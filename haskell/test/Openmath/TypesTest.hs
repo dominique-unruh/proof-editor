@@ -1,19 +1,19 @@
 {-# LANGUAGE ScopedTypeVariables, TypeSynonymInstances, FlexibleInstances #-}
 {-# OPTIONS_GHC -F -pgmF htfpp #-}
-module Cmathml.TypesTest where
-import Cmathml.Types
+module Openmath.TypesTest where
+import Openmath.Types
 
 
 import Test.Framework
-import Cmathml.Utils (bvarToOMV, omvToBvar)
-import Cmathml.QuickCheck()
+import Openmath.Utils (bvarToOMV, omvToBvar)
+import Openmath.QuickCheck()
 
 {-# ANN module "HLint: ignore Use camelCase" #-}
 
 -- TODO check whether QuickCheck's builtin handling of lists already splits the size for the subelements
 
 {-
-nonleaf :: Int -> Gen Cmathml
+nonleaf :: Int -> Gen Openmath
 nonleaf size = do
     let semSize = size `div` 5
     let sizeHd = size `div` 5
@@ -33,7 +33,7 @@ bvar size = do
     name <- arbitrary
     return (sem,name)
 
-cmathml :: Int -> Gen Cmathml
+cmathml :: Int -> Gen Openmath
 cmathml size = 
     if size<=1 then leaf size
     else oneof [ leaf size, nonleaf size ]
@@ -51,7 +51,7 @@ semanticsGen = sized_list (\s -> do
     ann <- cmathml s
     return (cd,name,ann))
 
-leaf :: Int -> Gen Cmathml
+leaf :: Int -> Gen Openmath
 leaf size = do
     sem <- semanticsGen (size-1)
     cd <- arbitrary

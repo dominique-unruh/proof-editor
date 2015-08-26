@@ -3,7 +3,7 @@ module Transformations.ComputeTest where
 
 import Transformations.Compute
 import Test.Framework
-import Cmathml.Types
+import Openmath.Types
 
 {-# ANN module "HLint: ignore Use camelCase" #-}
 

@@ -1,9 +1,9 @@
 {-# OPTIONS_GHC -F -pgmF htfpp #-}
 
-module Cmathml.UtilsTest where
+module Openmath.UtilsTest where
 
-import Cmathml.Utils
-import Cmathml.Types
+import Openmath.Utils
+import Openmath.Types
 import Test.Framework
 
 {-# ANN module "HLint: ignore Use camelCase" #-}

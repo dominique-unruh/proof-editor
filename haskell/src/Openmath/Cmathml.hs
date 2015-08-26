@@ -1,13 +1,13 @@
 {-# LANGUAGE PatternSynonyms, ViewPatterns #-}
-module Cmathml.Xml where
+module Openmath.Cmathml where
 
 import Text.XML.Light.Types
-import Cmathml.Types
+import Openmath.Types
 import Text.XML.Light.Output
 import Text.XML.Light.Proc
 import Text.XML.Light.Input (parseXML)
 import Data.Char (isSpace)
-import Cmathml.Utils (bvarToOMV, pattern Attribution, removeAttribution, mapAttribution)
+import Openmath.Utils (bvarToOMV, pattern Attribution, removeAttribution, mapAttribution)
 import Numeric (readSigned, readFloat)
 import Data.Ratio (denominator, numerator)
 

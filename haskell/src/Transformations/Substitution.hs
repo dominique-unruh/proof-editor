@@ -1,10 +1,10 @@
 module Transformations.Substitution where
 
 import Transformations.Common
-import Cmathml.Types
+import Openmath.Types
 import Control.Monad.Except (throwError)
 import Data.Maybe (isNothing, isJust, fromJust)
-import Cmathml.Utils (equivalentTerms, getSubterm, replaceSubterm)
+import Openmath.Utils (equivalentTerms, getSubterm, replaceSubterm)
 
 substitution :: Transformation
 substitution args = do

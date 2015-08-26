@@ -1,4 +1,4 @@
-module Cmathml.Types 
+module Openmath.Types 
     (Openmath(..), Attribution, Bvar, Attribute(..),
      Path, PathRange, )
 where

@@ -2,9 +2,9 @@
 module Transformations.Compute where
 
 import Transformations.Common
-import Cmathml.Utils (pattern Int', bindP, getSubterm, replaceSubterm, equivalentTerms, pattern OMASym)
+import Openmath.Utils (pattern Int', bindP, getSubterm, replaceSubterm, equivalentTerms, pattern OMASym)
 
-import Cmathml.Types
+import Openmath.Types
 import Data.Maybe (fromMaybe)
 
 intExp :: Integer -> Integer -> Integer

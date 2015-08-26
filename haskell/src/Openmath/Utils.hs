@@ -1,10 +1,10 @@
 {-# LANGUAGE RankNTypes, ScopedTypeVariables, PatternSynonyms, ViewPatterns #-}
-module Cmathml.Utils
+module Openmath.Utils
  (getSubterm, replaceSubterm, equivalentTerms, isAtom, pattern Attribution, pattern Attribution',
   bvarToOMV, omvToBvar, pattern Int', pattern OMASym, bindP, removeAttribution, mapAttribution)
 where
 
-import Cmathml.Types
+import Openmath.Types
 
 pattern OMASym cd name args <- (OMA _ (OMS _ cd name) args)
 pattern Int' i <- OMI _ i

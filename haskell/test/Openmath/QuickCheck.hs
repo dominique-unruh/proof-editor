@@ -1,11 +1,11 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
-module Cmathml.QuickCheck where
+module Openmath.QuickCheck where
 
 import Control.Monad (replicateM)
 import Test.QuickCheck (sized, resize, Gen, oneof, arbitrary, elements, Arbitrary)
-import Cmathml.Types
-import Cmathml.Utils (omvToBvar)
+import Openmath.Types
+import Openmath.Utils (omvToBvar)
 
 {-# ANN module "HLint: ignore Reduce duplication" #-}
 
@@ -53,7 +53,7 @@ attributionGen =
                     return (cd,name,a)
 
 attribGen :: Gen Attribute
-attribGen = fmap AttributeOM cmathmlGen
+attribGen = fmap AttributeOM openmathGen
 
 omiGen :: Gen Openmath
 omiGen = do
@@ -103,12 +103,12 @@ omsGen = do
 
 omaGen :: Gen Openmath
 omaGen = do
-    (sem,hd,args) <- shrinkingTuple3 attributionGen cmathmlGen (shrinkingList cmathmlGen)
+    (sem,hd,args) <- shrinkingTuple3 attributionGen openmathGen (shrinkingList openmathGen)
     return $ OMA sem hd args
 
 ombindGen :: Gen Openmath
 ombindGen = do
-    (sem,hd,bvars,arg) <- shrinkingTuple4 attributionGen cmathmlGen (shrinkingList bvarGen) cmathmlGen
+    (sem,hd,bvars,arg) <- shrinkingTuple4 attributionGen openmathGen (shrinkingList bvarGen) openmathGen
     return $ OMBIND sem hd bvars arg
 
 bvarGen :: Gen Bvar
@@ -120,12 +120,12 @@ leafGens = [ omiGen, omfGen, omstrGen, omvGen, omsGen ]
 nonleafGens :: [Gen Openmath]
 nonleafGens = [ omaGen, ombindGen ]
 
-cmathmlGen :: Gen Openmath
-cmathmlGen = sized (\size -> if size<=1 then oneof leafGens else oneof $ leafGens++nonleafGens)
+openmathGen :: Gen Openmath
+openmathGen = sized (\size -> if size<=1 then oneof leafGens else oneof $ leafGens++nonleafGens)
 
 
 instance Arbitrary Openmath where
-    arbitrary = cmathmlGen
+    arbitrary = openmathGen
 
 instance Arbitrary Attribute where
     arbitrary = attribGen

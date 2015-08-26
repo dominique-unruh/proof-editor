@@ -1,10 +1,10 @@
 module Main where
 
 import System.Environment (getArgs)
-import Cmathml.TeX
-import Cmathml.Xml
+import Openmath.TeX
+import Openmath.Cmathml
 import Data.List.Split (splitOn)
-import Cmathml.Types
+import Openmath.Types
 import Transformations.Commutativity
 import System.IO (stderr, hPutStr)
 import System.Exit (exitFailure)

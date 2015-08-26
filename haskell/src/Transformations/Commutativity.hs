@@ -2,8 +2,8 @@
 module Transformations.Commutativity where
 
 import Control.Monad.Except
-import Cmathml.Types
-import Cmathml.Utils
+import Openmath.Types
+import Openmath.Utils
 import Data.Maybe (isJust, fromJust)
 import Transformations.Common
 

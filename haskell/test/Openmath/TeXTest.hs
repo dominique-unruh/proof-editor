@@ -1,8 +1,8 @@
 {-# OPTIONS_GHC -F -pgmF htfpp #-}
 
-module Cmathml.TeXTest where
+module Openmath.TeXTest where
 
-import Cmathml.TeX
+import Openmath.TeX
 import Test.Framework
 
 {-# ANN module "HLint: ignore Use camelCase" #-}

@@ -4,44 +4,17 @@ cabal-version:  >=1.2
 build-type:     Simple
 author:         Dominique Unruh
 
-library
-  hs-source-dirs:  src
-  build-depends:   
-                   base >= 4,
-                   bytestring,
-                   texmath, text, xml-conduit,
-                   xml, mtl, xml-types, zip-archive
-  ghc-options:     -Wall
-  other-modules:   
-                   Cmathml.Types,
-                   Cmathml.TeX,
-                   Cmathml.Xml,
-                   Cmathml.Utils,
-                   Transformations.Commutativity,
-                   Transformations.Common,
-                   Transformations.ModusPonens,
-                   Transformations.Compute
-
 executable MathEdHaskell
   hs-source-dirs:  src
   main-is:         Main.hs
   build-depends:   
                    base >= 4,
                    bytestring,
-                   texmath,
-                   xml,
-                   split,
-                   mtl
+                   texmath, xml-conduit,
+                   xml, split,
+                   mtl, zip-archive
   ghc-options:     -Wall
   other-modules:   
-                   Cmathml.Types,
-                   Cmathml.TeX,
-                   Cmathml.Xml,
-                   Cmathml.Utils,
-                   Transformations.Commutativity,
-                   Transformations.Common,
-                   Transformations.ModusPonens,
-                   Transformations.Compute
 
 test-suite Test
   type:            exitcode-stdio-1.0
@@ -54,21 +27,6 @@ test-suite Test
                    xml-types,
                    text
   other-modules:   
-                  Cmathml.Types,
-                  Cmathml.TypesTest,
-                  Cmathml.Utils,
-                  Cmathml.UtilsTest,
-                  Cmathml.Xml,
-                  Cmathml.XmlTest,
-                  Cmathml.TeX,
-                  Cmathml.TeXTest,
-                  Transformations.Commutativity,
-                  Transformations.CommutativityTest,
-                  Transformations.Common,
-                  Transformations.ModusPonens,
-                  Cmathml.QuickCheck,
-                  Transformations.Compute,
-                  Transformations.ComputeTest
   hs-source-dirs:  
                   test,
                   src

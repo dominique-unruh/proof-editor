@@ -2,10 +2,10 @@
 module Transformations.ModusPonens where
 
 import Transformations.Common
-import Cmathml.Types
+import Openmath.Types
 import Control.Monad.Except (throwError)
 import Data.Maybe (isNothing)
-import Cmathml.Utils (equivalentTerms)
+import Openmath.Utils (equivalentTerms)
 
 modusPonens :: Transformation
 modusPonens args = do

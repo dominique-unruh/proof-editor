@@ -2,7 +2,7 @@
 module Transformations.CommutativityTest where
 import Transformations.Commutativity
 import Test.Framework
-import Cmathml.Types
+import Openmath.Types
 
 {-# ANN module "HLint: ignore Use camelCase" #-}
 

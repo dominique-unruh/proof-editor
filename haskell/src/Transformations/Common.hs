@@ -2,7 +2,7 @@ module Transformations.Common where
 
 import Control.Monad.Except (throwError, Except)
 import Control.Monad (unless)
-import Cmathml.Types
+import Openmath.Types
 
 type Error = Except String
 type Transformation = [(Openmath,Maybe Path)] -> Error Openmath

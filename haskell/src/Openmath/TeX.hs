@@ -1,6 +1,6 @@
-module Cmathml.TeX where
+module Openmath.TeX where
 
-import Cmathml.Types
+import Openmath.Types
 import Text.TeXMath.Types
 import Text.TeXMath.Readers.TeX (readTeX)
 
