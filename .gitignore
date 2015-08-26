@@ -10,3 +10,8 @@
 /cmathml.cmx
 /cmathml.o
 /cmathml
+/cmathml.exe
+
+__pycache__/
+
+src/*/Ui_*.py

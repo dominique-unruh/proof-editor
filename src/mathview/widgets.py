@@ -6,7 +6,7 @@ from PyQt5.Qt import QImage,  QPainter, QColor, QBrush,  QMouseEvent
 from PyQt5.QtCore import Qt,  QSize
 from PyQt5.QtSvg import QGraphicsSvgItem
 from lxml import etree  # @UnresolvedImport
-import logging
+import logging, sys
 
 # Own modules
 import utils
@@ -20,9 +20,9 @@ mathjax_page = """
 <script src='mathjax/MathJax.js'></script>
 </head>
 <body onload="onLoad()">
-<span id="formula-span">
+<span style="font-size: {size}cm" id="formula-span">
 <math xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
-{}</math>
+{math}</math>
 </span>
 <span id="selection-rect"></span>
 </body>
@@ -63,6 +63,7 @@ class MathGraphicsItem(QGraphicsSvgItem):
         assert isinstance(svg, bytes)
         self.renderer().load(svg)
         self.setElementId("") # Seems only way to trigger recalculation of bounding box
+
  
 class MathPicture(QObject):
     """@deprecated"""
@@ -190,6 +191,9 @@ class MathView(QWidget):
     def get_formula(self):
         return self.formula
 
+    # Under Windows, the ex-value is ~2.26 smaller than in Linux, so we add an extra zoom factor for the font size
+    extra_zoom = 2.26 if sys.platform=="win32" else 1
+
     def set_formula(self, math):
         self.formula = math
         self.selected_path = None
@@ -198,7 +202,7 @@ class MathView(QWidget):
             self.webview.setHtml(self._empty_html)
             return
             
-        try: html = mathjax_page.format(math.get_pmathml())
+        try: html = mathjax_page.format(math=math.get_pmathml(),size=0.75*self.extra_zoom)
         except ValueError as e: html = '[{}]'.format(str(e))
         
         self.webview.settings().setAttribute(QWebSettings.LocalContentCanAccessRemoteUrls, True)

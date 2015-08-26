@@ -121,14 +121,7 @@ class MainWin(QMainWindow, Ui_MainWindow):
             self.arguments.append(None)
             self.spltTrafoInputs.addWidget(mv)
             mv.mouse_press.connect(lambda: (self.select_mathviewer(idx), self.deselect_in_graph()))
-            mv.empty_html = """[Please select some math.]
-           <div style="width:1cm; height:1cm; background-color:blue"></div>
-           <div style="width:4.2ex; height:1ex; background-color:red"></div>
-           <span style="font-size: 1cm">
-           <div style="width:1cm; height:1cm; background-color:blue"></div>
-           <div style="width:1.96ex; height:1ex; background-color:red"></div>
-           </span>
-           """ # TODO remove
+            mv.empty_html = """[Please select some math.]""" # TODO remove
 
     def formula_node_into_mathview(self, node, i:Optional[int]=None):
         if i is None: i = self.current_mathviewer

@@ -6,7 +6,7 @@ from PyQt5 import QtWebKit
 from PyQt5.QtGui import QIcon
 import sys, utils, traceback
 
-# TODO: calibrate zoom in webview s.t. math size is corrent (by converting ex to cm etc)
+# TODO: give windows an extra zoom factor of 2.26
 
 # TODO: when switching to single input trafo, keep currently active input
 
