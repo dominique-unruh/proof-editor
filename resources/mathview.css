@@ -1,0 +1,31 @@
+
+#selection-rect {
+    position: fixed;
+    left:0; top:0;
+    background-color: blue;
+    visibility: hidden;
+    opacity: 0.2;
+}
+
+.variable {
+    color: blue;
+}
+
+
+.number {
+    color: green;
+}
+
+.highlight, .highlight * {
+    background-color: orange;
+    color: inherit; /* Overrides the coloring of variables+numbers */
+}
+
+body {
+    cursor: default;
+    background-color: white;
+}
+
+.highlight-bg {
+    background-color: azure;
+}

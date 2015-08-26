@@ -1,0 +1,68 @@
+<html>
+  <head>
+    <script>
+window.MathJax = {
+    jax: ["input/MathML", "output/SVG" ],
+    extensions: ["mml2jax.js" ],
+    showMathMenu: false,
+    mml2jax: { preview: "none" },
+};
+
+var mathspan;
+
+function extract_svg() {
+    svg_xml = "ERROR";
+    defs_xml = "ERROR";
+try {
+    svgspan = mathspan.firstChild;
+    defsvgspan = document.getElementById("MathJax_SVG_glyphs").parentElement.parentElement;
+    svg_xml = svgspan.innerHTML;
+    defs_xml = defsvgspan.innerHTML;
+
+// Needs postprocessing: insert the second tag into the first, and add attribute xmlns="http://www.w3.org/2000/svg" 
+   
+} finally {
+    window.controller.svg_rendered(svg_xml, defs_xml);
+}
+}
+
+function clear_node(node) {
+    while (node.childElementCount > 0)
+	node.childNodes[0].remove();
+}
+
+
+function clear_body() {
+    var body = document.body;
+    while (body.childElementCount > 0)
+	body.children[0].remove();
+}
+
+function convert_to_svg(mml) {
+    //clear_body();
+
+    mathspan = document.createElement("span");
+    mathspan.innerHTML = '<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline">'+mml+'</math>';
+    document.body.appendChild(mathspan);
+    MathJax.Hub.Queue(["Typeset",MathJax.Hub,mathspan]);
+    MathJax.Hub.Queue(extract_svg);
+}
+
+function convert_to_svgcb() {
+    convert_to_svg(window.controller._get_mml_for_js());
+}
+
+function onLoad() {
+  window.controller.body_load();
+}
+    </script>
+    <script src='mathjax/MathJax.js'></script>
+  </head>
+<body onload="onLoad()">
+
+<math>
+<mrow path="" class="apply"><mi path="1" class="leaf variable">a</mi><mo form="infix">+</mo><mfenced path="2" class="apply" separators=""><mrow><mi path="2.1" class="leaf variable">b</mi><mo form="infix">+</mo><mi path="2.2" class="leaf variable">c</mi></mrow></mfenced></mrow>
+</math>
+
+</body>
+</html>

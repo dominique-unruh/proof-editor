@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Project SYSTEM "Project-5.1.dtd">
+<!-- eric project file for project math-eq -->
+<!-- Saved: 2015-08-13, 19:40:49 -->
+<!-- Copyright (C) 2015 ,  -->
+<Project version="5.1">
+  <Language>en_US</Language>
+  <Hash>c3b2f70695be39be5071831108ec9137e13ffbcb</Hash>
+  <ProgLanguage mixed="0">Python3</ProgLanguage>
+  <ProjectType>PyQt5</ProjectType>
+  <Description></Description>
+  <Version>0.1</Version>
+  <Author></Author>
+  <Email></Email>
+  <Eol index="-1"/>
+  <Sources>
+    <Source>testui/mainwin.py</Source>
+    <Source>logging_conf.py</Source>
+    <Source>mathview/mathviewplugin.py</Source>
+    <Source>main.py</Source>
+    <Source>mathview/widgets.py</Source>
+    <Source>graph/graphview.py</Source>
+    <Source>graph/graphviewplugin.py</Source>
+    <Source>utils.py</Source>
+    <Source>setup.py</Source>
+    <Source>testui/__init__.py</Source>
+    <Source>transform/__init__.py</Source>
+    <Source>testui/Ui_mainwin.py</Source>
+    <Source>graph/Ui_controls.py</Source>
+    <Source>graph/__init__.py</Source>
+    <Source>mathview/__init__.py</Source>
+    <Source>test.py</Source>
+    <Source>mathview/tests.py</Source>
+  </Sources>
+  <Forms>
+    <Form>testui/mainwin.ui</Form>
+    <Form>graph/controls.ui</Form>
+  </Forms>
+  <Translations/>
+  <Resources/>
+  <Interfaces/>
+  <Others>
+    <Other>mathview/mathview.css</Other>
+    <Other>mathview/mathpicture.css</Other>
+    <Other>mathview/mathview.js</Other>
+  </Others>
+  <MainScript>main.py</MainScript>
+  <Vcs>
+    <VcsType>None</VcsType>
+  </Vcs>
+  <FiletypeAssociations>
+    <FiletypeAssociation pattern="*.idl" type="INTERFACES"/>
+    <FiletypeAssociation pattern="*.py" type="SOURCES"/>
+    <FiletypeAssociation pattern="*.py3" type="SOURCES"/>
+    <FiletypeAssociation pattern="*.pyw" type="SOURCES"/>
+    <FiletypeAssociation pattern="*.pyw3" type="SOURCES"/>
+    <FiletypeAssociation pattern="*.qm" type="TRANSLATIONS"/>
+    <FiletypeAssociation pattern="*.qrc" type="RESOURCES"/>
+    <FiletypeAssociation pattern="*.ts" type="TRANSLATIONS"/>
+    <FiletypeAssociation pattern="*.ui" type="FORMS"/>
+  </FiletypeAssociations>
+</Project>
