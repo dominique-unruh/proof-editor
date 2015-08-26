@@ -1,0 +1,12 @@
+/resources/mathjax/
+/resources/icons/
+*~
+.~*#
+
+/haskell/dist/
+/haskell/.HTF/Test.history
+
+/cmathml.cmi
+/cmathml.cmx
+/cmathml.o
+/cmathml

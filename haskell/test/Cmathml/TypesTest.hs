@@ -5,7 +5,7 @@ import Cmathml.Types
 
 
 import Test.Framework
-import Cmathml.Utils (bvarToCI, ciToBvar)
+import Cmathml.Utils (bvarToOMV, omvToBvar)
 import Cmathml.QuickCheck()
 
 {-# ANN module "HLint: ignore Use camelCase" #-}
@@ -69,11 +69,11 @@ tmp = arbitrary :: Gen Bvar -- to avoid "orphan instance" warning
 
 prop_ci_bvar :: Bvar -> Bool
 prop_ci_bvar b = 
-    b == ciToBvar (bvarToCI b)
+    b == omvToBvar (bvarToOMV b)
 
     
 test_plus :: IO ()
-test_plus = assertEqual (1+2) (Apply[] (CSymbol [] "arith1" "plus") [CN[] (Int 1), CN[] (Int 2)])
+test_plus = assertEqual (1+2) (OMA[] (OMS [] "arith1" "plus") [OMI [] 1, OMI [] 2])
 
 test_minus :: IO ()
-test_minus = assertEqual (1-2) (Apply[] (CSymbol [] "arith1" "minus") [CN[] (Int 1), CN[] (Int 2)])
+test_minus = assertEqual (1-2) (OMA[] (OMS [] "arith1" "minus") [OMI [] 1, OMI [] 2])

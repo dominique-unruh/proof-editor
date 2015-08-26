@@ -5,7 +5,7 @@ module Cmathml.QuickCheck where
 import Control.Monad (replicateM)
 import Test.QuickCheck (sized, resize, Gen, oneof, arbitrary, elements, Arbitrary)
 import Cmathml.Types
-import Cmathml.Utils (ciToBvar)
+import Cmathml.Utils (omvToBvar)
 
 {-# ANN module "HLint: ignore Reduce duplication" #-}
 
@@ -44,43 +44,40 @@ shrinkingTuple4 gen1 gen2 gen3 gen4 = sized (\size -> do
     x4 <- resize size1 gen4
     return (x1,x2,x3,x4))
 
-semanticsGen :: Gen Semantics
-semanticsGen = 
+attributionGen :: Gen Attribution
+attributionGen = 
     oneof [shrinkingList annot, return []]
             where annot = do
                     (cd,name) <- arbitrary
-                    a <- annotGen
+                    a <- attribGen
                     return (cd,name,a)
 
-annotGen :: Gen Annotation
-annotGen = fmap AnnotationCMML cmathmlGen
+attribGen :: Gen Attribute
+attribGen = fmap AttributeOM cmathmlGen
 
-cnIntGen :: Gen Cmathml
-cnIntGen = do
-    sem <- semanticsGen
+omiGen :: Gen Openmath
+omiGen = do
+    sem <- attributionGen
     i <- arbitrary
-    return (CN sem $ Int i)
+    return (OMI sem i)
 
-cnRealGen :: Gen Cmathml
-cnRealGen = do
-    sem <- semanticsGen
-    r <- arbitrary
-    return (CN sem $ Real r)
+-- cnRealGen :: Gen Openmath
+-- cnRealGen = do
+--     sem <- attributionGen
+--     r <- arbitrary
+--     return (CN sem $ Real r)
 
-cnIEEEGen :: Gen Cmathml
-cnIEEEGen = do
-    sem <- semanticsGen
+omfGen :: Gen Openmath
+omfGen = do
+    sem <- attributionGen
     d <- arbitrary
-    return (CN sem $ IEEE d)
+    return (OMF sem d)
 
-cnGen :: Gen Cmathml
-cnGen = oneof [cnIntGen, cnRealGen, cnIEEEGen]
-
-csGen :: Gen Cmathml
-csGen = do
-    sem <- semanticsGen
+omstrGen :: Gen Openmath
+omstrGen = do
+    sem <- attributionGen
     s <- arbitrary
-    return (CS sem s)
+    return (OMSTR sem s)
 
 nonemptyListGen :: Arbitrary a => Gen [a]
 nonemptyListGen = do
@@ -88,48 +85,48 @@ nonemptyListGen = do
     xs <- arbitrary
     return $ x:xs
 
-ciGen :: Gen Cmathml
-ciGen = do
-    sem <- semanticsGen
+omvGen :: Gen Openmath
+omvGen = do
+    sem <- attributionGen
     name <- nonemptyListGen
-    return (CI sem name)
+    return (OMV sem name)
 
-csymbols :: [(String, String)]
-csymbols = [("arith1","plus"),("arith1","minus"),("arith1","times"),("arith1","divide"),
+omSymbols :: [(String, String)]
+omSymbols = [("arith1","plus"),("arith1","minus"),("arith1","times"),("arith1","divide"),
     ("relation1","eq")]
 
-csymbolGen :: Gen Cmathml
-csymbolGen = do
-    sem <- semanticsGen
-    (cd,name) <- elements csymbols
-    return $ CSymbol sem cd name
+omsGen :: Gen Openmath
+omsGen = do
+    sem <- attributionGen
+    (cd,name) <- elements omSymbols
+    return $ OMS sem cd name
 
-applyGen :: Gen Cmathml
-applyGen = do
-    (sem,hd,args) <- shrinkingTuple3 semanticsGen cmathmlGen (shrinkingList cmathmlGen)
-    return $ Apply sem hd args
+omaGen :: Gen Openmath
+omaGen = do
+    (sem,hd,args) <- shrinkingTuple3 attributionGen cmathmlGen (shrinkingList cmathmlGen)
+    return $ OMA sem hd args
 
-bindGen :: Gen Cmathml
-bindGen = do
-    (sem,hd,bvars,arg) <- shrinkingTuple4 semanticsGen cmathmlGen (shrinkingList bvarGen) cmathmlGen
-    return $ Bind sem hd bvars arg
+ombindGen :: Gen Openmath
+ombindGen = do
+    (sem,hd,bvars,arg) <- shrinkingTuple4 attributionGen cmathmlGen (shrinkingList bvarGen) cmathmlGen
+    return $ OMBIND sem hd bvars arg
 
 bvarGen :: Gen Bvar
-bvarGen = fmap ciToBvar ciGen
+bvarGen = fmap omvToBvar omvGen
 
-leafGens :: [Gen Cmathml]
-leafGens = [ cnGen, csGen, ciGen, csymbolGen ]
+leafGens :: [Gen Openmath]
+leafGens = [ omiGen, omfGen, omstrGen, omvGen, omsGen ]
 
-nonleafGens :: [Gen Cmathml]
-nonleafGens = [ applyGen, bindGen ]
+nonleafGens :: [Gen Openmath]
+nonleafGens = [ omaGen, ombindGen ]
 
-cmathmlGen :: Gen Cmathml
+cmathmlGen :: Gen Openmath
 cmathmlGen = sized (\size -> if size<=1 then oneof leafGens else oneof $ leafGens++nonleafGens)
 
 
-instance Arbitrary Cmathml where
+instance Arbitrary Openmath where
     arbitrary = cmathmlGen
 
-instance Arbitrary Annotation where
-    arbitrary = annotGen
+instance Arbitrary Attribute where
+    arbitrary = attribGen
     

@@ -13,7 +13,7 @@ modusPonens args = do
     let [(arg1,path1),(arg2,path2)] = args
     assert (isNothing path1 && isNothing path2) "Do not selected any subterms with this transformation."
     (prem,concl) <- case arg1 of
-            Apply _ (CSymbol _ "logic1" "implies") [p,c] -> return (p,c)
+            OMA _ (OMS _ "logic1" "implies") [p,c] -> return (p,c)
             _ -> throwError "The first formula must be an implication (e.g., A=>B)"
     -- TODO: be more flexible with the equality (e.g., modulo AC)
     assert (equivalentTerms prem arg2) "Second formula must match premise of first formula.\nE.g. A=>B and A,  not A=>B and C."

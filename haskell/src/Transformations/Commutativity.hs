@@ -21,11 +21,11 @@ commutativity args = do
     let path = fromJust path'
     let subterm = getSubterm arg path 
     (sem,lhs,op,rhs) <- case subterm of
-        Apply sem op [a,b] -> return (sem,a,op,b)
+        OMA sem op [a,b] -> return (sem,a,op,b)
         _ -> throwError "You should select a binary operation (e.g., a+b)"
     (cd,name) <- case op of
-        CSymbol _ cd name -> return (cd,name)
+        OMS _ cd name -> return (cd,name)
         _ -> throwError "The operation you selected should be a builtin symbol (e.g., a+b, not f(a,b) for your own f)"
     assert ((cd,name) `elem` commutativeOps) "The operation you selected is not commutative (e.g, a+b is OK, a/b is not)"
-    let newterm = Apply sem op [rhs,lhs]
+    let newterm = OMA sem op [rhs,lhs]
     return (replaceSubterm arg path newterm)

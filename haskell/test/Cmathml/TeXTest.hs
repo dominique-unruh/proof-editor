@@ -9,10 +9,10 @@ import Test.Framework
 
 test_plus :: IO ()
 test_plus = 
-    assertEqual (texToCmathml "1+2") (1+2) 
+    assertEqual (texToOpenmath "1+2") (1+2) 
         -- (Apply[] (CSymbol [] "arith1" "plus") [CN[] (Int 1), CN[] (Int 2)])
 
 test_minus :: IO ()
 test_minus = 
-    assertEqual (texToCmathml "1-2") (1-2)
+    assertEqual (texToOpenmath "1-2") (1-2)
        -- (Apply[] (CSymbol [] "arith1" "minus") [CN[] (Int 1), CN[] (Int 2)])

@@ -5,7 +5,7 @@ import Control.Monad (unless)
 import Cmathml.Types
 
 type Error = Except String
-type Transformation = [(Cmathml,Maybe Path)] -> Error Cmathml
+type Transformation = [(Openmath,Maybe Path)] -> Error Openmath
 
 assert :: Bool -> String -> Error ()
 assert condition err = unless condition $ throwError err

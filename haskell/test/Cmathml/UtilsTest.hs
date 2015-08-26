@@ -8,11 +8,8 @@ import Test.Framework
 
 {-# ANN module "HLint: ignore Use camelCase" #-}
 
-apply :: String -> String -> [Cmathml] -> Cmathml
-apply cd name args = Apply [] (CSymbol [] cd name) args
-
-int :: Integer -> Cmathml
-int i = CN [] (Int i)
+apply :: String -> String -> [Openmath] -> Openmath
+apply cd name args = OMA [] (OMS [] cd name) args
 
 test_getSubterm :: IO ()
 test_getSubterm = do

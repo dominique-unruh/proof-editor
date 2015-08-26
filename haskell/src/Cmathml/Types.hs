@@ -1,41 +1,47 @@
 module Cmathml.Types 
-    (Number(..), Cmathml(..), Semantics, Bvar, Annotation(..),
+    (Openmath(..), Attribution, Bvar, Attribute(..),
      Path, PathRange, )
 where
 
 import qualified Data.ByteString as B
 import qualified Data.XML.Types
-import qualified Data.Text
+--import qualified Data.Text
 
-data Number = Int Integer | IEEE Double | Real Rational
-    deriving (Eq, Show)
+-- TODO: transition to OpenMath 2.0
+
+
+type Foreign = (String,Data.XML.Types.Node) -- encoding, content
+data Error = ErrorOM Openmath | ErrorForeign Foreign
+  deriving (Eq, Show)
+--data Number = Int Integer | IEEE Double | Real Rational
+--    deriving (Eq, Show)
 {- | Constraints: cd-name must be non-empty everywhere, 
      name of bvars and ci's must be nonempty
      whatever conditions CMML standard imposes on identifiers
 -}
-data Cmathml = 
-  CN Semantics Number
-  | CI Semantics String -- type can be added using annotations
-  | CSymbol Semantics String String -- cd, name
-  | CS Semantics String
-  | Apply Semantics Cmathml [Cmathml]
-  | Bind Semantics Cmathml [Bvar] Cmathml
-  | CError Semantics String String [Cmathml] -- cd name contents 
-  | CBytes Semantics B.ByteString
+data Openmath = 
+  OMI Attribution Integer -- integer
+  | OMF Attribution Double -- floating point number
+  | OMV Attribution String -- type can be added using annotations
+  | OMS Attribution String String -- cd, name
+  | OMSTR Attribution String
+  | OMA Attribution Openmath [Openmath]
+  | OMBIND Attribution Openmath [Bvar] Openmath
+  | OME Attribution String String [Error] -- cd name contents 
+  | OMB Attribution B.ByteString
     deriving (Eq, Show)
-type Semantics = [(String,String,Annotation)] -- cd name value
-data Annotation = 
-    AnnotationCMML Cmathml -- for encoding "MathML-Content"
-    | AnnotationXML String [Data.XML.Types.Node] -- AnnotationXML encoding xml
-    | AnnotationData String Data.Text.Text
+type Attribution = [(String,String,Attribute)] -- cd name value
+data Attribute = 
+    AttributeOM Openmath -- for encoding "MathML-Content"
+    | AttributeForeign Foreign
     deriving (Eq, Show)
-type Bvar = (Semantics,String)
+type Bvar = (Attribution,String)
 
 {- | Describes a path within a formula (i.e., a pointer to a subterm).
      [] denotes the formula itself.
      -i:rest descends into the i-th semantics annotation (counting from 1). 
-     In Apply, 0:rest descends into the head of the application, 1:i:rest into the i-th argument (counting from 0).
-     In Bind, 0:rest descends into the head, 1:i:rest into the i-th bound variable, 2:rest into the argument.
+     In OMA, 0:rest descends into the head of the application, 1:i:rest into the i-th argument (counting from 0).
+     In OMBIND, 0:rest descends into the head, 1:i:rest into the i-th bound variable, 2:rest into the argument.
 -}
 type Path = [Int]
 
@@ -47,11 +53,11 @@ type Path = [Int]
 type PathRange = (Path,Int)
 
 {- Local abbreviation -}
-apply :: String -> String -> [Cmathml] -> Cmathml
-apply cd name = Apply [] (CSymbol [] cd name)
+apply :: String -> String -> [Openmath] -> Openmath
+apply cd name = OMA [] (OMS [] cd name)
         
-instance Num Cmathml where
-    fromInteger i = CN [] (Int i)
+instance Num Openmath where
+    fromInteger i = OMI [] i
     abs x = apply "arith1" "abs" [x]
     signum _ = error "signum not implemented" -- TODO
     a * b = apply "arith1" "times" [a,b]
@@ -59,13 +65,13 @@ instance Num Cmathml where
     a - b = apply "arith1" "minus" [a,b]
     negate _ = error "negate not implemented" -- TODO
     
-instance Fractional Cmathml where
+instance Fractional Openmath where
     a / b = apply "arith1" "divide" [a,b]
     recip _ = error "recip not implemented"
-    fromRational r = CN [] (Real r)
+    fromRational r = OMF [] (fromRational r) -- TODO: represent as a rational?
 
-instance Floating Cmathml where
-    pi = CSymbol [] "nums1" "pi"
+instance Floating Openmath where
+    pi = OMS [] "nums1" "pi"
     exp x = apply "transc1" "exp" [x]
     sqrt x = apply "arith1" "root" [x,2]
     log _ = error "log" -- TODO

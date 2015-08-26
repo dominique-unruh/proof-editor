@@ -1,132 +1,124 @@
 {-# LANGUAGE RankNTypes, ScopedTypeVariables, PatternSynonyms, ViewPatterns #-}
 module Cmathml.Utils
- (getSubterm, replaceSubterm, equivalentTerms, isAtom, pattern Semantics, pattern Semantics',
-  bvarToCI, ciToBvar, pattern Int', pattern ApplySym, bindP, removeSemantics)
+ (getSubterm, replaceSubterm, equivalentTerms, isAtom, pattern Attribution, pattern Attribution',
+  bvarToOMV, omvToBvar, pattern Int', pattern OMASym, bindP, removeAttribution, mapAttribution)
 where
 
 import Cmathml.Types
 
-pattern ApplySym cd name args <- (Apply _ (CSymbol _ cd name) args)
-pattern Int' i <- CN _ (Int i)
+pattern OMASym cd name args <- (OMA _ (OMS _ cd name) args)
+pattern Int' i <- OMI _ i
 
 -- TODO replace by PatternSynonym
-bindP :: Cmathml -> Maybe (String, String, [Bvar], Cmathml)
-bindP (Bind _ (CSymbol _ cd name) bvars arg) = Just (cd,name,bvars,arg)
+bindP :: Openmath -> Maybe (String, String, [Bvar], Openmath)
+bindP (OMBIND _ (OMS _ cd name) bvars arg) = Just (cd,name,bvars,arg)
 bindP _ = Nothing
 
--- intP :: Cmathml -> Maybe Integer
--- intP (CN _ (Int i)) = Just i
--- intP _ = Nothing
+mapAttribution :: (Attribution -> Attribution) -> Openmath -> Openmath
+mapAttribution f (OMS s cd name) = OMS (f s) cd name
+mapAttribution f (OMV s name) = OMV (f s) name
+mapAttribution f (OMSTR s str) = OMSTR (f s) str
+mapAttribution f (OMA s hd args) = OMA (f s) hd args
+mapAttribution f (OMBIND s hd bvars arg) = OMBIND (f s) hd bvars arg
+mapAttribution f (OME s cd name content) = OME (f s) cd name content
+mapAttribution f (OMB s bytes) = OMB (f s) bytes
+mapAttribution f (OMI s num) = OMI (f s) num
+mapAttribution f (OMF s num) = OMF (f s) num
 
--- DEPRECATED
---applyP :: Cmathml -> Maybe (String, String, [Cmathml])
---applyP (Apply _ (CSymbol _ cd name) args) = Just (cd,name,args)
---applyP _ = Nothing
+removeAttribution :: Openmath -> Openmath
+removeAttribution = mapAttribution (\_ -> [])
 
---intP :: Cmathml -> Maybe Integer
---intP (CN _ (Int i)) = Just i
---intP _ = Nothing
-
-mapSemantics :: (Semantics -> Semantics) -> Cmathml -> Cmathml
-mapSemantics f (CSymbol s cd name) = CSymbol (f s) cd name
-mapSemantics f (CI s name) = CI (f s) name
-mapSemantics f (CS s str) = CS (f s) str
-mapSemantics f (Apply s hd args) = Apply (f s) hd args
-mapSemantics f (Bind s hd bvars arg) = Bind (f s) hd bvars arg
-mapSemantics f (CError s cd name content) = CError (f s) cd name content
-mapSemantics f (CBytes s bytes) = CBytes (f s) bytes
-mapSemantics f (CN s num) = CN (f s) num
-
-removeSemantics :: Cmathml -> Cmathml
-removeSemantics = mapSemantics (\_ -> [])
-
-semantics' :: Cmathml -> Semantics
-semantics' (CSymbol s _ _) = s
-semantics' (CI s _) = s
-semantics' (CS s _) = s
-semantics' (Apply s _ _) = s
-semantics' (Bind s _ _ _) = s
-semantics' (CError s _ _ _) = s
-semantics' (CBytes s _) = s
-semantics' (CN s _) = s
--- | Matches all Cmathml values with given semantics
-pattern Semantics' s <- (semantics' -> s)
+semantics' :: Openmath -> Attribution
+semantics' (OMS s _ _) = s
+semantics' (OMV s _) = s
+semantics' (OMSTR s _) = s
+semantics' (OMA s _ _) = s
+semantics' (OMBIND s _ _ _) = s
+semantics' (OME s _ _ _) = s
+semantics' (OMB s _) = s
+semantics' (OMI s _) = s
+semantics' (OMF s _) = s
+-- | Matches all Openmath values with given semantics
+pattern Attribution' s <- (semantics' -> s)
 
 
-semantics :: Cmathml -> Maybe Semantics
+semantics :: Openmath -> Maybe Attribution
 semantics c = case semantics' c of [] -> Nothing; s -> Just s
--- | Matches all Cmathml values with given semantics, unless the semantics is empty
-pattern Semantics s <- (semantics -> Just s)
+-- | Matches all Openmath values with given semantics, unless the semantics is empty
+pattern Attribution s <- (semantics -> Just s)
 
-{- | Extracts the semantics of a Cmathml element.
+{- | Extracts the semantics of a Openmath element.
      If the semantics is empty ([]), returns Nothing.
      Useful for pattern matching. -}
 
--- | Converts a bound variable (Bvar) to a Cmathml identifier (CI)
-bvarToCI :: Bvar -> Cmathml
-bvarToCI (sem,name) = CI sem name
+-- | Converts a bound variable (Bvar) to a Openmath identifier (CI)
+bvarToOMV :: Bvar -> Openmath
+bvarToOMV (sem,name) = OMV sem name
 
--- | Converts a Cmathml identifier (CI) to a bound variable (Bvar)
-ciToBvar :: Cmathml -> (Semantics, String)
-ciToBvar (CI sem name) = (sem,name)
-ciToBvar _ = error "expecting CI"
+-- | Converts a Openmath identifier (CI) to a bound variable (Bvar)
+omvToBvar :: Openmath -> (Attribution, String)
+omvToBvar (OMV sem name) = (sem,name)
+omvToBvar _ = error "expecting CI"
 
 
 {- | Returns True the formula is an atom, i.e., contains no further subterms.
-   | CError is considered an atom.
+   | OME is considered an atom.
 -}
-isAtom :: Cmathml -> Bool
-isAtom CSymbol{} = True
-isAtom CI{} = True
-isAtom CN{} = True
-isAtom CS{} = True
-isAtom Bind{} = False
-isAtom Apply{} = False
-isAtom CError{} = True
-isAtom CBytes{} = True
+isAtom :: Openmath -> Bool
+isAtom OMS{} = True
+isAtom OMV{} = True
+isAtom OMI{} = True
+isAtom OMF{} = True
+isAtom OMSTR{} = True
+isAtom OMBIND{} = False
+isAtom OMA{} = False
+isAtom OME{} = True
+isAtom OMB{} = True
 
-getSubterm :: Cmathml -> Path -> Cmathml
+getSubterm :: Openmath -> Path -> Openmath
 getSubterm _ (i:_) | i<0 = error "descending into semantics not implemented"
 getSubterm term [] = term
-getSubterm (Apply _ hd _) (0:path) = getSubterm hd path
-getSubterm (Apply _ _ args) (1:i:path) = getSubterm (args!!i) path
-getSubterm (Apply{}) (i:_) = error $ "accessing subelement "++show i ++ " of Apply"
-getSubterm (Bind _ hd _ _) (0:path) = getSubterm hd path
-getSubterm (Bind _ _ bvars _) (1:i:path) =
-    case bvars!!i of (sem,name) -> getSubterm (CI sem name) path
-getSubterm (Bind _ _ _ arg) (2:path) = getSubterm arg path
-getSubterm (Bind{}) (i:_) = error $ "accessing subelement "++show i ++ " of Bind"
-getSubterm (CError{}) _ = error "CError subterms not supported"
-getSubterm (CS{}) _ = error "cannot descend into CS"
-getSubterm (CI{}) _ = error "cannot descend into CI"
-getSubterm (CBytes{}) _ = error "cannot descend into CBytes"
-getSubterm (CSymbol{}) _ = error "cannot descend into CSymbol"
-getSubterm (CN{}) _ = error "cannot descend into CN"
+getSubterm (OMA _ hd _) (0:path) = getSubterm hd path
+getSubterm (OMA _ _ args) (1:i:path) = getSubterm (args!!i) path
+getSubterm (OMA{}) (i:_) = error $ "accessing subelement "++show i ++ " of OMA"
+getSubterm (OMBIND _ hd _ _) (0:path) = getSubterm hd path
+getSubterm (OMBIND _ _ bvars _) (1:i:path) =
+    case bvars!!i of (sem,name) -> getSubterm (OMV sem name) path
+getSubterm (OMBIND _ _ _ arg) (2:path) = getSubterm arg path
+getSubterm (OMBIND{}) (i:_) = error $ "accessing subelement "++show i ++ " of OMBIND"
+getSubterm (OME{}) _ = error "OME subterms not supported"
+getSubterm (OMSTR{}) _ = error "cannot descend into OMSTR"
+getSubterm (OMV{}) _ = error "cannot descend into OMV"
+getSubterm (OMB{}) _ = error "cannot descend into OMB"
+getSubterm (OMS{}) _ = error "cannot descend into OMS"
+getSubterm (OMI{}) _ = error "cannot descend into OMF"
+getSubterm (OMF{}) _ = error "cannot descend into OMI"
 
 
 replaceIth :: [a] -> Int -> a -> [a]
 replaceIth xs i x = take i xs ++ x : drop (i+1) xs
 
-replaceSubterm :: Cmathml -> Path -> Cmathml -> Cmathml
+replaceSubterm :: Openmath -> Path -> Openmath -> Openmath
 replaceSubterm _ (i:_) _ | i<0 = error "descending into semantics not implemented"
 replaceSubterm _ [] subterm = subterm
-replaceSubterm (Apply sem hd args) (0:path) subterm = 
-    Apply sem (replaceSubterm hd path subterm) args
-replaceSubterm (Apply sem hd args) (1:i:path) subterm =
-    Apply sem hd (replaceIth args i (replaceSubterm (args!!i) path subterm))
-replaceSubterm (Apply{}) (i:_) _ = error $ "accessing subelement "++show i ++ " of Apply"
-replaceSubterm (Bind sem hd bvars arg) (0:path) subterm = Bind sem (replaceSubterm hd path subterm) bvars arg
-replaceSubterm (Bind sem hd bvars arg) (1:i:path) subterm =
-    let newbvar =  ciToBvar (replaceSubterm (bvarToCI (bvars!!i)) path subterm) in
-    Bind sem hd (replaceIth bvars i newbvar) arg
-replaceSubterm (Bind sem hd bvars arg) (2:path) subterm = Bind sem hd bvars (replaceSubterm arg path subterm)
-replaceSubterm (Bind{}) (i:_) _ = error $ "accessing subelement "++show i++" of Bind"
-replaceSubterm (CError{}) _ _ = error "CError subterms not supported"
-replaceSubterm (CS{}) _ _ = error "cannot descend into CS"
-replaceSubterm (CI{}) _ _ = error "cannot descend into CI"
-replaceSubterm (CBytes{}) _ _ = error "cannot descend into CBytes"
-replaceSubterm (CSymbol{}) _ _ = error "cannot descend into CSymbol"
-replaceSubterm (CN{}) _ _ = error "cannot descend into CN"
+replaceSubterm (OMA sem hd args) (0:path) subterm = 
+    OMA sem (replaceSubterm hd path subterm) args
+replaceSubterm (OMA sem hd args) (1:i:path) subterm =
+    OMA sem hd (replaceIth args i (replaceSubterm (args!!i) path subterm))
+replaceSubterm (OMA{}) (i:_) _ = error $ "accessing subelement "++show i ++ " of OMA"
+replaceSubterm (OMBIND sem hd bvars arg) (0:path) subterm = OMBIND sem (replaceSubterm hd path subterm) bvars arg
+replaceSubterm (OMBIND sem hd bvars arg) (1:i:path) subterm =
+    let newbvar =  omvToBvar (replaceSubterm (bvarToOMV (bvars!!i)) path subterm) in
+    OMBIND sem hd (replaceIth bvars i newbvar) arg
+replaceSubterm (OMBIND sem hd bvars arg) (2:path) subterm = OMBIND sem hd bvars (replaceSubterm arg path subterm)
+replaceSubterm (OMBIND{}) (i:_) _ = error $ "accessing subelement "++show i++" of OMBIND"
+replaceSubterm (OME{}) _ _ = error "OME subterms not supported"
+replaceSubterm (OMSTR{}) _ _ = error "cannot descend into OMSTR"
+replaceSubterm (OMV{}) _ _ = error "cannot descend into OMV"
+replaceSubterm (OMB{}) _ _ = error "cannot descend into OMB"
+replaceSubterm (OMS{}) _ _ = error "cannot descend into OMS"
+replaceSubterm (OMI{}) _ _ = error "cannot descend into OMI"
+replaceSubterm (OMF{}) _ _ = error "cannot descend into OMF"
 
 
 -- TODO alpha-equivalence
@@ -135,6 +127,6 @@ replaceSubterm (CN{}) _ _ = error "cannot descend into CN"
 -- TODO associativity
 -- TODO commutativity of binder args
 -- TODO nested allquantifiers/exquantifiers
-equivalentTerms :: Cmathml -> Cmathml -> Bool
+equivalentTerms :: Openmath -> Openmath -> Bool
 equivalentTerms a b = a==b
 

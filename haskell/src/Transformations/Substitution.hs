@@ -13,7 +13,7 @@ substitution args = do
     assert (isJust path1) "Please select the subterm to be replaced in the first formula"
     assert (isNothing path2) "Do not select any subterms in the second formula"
     (lhs,rhs) <- case arg2 of
-        Apply _ (CSymbol _ "relation1" "eq") [l,r] -> return (l,r)
+        OMA _ (OMS _ "relation1" "eq") [l,r] -> return (l,r)
         _ -> throwError "The second formula must be an equality (e.g., A=B)"
     let subterm = getSubterm arg1 (fromJust path1)
     assert (equivalentTerms subterm lhs) "The left hand side of the second formula must match the selected subterm in the first.\nE.g. \"...a...\" and \"a=b\"."
