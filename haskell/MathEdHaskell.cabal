@@ -11,8 +11,9 @@ executable MathEdHaskell
                    base >= 4,
                    bytestring,
                    texmath, xml-conduit,
-                   xml, split,
-                   mtl, zip-archive
+                   xml, split, parsec,
+                   mtl, zip-archive,
+                   xml-types
   ghc-options:     -Wall
   other-modules:   
 

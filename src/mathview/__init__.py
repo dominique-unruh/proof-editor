@@ -1,4 +1,4 @@
-import logging, os, sys
+import logging, os, sys, traceback
 from subprocess import Popen, PIPE
 from PyQt5.QtWebKitWidgets import QWebPage
 from PyQt5.QtCore import pyqtSlot, QUrl, QObject
@@ -29,8 +29,13 @@ def call_converter(command, *args):
     cmdstr = " ".join("'{}'".format(x) for x in cmd)
     logging.info("Calling {}".format(cmdstr))
 
-    proc = Popen(cmd, cwd=utils.base_path, env={'OCAMLRUNPARAM':'b'},  stdin=PIPE, stdout=PIPE, stderr=PIPE)
-    (pmml, errors) = proc.communicate()
+    try:
+        proc = Popen(cmd, cwd=utils.base_path, env={'OCAMLRUNPARAM':'b'},  stdin=PIPE, stdout=PIPE, stderr=PIPE)
+        (pmml, errors) = proc.communicate()
+    except:
+        e = traceback.format_exc()
+        logging.warning(e)
+        raise ConverterError("Unhandled exception",e)
     if proc.returncode != 0:
         errors = str(errors, encoding='utf-8')
         logging.warning("Converter call failed: {}".format(cmdstr, errors))
