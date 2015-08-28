@@ -1,7 +1,8 @@
 {-# LANGUAGE RankNTypes, ScopedTypeVariables, PatternSynonyms, ViewPatterns #-}
 module Openmath.Utils
  (getSubterm, replaceSubterm, equivalentTerms, isAtom, pattern Attribution, pattern Attribution',
-  bvarToOMV, omvToBvar, pattern Int', pattern OMASym, bindP, removeAttribution, mapAttribution)
+  bvarToOMV, omvToBvar, pattern Int', pattern OMASym, bindP, removeAttribution, mapAttribution,
+  splitDot)
 where
 
 import Openmath.Types
@@ -130,3 +131,5 @@ replaceSubterm (OMF{}) _ _ = error "cannot descend into OMF"
 equivalentTerms :: Openmath -> Openmath -> Bool
 equivalentTerms a b = a==b
 
+splitDot :: String -> (String, String)
+splitDot str = let (pfx,suffix) = break (=='.') str in (pfx,tail suffix)

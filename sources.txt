@@ -1,0 +1,11 @@
+This lists all sources from which we include code.
+This makes it easier to clarify license questions.
+
+MathJax:
+- Not included in source
+- But downloaded automatically during build
+
+Tango Icons:
+- Not included in source
+- But downloaded automatically during build
+
