@@ -53,7 +53,7 @@ parseCell :: Cursor -> [Cell]
 parseCell cursor =
     let texts = (child >=> element "{urn:oasis:names:tc:opendocument:xmlns:text:1.0}p"
                            >=> child >=> content) cursor in
-    let [text] = texts in
+    let text = case texts of [t] -> t; [] -> ""; _ -> error "more than one text element in cell" in
     let repetitions = case attribute "{urn:oasis:names:tc:opendocument:xmlns:table:1.0}number-columns-repeated" cursor of
                         [n] -> read (T.unpack n)
                         [] -> 1

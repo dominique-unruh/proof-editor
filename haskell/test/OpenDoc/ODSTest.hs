@@ -12,5 +12,5 @@ test_loadfile = do
   let sheet1 = head (sheets ods)
   let cells1 = cells sheet1
   let cells1_str = map (map cellText) cells1
-  assertEqual [["a","b","1"],["c","c","c"]]
+  assertEqual [["a","","1"],["c","c","c"]]
               cells1_str

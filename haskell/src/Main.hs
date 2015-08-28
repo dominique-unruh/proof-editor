@@ -38,12 +38,12 @@ trafos = [
     ("compute", compute)
     ]
 
-
-main::IO()
+main:: IO()
 main = do
     args <- getArgs
     case args of
-        ["tex2cmml", tex] -> tex |> texToOpenmath |> toCmathml |> putStrLn
+        ["tex2cmml", tex] -> do config <- texDefaultConfiguration
+                                putStrLn $ toCmathml $ texToOpenmath config tex
         "transform" : name : rest ->
             case lookup name trafos of
                 Nothing -> error $ "Unknown trafo "++name
