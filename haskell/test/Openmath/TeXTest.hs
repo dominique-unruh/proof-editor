@@ -17,17 +17,17 @@ test_tokens =
                   (map tokenContent $ tokenize " 1+\\  \\test\n~\t")
 
 test_plus :: IO ()
-test_plus = 
-    assertEqual (texToOpenmath "1+2") (1+2) 
+test_plus =
+    assertEqual (texToOpenmath "1+2") (1+2)
 
 test_int_parser :: IO ()
-test_int_parser = do
-  case parse int_unsigned "" (tokenize "1") of
+test_int_parser =
+  case parse intUnsigned "" (tokenize "1") of
     Right i -> assertEqual 1 i
     Left err -> fail $ show err
 
 test_atom_parser :: IO ()
-test_atom_parser = do
+test_atom_parser =
   case parse atom "" (tokenize "-1") of
     Right i -> assertEqual (fromInteger $ -1) i
     Left err -> fail $ show err
@@ -43,17 +43,17 @@ prop_int :: Integer -> Bool
 prop_int i = texToOpenmath (show i) == fromInteger i
 
 test_plus_ab :: IO ()
-test_plus_ab = 
-    assertEqual (texToOpenmath "a+b") (OMV [] "a" + OMV [] "b") 
+test_plus_ab =
+    assertEqual (texToOpenmath "a+b") (OMV [] "a" + OMV [] "b")
 
 test_minus :: IO ()
-test_minus = 
+test_minus =
     assertEqual (texToOpenmath "1-2") (1-2)
 
 test_prec1 :: IO ()
-test_prec1 = 
+test_prec1 =
     assertEqual (texToOpenmath "1*2+3") (1*2+3)
 
 test_prec2 :: IO ()
-test_prec2 = 
+test_prec2 =
     assertEqual (texToOpenmath "1+2*3") (1+2*3)

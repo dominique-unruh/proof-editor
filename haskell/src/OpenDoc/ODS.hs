@@ -22,7 +22,7 @@ odsFromFile file = do
   return $ odsFromBytestring bytes
 
 unsafePrint :: String -> a -> a
-unsafePrint str val = 
+unsafePrint str val =
     unsafePerformIO (do
                       putStrLn str
                       return val)
@@ -41,8 +41,8 @@ unsafePrint str val =
 
 -- showXMLElement :: Element -> String
 -- showXMLElement xml = TL.unpack text
---     where text = renderText def $ Document { documentPrologue=emptyPrologue, 
---                                              documentRoot=xml, 
+--     where text = renderText def $ Document { documentPrologue=emptyPrologue,
+--                                              documentRoot=xml,
 --                                              documentEpilogue=[] }
 --           emptyPrologue = Prologue { prologueBefore=[], prologueDoctype=Nothing, prologueAfter=[] }
 
@@ -50,8 +50,8 @@ unsafePrint str val =
 -- cursorShortShow cursor = nodeShortShow $ node cursor
 
 parseCell :: Cursor -> [Cell]
-parseCell cursor = 
-    let texts = (child >=> element "{urn:oasis:names:tc:opendocument:xmlns:text:1.0}p" 
+parseCell cursor =
+    let texts = (child >=> element "{urn:oasis:names:tc:opendocument:xmlns:text:1.0}p"
                            >=> child >=> content) cursor in
     let [text] = texts in
     let repetitions = case attribute "{urn:oasis:names:tc:opendocument:xmlns:table:1.0}number-columns-repeated" cursor of
@@ -67,14 +67,14 @@ parseRow cursor =
     concatMap parseCell cells'
 
 parseSheet :: Cursor -> Sheet
-parseSheet cursor = 
+parseSheet cursor =
     let rows = (child >=> element "{urn:oasis:names:tc:opendocument:xmlns:table:1.0}table-row") cursor in
-    Sheet { cells=(map parseRow rows) }
+    Sheet {cells = map parseRow rows}
 
 
 
 odsFromBytestring :: BL.ByteString -> ODS
-odsFromBytestring bytes = 
+odsFromBytestring bytes =
     let archive = toArchive bytes in
     let Just entry = findEntryByPath "content.xml" archive in
     let content' = fromEntry entry in
@@ -87,4 +87,4 @@ odsFromBytestring bytes =
     let sheets' = map parseSheet sheet_cursor in
     ODS { sheets = sheets' }
 
-                
+

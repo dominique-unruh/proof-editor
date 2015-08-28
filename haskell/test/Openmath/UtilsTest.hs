@@ -9,7 +9,7 @@ import Test.Framework
 {-# ANN module "HLint: ignore Use camelCase" #-}
 
 apply :: String -> String -> [Openmath] -> Openmath
-apply cd name args = OMA [] (OMS [] cd name) args
+apply cd name = OMA [] (OMS [] cd name)
 
 test_getSubterm :: IO ()
 test_getSubterm = do
@@ -26,5 +26,5 @@ test_replaceSubterm = do
     let newterm = 1+subterm2 -- apply "arith1" "plus" [int 1, subterm2] in
     let path = [1,1]
     assertEqual (replaceSubterm term path subterm2) newterm
-    
+
 

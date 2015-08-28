@@ -4,10 +4,12 @@ module OpenDoc.ODSTest where
 import OpenDoc.ODS
 import Test.Framework
 
+{-# ANN module "HLint: ignore Use camelCase" #-}
+
 test_loadfile :: IO ()
 test_loadfile = do
   ods <- odsFromFile "test/OpenDoc/test.ods"
-  let sheet1 = (sheets ods) !! 0
+  let sheet1 = head (sheets ods)
   let cells1 = cells sheet1
   let cells1_str = map (map cellText) cells1
   assertEqual [["a","b","1"],["c","c","c"]]

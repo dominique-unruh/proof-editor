@@ -8,6 +8,7 @@ import Openmath.Utils (splitDot)
 import Text.Parsec hiding (digit)
 import Text.Parsec.Expr
 import Data.Functor.Identity (Identity)
+import Control.Monad (void)
 
 data TexToken = TexToken { tokenContent::String, tokenSource::String, tokenPos::SourcePos }
 
@@ -16,9 +17,9 @@ macroToken = do
   pos <- getPosition
   pre <- many space
   _   <- char '\\'
-  str <- many1 letter <|> fmap (\c -> [c]) anyChar
+  str <- many1 letter <|> fmap (: []) anyChar
   post <- many space
-  return $ TexToken { tokenContent='\\':str, tokenSource=pre++'\\':str++post, tokenPos = pos }
+  return TexToken { tokenContent='\\':str, tokenSource=pre++'\\':str++post, tokenPos = pos }
 
 letterToken :: Parsec String () TexToken
 letterToken = do
@@ -26,7 +27,7 @@ letterToken = do
   pre <- many space
   c <- anyChar
   post <- many space
-  return $ TexToken { tokenContent=[c], tokenSource=pre++c:post, tokenPos = pos }
+  return TexToken { tokenContent=[c], tokenSource=pre++c:post, tokenPos = pos }
 
 texToken :: Parsec String () TexToken
 texToken = macroToken <|> letterToken
@@ -39,7 +40,7 @@ tokenize tex = case parse (spaces >> many texToken) "" tex of
 
 
 texTok :: String -> Parsec [TexToken] () TexToken
-texTok content = token tokenSource tokenPos 
+texTok content = token tokenSource tokenPos
                  (\t -> if tokenContent t == content then Just t else Nothing)
 texToks :: String -> Parsec [TexToken] () [TexToken]
 texToks content =
@@ -50,10 +51,10 @@ type Op = Operator [TexToken] () Identity Openmath
 type TexParser = Parsec [TexToken] () Openmath
 
 reservedOp :: String -> Parsec [TexToken] () ()
-reservedOp x = try (texToks x) >> return ()
+reservedOp x = Control.Monad.void (try (texToks x))
 
 binary :: String -> (Openmath->Openmath->Openmath) -> Assoc -> Op
-binary  name fun assoc = Infix (do{ reservedOp name; return fun }) assoc
+binary  name fun = Infix (do{ reservedOp name; return fun })
 prefix :: String -> (Openmath->Openmath) -> Op
 prefix  name fun       = Prefix (do{ reservedOp name; return fun })
 postfix :: String -> (Openmath->Openmath) -> Op
@@ -71,13 +72,13 @@ apply2 name =
 
 
 negateTerm :: Openmath -> Openmath
-negateTerm (OMI [] i) = (OMI [] (-i))
+negateTerm (OMI [] i) = OMI [] (-i)
 negateTerm m = apply1 "arith1.negate" m
 
 grammar :: [[Op]]
 grammar = [
  [prefix "-" negateTerm],
- [binary "*" (apply2 "arith1.times") AssocLeft, 
+ [binary "*" (apply2 "arith1.times") AssocLeft,
   binary "/" (apply2 "arith1.divide") AssocLeft],
  [binary "+" (apply2 "arith1.plus") AssocLeft,
   binary "-" (apply2 "arith1.minus") AssocLeft]]
@@ -93,46 +94,46 @@ digit = choice [ texTok "0" >> return 0,
                  texTok "7" >> return 7,
                  texTok "8" >> return 8,
                  texTok "9" >> return 9 ]
-        
 
-int_unsigned :: Parsec [TexToken] () Integer
-int_unsigned = do
+
+intUnsigned :: Parsec [TexToken] () Integer
+intUnsigned = do
   digits <- many1 digit
   return $ foldl (\i d -> i*10+d) 0 digits
-  
-int_negative :: Parsec [TexToken] () Integer
-int_negative = do
+
+intNegative :: Parsec [TexToken] () Integer
+intNegative = do
   _ <- texTok "-"
-  i <- int_unsigned
+  i <- intUnsigned
   return $ -i
 
 int :: TexParser
 int = do
-  i <- try int_negative <|> int_unsigned
+  i <- try intNegative <|> intUnsigned
   return $ OMI [] i
 
 -- TODO: all alphabet
 var :: TexParser
-var = 
+var =
     let v x = texToks x >> return (OMV [] x) in
     choice $ map v ["a","b","c"]
-    
+
 
 atom :: TexParser
-atom = int <|> var    
+atom = int <|> var
 
 exprParser :: Parsec [TexToken] () Openmath
 exprParser = buildExpressionParser grammar atom
 
 
 texToOpenmath :: String -> Openmath
-texToOpenmath tex = 
+texToOpenmath tex =
     let toks = tokenize tex in
     case parse exprParser "" toks of
-      Left err -> error (show err) 
+      Left err -> error (show err)
       Right math -> math
 
 -- texToOpenmath tex = case readTeX tex of
 --     Right exps -> texmathExpsToCmml exps
---     Left err -> error ("parsing tex: "++err) 
-    
+--     Left err -> error ("parsing tex: "++err)
+

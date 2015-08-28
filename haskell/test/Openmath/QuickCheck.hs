@@ -14,7 +14,7 @@ shrinkingList gen = sized (\size -> do
     let len = round (sqrt (fromIntegral size) :: Double)
     let size1 = size `div` len
     replicateM len (resize size1 gen))
-    
+
 shrinkingListN :: Gen a -> Int -> Gen [a]
 shrinkingListN gen len = sized (\size -> do
     let size1 = size `div` len
@@ -45,7 +45,7 @@ shrinkingTuple4 gen1 gen2 gen3 gen4 = sized (\size -> do
     return (x1,x2,x3,x4))
 
 attributionGen :: Gen Attribution
-attributionGen = 
+attributionGen =
     oneof [shrinkingList annot, return []]
             where annot = do
                     (cd,name) <- arbitrary
@@ -129,4 +129,4 @@ instance Arbitrary Openmath where
 
 instance Arbitrary Attribute where
     arbitrary = attribGen
-    
+
