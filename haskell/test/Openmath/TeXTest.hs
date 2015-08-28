@@ -7,6 +7,7 @@ import Openmath.Types
 import Openmath.TeX
 import Test.Framework
 import Text.Parsec
+--import Text.Parsec.Expr
 
 {-# ANN module "HLint: ignore Use camelCase" #-}
 
@@ -34,13 +35,13 @@ test_atom_parser =
 
 test_int1 :: IO ()
 test_int1 = do
-  let i :: Integer = -1
-  let res = texToOpenmath (show i)
-  let expect = fromInteger i
+  let i = 1 :: Integer
+  let res = texToOpenmath (show (-i))
+  let expect = -(fromInteger i)
   assertEqual expect res
 
 prop_int :: Integer -> Bool
-prop_int i = texToOpenmath (show i) == fromInteger i
+prop_int i = i<0 || texToOpenmath (show i) == fromInteger i
 
 test_plus_ab :: IO ()
 test_plus_ab =
@@ -57,3 +58,12 @@ test_prec1 =
 test_prec2 :: IO ()
 test_prec2 =
     assertEqual (texToOpenmath "1+2*3") (1+2*3)
+
+test_parens :: IO ()
+test_parens =
+    assertEqual (texToOpenmath "(1+2)*3") ((1+2)*3)
+
+--test_print_table :: IO ()
+--test_print_table = print $ (map (map showOp)) $ grammarTableFromConfig testConfiguration
+--    where showOp (Infix _ AssocLeft) = "InfixL"
+--          showOp (Prefix _) = "Prefix"

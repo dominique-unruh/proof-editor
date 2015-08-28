@@ -7,7 +7,6 @@ import qualified Data.ByteString as B
 import qualified Data.XML.Types
 --import qualified Data.Text
 
--- TODO: transition to OpenMath 2.0
 
 
 type Foreign = (String,Data.XML.Types.Node) -- encoding, content
@@ -63,7 +62,7 @@ instance Num Openmath where
     a * b = apply "arith1" "times" [a,b]
     a + b = apply "arith1" "plus" [a,b]
     a - b = apply "arith1" "minus" [a,b]
-    negate _ = error "negate not implemented" -- TODO
+    negate a = apply "arith1" "negate" [a]
 
 instance Fractional Openmath where
     a / b = apply "arith1" "divide" [a,b]
