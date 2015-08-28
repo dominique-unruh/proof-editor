@@ -13,7 +13,7 @@ executable MathEdHaskell
                    texmath, xml-conduit,
                    xml, split, parsec,
                    mtl, zip-archive,
-                   xml-types
+                   xml-types, text
   ghc-options:     -Wall
   other-modules:   
 
