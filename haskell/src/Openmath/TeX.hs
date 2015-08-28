@@ -94,9 +94,9 @@ apply2 name =
     \a b -> OMA [] (OMS [] cd name') [a,b]
 
 
-negateTerm :: Openmath -> Openmath
-negateTerm (OMI [] i) = OMI [] (-i)
-negateTerm m = apply1 "arith1.negate" m
+-- negateTerm :: Openmath -> Openmath
+-- negateTerm (OMI [] i) = OMI [] (-i)
+-- negateTerm m = apply1 "arith1.negate" m
 
 
 grammarTableFromConfig :: TexConfiguration -> [[Op]]
@@ -113,7 +113,8 @@ grammarTableFromConfig (TexConfiguration {texConfigOperators=ops}) =
             "infixr" -> Infix (do reservedOp templ'; return $ apply2 sym) AssocRight
             "infix" -> Infix (do reservedOp templ'; return $ apply2 sym) AssocNone
             "prefix" -> Prefix (do reservedOp templ'; return $ apply1 sym)
-            _ -> error $ "unknown prefix "++kind++" for template "++templ
+            "postfix" -> Postfix (do reservedOp templ'; return $ apply1 sym)
+            _ -> error $ "unknown prefix '"++kind++":' in template "++templ
 
 
 --grammar :: [[Op]]

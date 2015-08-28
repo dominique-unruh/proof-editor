@@ -62,7 +62,7 @@ instance Num Openmath where
     a * b = apply "arith1" "times" [a,b]
     a + b = apply "arith1" "plus" [a,b]
     a - b = apply "arith1" "minus" [a,b]
-    negate a = apply "arith1" "negate" [a]
+    negate a = apply "arith1" "unary_minus" [a]
 
 instance Fractional Openmath where
     a / b = apply "arith1" "divide" [a,b]
