@@ -30,7 +30,7 @@ attr :: String -> String -> Attr
 attr name val = Attr {attrKey=blank_name {qName=name}, attrVal=val}
 
 toElement :: Openmath -> Content
-toElement (math @ (Attribution sem)) = 
+toElement (math @ (Attribution sem)) =
     let math' = removeAttribution math in
     let attribs = map attrToXML sem
             where attrToXML (cd,name,AttributeOM ann) = elm "annotation-xml" [attr "cd" cd, attr "name" name, attr "encoding" "MathML-Content"] [toElement ann]
@@ -44,11 +44,11 @@ toElement (OMBIND _ hd vars arg) =
         (toElement hd :
          map (\v -> elm "bvar" [] [toElement (bvarToOMV v)]) vars ++
          [toElement arg])
-toElement (OMI _ i) = 
+toElement (OMI _ i) =
     elm "cn" [attr "type" "integer"] [text (show i)]
-toElement (OMF _ r) = 
+toElement (OMF _ r) =
     elm "cn" [attr "type" "double"] [text (show r)]
--- toElement (CN _ (Real r)) = 
+-- toElement (CN _ (Real r)) =
 --     -- TODO remove or make infinite precision!
 --     let str = show ((fromRational r)::Double) in
 --     elm "cn" [attr "type" "real"] [text str]
@@ -77,7 +77,7 @@ readRational :: String -> Rational
 readRational = fst . head . readSigned readFloat . dropPlus
 
 pattern Txt t <- (textP -> Just t)
-          
+
 pattern TypeAttr t <- (lookupAttrBy (\a -> qName a == "type") -> Just t)
 pattern NoTypeAttr <- (lookupAttrBy (\a -> qName a == "type") -> Nothing)
 pattern EncodingAttr t <- (lookupAttrBy (\a -> qName a == "encoding") -> Just t)
@@ -85,7 +85,7 @@ pattern NoEncodingAttr <- (lookupAttrBy (\a -> qName a == "encoding") -> Nothing
 pattern CDAttr t <- (attrP "cd" -> Just t)
 
 rationalToOpenmath :: Rational -> Openmath
-rationalToOpenmath r = 
+rationalToOpenmath r =
     OMA [] (OMS [] "nums1" "rational") [OMI [] (numerator r), OMI [] (denominator r)]
 
 
@@ -113,7 +113,7 @@ fromElement (Elm "cs" _ [Txt str]) = OMSTR [] str
 fromElement (Elm "cs" _ [_]) = error "cs with non-text content"
 fromElement (Elm "cs" _ []) = OMSTR [] ""
 fromElement (Elm "cs" _ (_:_)) = error "cs with more than one content element"
-fromElement (Elm "semantics" _ (math:annots)) = 
+fromElement (Elm "semantics" _ (math:annots)) =
    let math' = fromElement math in
    let annots' = map fromElementAttr annots in
    mapAttribution (\sem -> sem++annots') math'
@@ -145,7 +145,7 @@ bvarFromElement :: Content -> Bvar
 bvarFromElement (Elm "bvar" _ [v]) =
     case fromElement v of
         OMV sem name -> (sem,name)
-        _ -> error "below bvar, not ci or semantics-ci" 
+        _ -> error "below bvar, not ci or semantics-ci"
 bvarFromElement (Elm "bvar" _ _) = error "bvar must have exactly one child"
 bvarFromElement (Elm tag _ _) = error $ "unexpected tag "++tag++" instead of bvar"
 bvarFromElement (Text _) = error "expecting a bvar tag, got text"
@@ -153,8 +153,10 @@ bvarFromElement (CRef _) = error "expecting a bvar tag, got CRef"
 bvarFromElement (Elem _) = error "unreachable code"
 
 
-cmathmlToXML :: Openmath -> String
-cmathmlToXML = showContent . toElement
+{- | Converts an Openmath value into Content MathML XML.
+  (see http://www.w3.org/TR/MathML3/chapter4.html) -}
+toCmathml:: Openmath -> String
+toCmathml = showContent . toElement
 
 stripWhiteText :: [Content] -> [Content]
 stripWhiteText = filter isNonWhite
@@ -162,10 +164,10 @@ stripWhiteText = filter isNonWhite
           isNonWhite (Elem _) = True
           isNonWhite (CRef _) = True
 
-cmathmlFromXML :: String -> Openmath
-cmathmlFromXML xml = 
+fromCmathml:: String -> Openmath
+fromCmathml xml =
     case stripWhiteText $ parseXML xml of
         [root] -> fromElement root
         [] -> error "empty XML"
         _ -> error "more than one root element in XML"
-        
+

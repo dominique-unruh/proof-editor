@@ -29,5 +29,5 @@ texmathExpsToCmml math = error ("Could not parse math " ++ show math)
 texToOpenmath :: String -> Openmath
 texToOpenmath tex = case readTeX tex of
     Right exps -> texmathExpsToCmml exps
-    Left err -> error ("parsing tex: "++err) 
-    
+    Left err -> error ("parsing tex: "++err)
+

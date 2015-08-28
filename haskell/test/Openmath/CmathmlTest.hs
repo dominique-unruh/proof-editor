@@ -17,15 +17,15 @@ test_trailing_white :: IO ()
 test_trailing_white = do
     let xml = "<apply><csymbol cd=\"relation1\">eq</csymbol><ci>u</ci><ci>v</ci></apply>\n"
     putStr $ "["++xml++"]"
-    let cmathml = cmathmlFromXML xml
+    let cmathml = fromCmathml xml
     let expect = apply "relation1" "eq" [omv "u", omv "v"]
     assertEqual expect cmathml
 
 
 prop_xml_roundtrip :: Openmath -> Bool
-prop_xml_roundtrip cmathml = (cmathmlFromXML (cmathmlToXML cmathml) == cmathml)
+prop_xml_roundtrip cmathml = fromCmathml (toCmathml cmathml) == cmathml
 
 
 prop_double_roundtrip :: Double -> Bool
-prop_double_roundtrip r = (read (show r) == r)
+prop_double_roundtrip r = read (show r) == r
 

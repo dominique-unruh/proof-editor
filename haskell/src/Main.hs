@@ -26,7 +26,7 @@ parsePath path = Just (map read (splitOn "." path))
 
 cmmlPathPairs :: [String] -> [(Openmath,Maybe Path)]
 cmmlPathPairs [] = []
-cmmlPathPairs (cmml:path:rest) = (cmathmlFromXML cmml, parsePath path) : cmmlPathPairs rest
+cmmlPathPairs (cmml:path:rest) = (fromCmathml cmml, parsePath path) : cmmlPathPairs rest
 cmmlPathPairs _ = error "Invalid CMML/Path interleaving (need even number of transformation arguments)"
 
 trafos :: [(String, Transformation)]
@@ -43,13 +43,13 @@ main::IO()
 main = do
     args <- getArgs
     case args of
-        ["tex2cmml", tex] -> tex |> texToOpenmath |> cmathmlToXML |> putStrLn
+        ["tex2cmml", tex] -> tex |> texToOpenmath |> toCmathml |> putStrLn
         "transform" : name : rest ->
             case lookup name trafos of
                 Nothing -> error $ "Unknown trafo "++name
-                Just trafo -> 
+                Just trafo ->
                     case runExcept $ trafo (cmmlPathPairs rest) of
                         Left err -> do hPutStr stderr err; exitFailure
-                        Right out -> putStr (cmathmlToXML out)                       
+                        Right out -> putStr (toCmathml out)
         _ -> error "Invalid arguments"
 
