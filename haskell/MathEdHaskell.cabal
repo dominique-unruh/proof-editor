@@ -1,34 +1,81 @@
-name:           MathEdHaskell
-version:        0.1
-cabal-version:  >=1.2
-build-type:     Simple
-author:         Dominique Unruh
+name: MathEdHaskell
+version: 0.1
+cabal-version: 1.2
+build-type: Simple
+license: OtherLicense
+description:
+     
+author: Dominique Unruh
 
 executable MathEdHaskell
-  hs-source-dirs:  src
-  main-is:         Main.hs
-  build-depends:   
-                   base >= 4,
-                   bytestring,
-                   texmath, xml-conduit,
-                   xml, split, parsec,
-                   mtl, zip-archive,
-                   xml-types, text
-  ghc-options:     -Wall
-  other-modules:   
+    main-is: Main.hs
+    build-depends:
+        HTF >0.9,
+        QuickCheck -any,
+        base >=4,
+        bytestring -any,
+        mtl -any,
+        parsec -any,
+        split -any,
+        texmath -any,
+        text -any,
+        xml -any,
+        xml-conduit -any,
+        xml-types -any,
+        zip-archive -any
+    hs-source-dirs: src
+    other-modules:
+        Main
+        Main
+        Openmath.Utils
+        Openmath.Cmathml
+        Openmath.TeX
+        Openmath.Types
+        OpenDoc.ODS
+        Transformations.Associativity
+        Transformations.Common
+        Transformations.Commutativity
+        Transformations.ModusPonens
+        Transformations.Substitution
+        Transformations.Compute
+    ghc-options: -Wall
 
 test-suite Test
-  type:            exitcode-stdio-1.0
-  main-is:         Test.hs
-  ghc-options:     -Wall -rtsopts
-  build-depends:   
-                   base >= 4,
-                   HTF > 0.9,
-                   QuickCheck,
-                   xml-types,
-                   text
-  other-modules:   
-  hs-source-dirs:  
-                  test,
-                  src
-
+    type: exitcode-stdio-1.0
+    main-is: Test.hs
+    build-depends:
+        HTF >0.9,
+        QuickCheck -any,
+        base >=4,
+        bytestring -any,
+        mtl -any,
+        parsec -any,
+        split -any,
+        texmath -any,
+        text -any,
+        xml -any,
+        xml-conduit -any,
+        xml-types -any,
+        zip-archive -any
+    hs-source-dirs: src test
+    other-modules:
+        Openmath.TypesTest
+        Openmath.CmathmlTest
+        Openmath.QuickCheck
+        Openmath.UtilsTest
+        Openmath.TeXTest
+        OpenDoc.ODSTest
+        Transformations.CommutativityTest
+        Transformations.ComputeTest
+        Openmath.Utils
+        Openmath.Cmathml
+        Openmath.TeX
+        Openmath.Types
+        OpenDoc.ODS
+        Transformations.Associativity
+        Transformations.Common
+        Transformations.Commutativity
+        Transformations.ModusPonens
+        Transformations.Substitution
+        Transformations.Compute
+    ghc-options: -Wall -rtsopts

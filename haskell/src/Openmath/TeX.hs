@@ -1,10 +1,9 @@
-{-# LANGUAGE PartialTypeSignatures #-}
-module Openmath.TeX where
+module Openmath.TeX (texToOpenmath', texToOpenmath, completeConfiguration,
+    TexOperator(..), TexConfiguration(..), TexConfigurationFull,
+    texDefaultConfiguration) where
 
 import Openmath.Types
 import Openmath.Utils (splitDot)
--- import Text.TeXMath.Types
--- import Text.TeXMath.Readers.TeX (readTeX)
 import Text.Parsec hiding (digit)
 import Text.Parsec.Expr
 import Data.Functor.Identity (Identity)
@@ -76,12 +75,12 @@ type TexParser = Parsec [TexToken] () Openmath
 reservedOp :: String -> Parsec [TexToken] () ()
 reservedOp x = Control.Monad.void (try (texToks x))
 
-binary :: String -> (Openmath->Openmath->Openmath) -> Assoc -> Op
-binary  name fun = Infix (do{ reservedOp name; return fun })
-prefix :: String -> (Openmath->Openmath) -> Op
-prefix  name fun       = Prefix (do{ reservedOp name; return fun })
-postfix :: String -> (Openmath->Openmath) -> Op
-postfix name fun       = Postfix (do{ reservedOp name; return fun })
+--binary :: String -> (Openmath->Openmath->Openmath) -> Assoc -> Op
+--binary  name fun = Infix (do{ reservedOp name; return fun })
+--prefix :: String -> (Openmath->Openmath) -> Op
+--prefix  name fun       = Prefix (do{ reservedOp name; return fun })
+--postfix :: String -> (Openmath->Openmath) -> Op
+--postfix name fun       = Postfix (do{ reservedOp name; return fun })
 
 apply1 :: String -> Openmath -> Openmath
 apply1 name =

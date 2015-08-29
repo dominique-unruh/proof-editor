@@ -1,5 +1,5 @@
 {-# LANGUAGE ScopedTypeVariables #-}
-module Transformations.Associativity where
+module Transformations.Associativity (associativity) where
 
 import Control.Monad.Except
 import Openmath.Types
@@ -15,7 +15,7 @@ associativeOps = map splitDot [
 
 checkOp :: Openmath -> Openmath -> Error ()
 checkOp op1 op2 = do
-    assert (op1 == op2) "You cannot apply associativity to an expression with two different operations.\nE.g. (a+b)+c is OK, and a*(b*c) is OK, but a+(b*c) is not OK." 
+    assert (op1 == op2) "You cannot apply associativity to an expression with two different operations.\nE.g. (a+b)+c is OK, and a*(b*c) is OK, but a+(b*c) is not OK."
     cdName <- case op1 of
         OMS _ cd name -> return (cd,name)
         _ -> throwError "The operation you selected should be a builtin symbol (e.g., (a+b)+c, not f(a,f(b,c)) for your own f)"
@@ -29,7 +29,7 @@ associativity args = do
     let [(arg,path')] = args
     assert (isJust path') "You need to select the subterm to be transformed (e.g., a term like (a+b)+c)"
     let path = fromJust path'
-    let subterm = getSubterm arg path 
+    let subterm = getSubterm arg path
     newterm <- case subterm of
         OMA sem1 op2 [OMA sem2 op1 [a,b], c] -> do
             checkOp op1 op2

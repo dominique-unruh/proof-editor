@@ -1,5 +1,5 @@
 {-# LANGUAGE PatternSynonyms, ViewPatterns #-}
-module Openmath.Cmathml where
+module Openmath.Cmathml (fromCmathml, toCmathml) where
 
 import Text.XML.Light.Types
 import Openmath.Types
@@ -8,13 +8,13 @@ import Text.XML.Light.Proc
 import Text.XML.Light.Input (parseXML)
 import Data.Char (isSpace)
 import Openmath.Utils (bvarToOMV, pattern Attribution, removeAttribution, mapAttribution)
-import Numeric (readSigned, readFloat)
+--import Numeric (readSigned, readFloat)
 import Data.Ratio (denominator, numerator)
 
-elCSymbol :: QName
-elCSymbol = blank_name {qName="csymbol"}
-atCD :: QName
-atCD = blank_name {qName="cd"}
+--elCSymbol :: QName
+--elCSymbol = blank_name {qName="csymbol"}
+--atCD :: QName
+--atCD = blank_name {qName="cd"}
 
 text :: String -> Content
 text t = Text CData{cdVerbatim = CDataText, cdData = t, cdLine = Nothing}
@@ -73,15 +73,15 @@ dropPlus ('+':str) = str
 dropPlus str = str
 
 -- | Read a rational given as a decimal fraction
-readRational :: String -> Rational
-readRational = fst . head . readSigned readFloat . dropPlus
+--readRational :: String -> Rational
+--readRational = fst . head . readSigned readFloat . dropPlus
 
 pattern Txt t <- (textP -> Just t)
 
 pattern TypeAttr t <- (lookupAttrBy (\a -> qName a == "type") -> Just t)
 pattern NoTypeAttr <- (lookupAttrBy (\a -> qName a == "type") -> Nothing)
 pattern EncodingAttr t <- (lookupAttrBy (\a -> qName a == "encoding") -> Just t)
-pattern NoEncodingAttr <- (lookupAttrBy (\a -> qName a == "encoding") -> Nothing)
+--pattern NoEncodingAttr <- (lookupAttrBy (\a -> qName a == "encoding") -> Nothing)
 pattern CDAttr t <- (attrP "cd" -> Just t)
 
 rationalToOpenmath :: Rational -> Openmath

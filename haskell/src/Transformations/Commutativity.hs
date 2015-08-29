@@ -1,5 +1,5 @@
 {-# LANGUAGE ScopedTypeVariables #-}
-module Transformations.Commutativity where
+module Transformations.Commutativity (commutativity) where
 
 import Control.Monad.Except
 import Openmath.Types
@@ -19,7 +19,7 @@ commutativity args = do
     let [(arg,path')] = args
     assert (isJust path') "You need to select the subterm to be transformed (e.g., a term like a+b)"
     let path = fromJust path'
-    let subterm = getSubterm arg path 
+    let subterm = getSubterm arg path
     (sem,lhs,op,rhs) <- case subterm of
         OMA sem op [a,b] -> return (sem,a,op,b)
         _ -> throwError "You should select a binary operation (e.g., a+b)"

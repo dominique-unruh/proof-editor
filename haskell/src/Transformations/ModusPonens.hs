@@ -1,5 +1,5 @@
 {-# LANGUAGE ScopedTypeVariables #-}
-module Transformations.ModusPonens where
+module Transformations.ModusPonens (modusPonens) where
 
 import Transformations.Common
 import Openmath.Types

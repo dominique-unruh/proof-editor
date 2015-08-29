@@ -1,4 +1,4 @@
-module Transformations.Substitution where
+module Transformations.Substitution (substitution) where
 
 import Transformations.Common
 import Openmath.Types
