@@ -6,7 +6,7 @@ module Openmath.TeXTest where
 import Openmath.Types
 import Openmath.TeX
 import Test.Framework
-import Text.Parsec
+--import Text.Parsec
 import Test.QuickCheck.Monadic
 
 --import Text.Parsec.Expr
@@ -15,21 +15,21 @@ import Test.QuickCheck.Monadic
 
 
 
-test_tokens :: IO ()
-test_tokens =
-  assertEqual ["1","+","\\ ","\\test","~"]
-                  (map tokenContent $ tokenize " 1+\\  \\test\n~\t")
+--test_tokens :: IO ()
+--test_tokens =
+--  assertEqual ["1","+","\\ ","\\test","~"]
+--                  (map tokenContent $ tokenize " 1+\\  \\test\n~\t")
 
 test_plus :: IO ()
 test_plus = do
     config <- texDefaultConfiguration
     assertEqual (texToOpenmath config "1+2") (1+2)
 
-test_int_parser :: IO ()
-test_int_parser =
-  case parse intUnsigned "" (tokenize "1") of
-    Right i -> assertEqual 1 i
-    Left err -> fail $ show err
+--test_int_parser :: IO ()
+--test_int_parser =
+--  case parse intUnsigned "" (tokenize "1") of
+--    Right i -> assertEqual 1 i
+--    Left err -> fail $ show err
 
 --test_atom_parser :: IO ()
 --test_atom_parser =

@@ -1,0 +1,12 @@
+<html>
+<body>
+<p>This is a <i>short</i> description</p>
+And here follows the long description. With fancy stuff...
+<ul>
+  <li>Bla</li>
+  <li>Test</li>
+  <li>Etc</li>
+  <li>Pp</li>
+</ul>
+</body>
+</html>

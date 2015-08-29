@@ -5,13 +5,14 @@ where
 
 import qualified Data.ByteString as B
 import qualified Data.XML.Types
+import Data.Typeable (Typeable)
 --import qualified Data.Text
 
 
 
 type Foreign = (String,Data.XML.Types.Node) -- encoding, content
 data Error = ErrorOM Openmath | ErrorForeign Foreign
-  deriving (Eq, Show)
+  deriving (Eq, Show, Typeable)
 --data Number = Int Integer | IEEE Double | Real Rational
 --    deriving (Eq, Show)
 {- | Constraints: cd-name must be non-empty everywhere,
@@ -28,12 +29,12 @@ data Openmath =
   | OMBIND Attribution Openmath [Bvar] Openmath
   | OME Attribution String String [Error] -- cd name contents
   | OMB Attribution B.ByteString
-    deriving (Eq, Show)
+    deriving (Eq, Show, Typeable)
 type Attribution = [(String,String,Attribute)] -- cd name value
 data Attribute =
     AttributeOM Openmath -- for encoding "MathML-Content"
     | AttributeForeign Foreign
-    deriving (Eq, Show)
+    deriving (Eq, Show, Typeable)
 type Bvar = (Attribution,String)
 
 {- | Describes a path within a formula (i.e., a pointer to a subterm).

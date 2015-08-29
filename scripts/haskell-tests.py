@@ -45,7 +45,7 @@ def splitpath(p):
     return split
 
 haskell_ext = set(['.hs'])
-ignore_ext = set(['.ods'])
+ignore_ext = set(['.ods','.xml'])
 
 
 for (dirpath, _, filenames) in os.walk(haskelltestdir,onerror=raiseExn):

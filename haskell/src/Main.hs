@@ -1,5 +1,6 @@
 module Main where
 
+import UserError()
 import System.Environment (getArgs)
 import Openmath.TeX
 import Openmath.Cmathml
@@ -14,6 +15,7 @@ import Transformations.ModusPonens (modusPonens)
 import Control.Monad.Except (runExcept)
 import Transformations.Substitution (substitution)
 import Transformations.Compute (compute)
+import Text.JSON
 
 (|>) :: t1 -> (t1 -> t) -> t
 x |> f = f x
@@ -52,4 +54,3 @@ main = do
                         Left err -> do hPutStr stderr err; exitFailure
                         Right out -> putStr (toCmathml out)
         _ -> error "Invalid arguments"
-
