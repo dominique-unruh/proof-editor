@@ -16,6 +16,7 @@ import Data.List (intercalate)
 
 -- | Contains an object of arbitrary type a, together with its string representation
 data Dyn = Dyn Dynamic String
+    deriving (Typeable)
 instance Show Dyn where
     show (Dyn _ str) = str
 
@@ -31,6 +32,7 @@ data UserError = UserError {
     longDescription :: [X.Node],
     errorData :: Map.Map String Dyn
 }
+    deriving (Typeable)
 
 type UserErrorRenderer = ()
 
@@ -81,3 +83,11 @@ instance Show UserError where
     show err = intercalate "\n" (shortDescr:datas)
         where shortDescr :: String = xmlToString $ shortDescription err
               datas :: [String] = map (\(k,v) -> "    "++k++" = "++show v) $ Map.assocs $ errorData err
+
+
+-- TODO: remove this
+miniUserError :: String -> UserError
+miniUserError err = UserError { shortDescription=[X.NodeContent $ T.pack err],
+                                longDescription=[X.NodeContent $ T.pack long],
+                                errorData=Map.empty }
+    where long = "No long description available yet.\nSo, instead, some dummy text.\n"++err

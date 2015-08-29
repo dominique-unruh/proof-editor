@@ -276,7 +276,9 @@ class MainWin(QMainWindow, Ui_MainWindow):
         #args = [a for aa in zip(mml, path) for a in aa] # Interleave lists
         try: newformula = trafo.transform(formulas, paths)
         except ConverterError as e: # TODO: should be "UserError"
-            QMessageBox.warning(self, 'Transformation "{}" failed'.format(trafo.name), e.errors)
+            self.txtShortError.setHtml(e.error)
+            self.txtLongError.setHtml(e.longError)
+            QMessageBox.warning(self, 'Transformation "{}" failed'.format(trafo.name), e.error)
             return
         self.addFormula(newformula, sources=nodes)
         

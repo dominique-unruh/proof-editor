@@ -9,15 +9,17 @@ from PyQt5.QtCore import pyqtSlot, QUrl, QObject
 
 # Own modules
 import utils
+import json
 
 cmathml = utils.file_path("cmathml" if sys.platform!="win32" else "cmathml.exe")
 mathedhaskell = utils.file_path("MathEdHaskell" if sys.platform!="win32" else "MathEdHaskell.exe")
 base_url = QUrl.fromLocalFile(utils.file_path("resources/math.html"))
 
 class ConverterError(RuntimeError):
-    def __init__(self, cmd, errors):
-        super().__init__(cmd, errors)
-        self.errors = errors
+    def __init__(self, cmd:str, error:str, longError:str=None) -> None:
+        super().__init__(cmd, error)
+        self.error = error
+        self.longError = longError
         self.cmd = cmd
 def call_converter(command, *args):
     if command in ('tex2cmml','transform'):
@@ -31,18 +33,45 @@ def call_converter(command, *args):
 
     try:
         proc = Popen(cmd, cwd=utils.base_path, env={'OCAMLRUNPARAM':'b'},  stdin=PIPE, stdout=PIPE, stderr=PIPE)
-        (pmml, errors) = proc.communicate()
+        (result, errors) = proc.communicate()
+        if proc.returncode != 0:
+            errors = str(errors, encoding='utf-8')
+            logging.warning("Converter call failed: {}".format(cmdstr, errors))
+            raise ConverterError(cmd, errors)
+        result = str(result, encoding="utf-8")
+        return result
+    except ConverterError: raise
     except:
         e = traceback.format_exc()
         logging.warning(e)
         raise ConverterError("Unhandled exception",e)
-    if proc.returncode != 0:
-        errors = str(errors, encoding='utf-8')
-        logging.warning("Converter call failed: {}".format(cmdstr, errors))
-        raise ConverterError(cmd, errors)
         
-    pmml = str(pmml, encoding="utf-8")
-    return pmml
+
+def call_converter_json(command,*args):
+    cmd = [mathedhaskell, command]+list(args)
+    cmdstr = " ".join("'{}'".format(x) for x in cmd)
+    logging.info("Calling {}".format(cmdstr))
+
+    try:
+        proc = Popen(cmd, cwd=utils.base_path, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+        (result, errors) = proc.communicate()
+        if proc.returncode != 0:
+            errors = str(errors, encoding='utf-8')
+            logging.warning("Converter call failed: {}".format(cmdstr, errors))
+            raise ConverterError(cmd, errors)
+        result0 = str(result, encoding="utf-8")
+        result = json.loads(result0)
+        assert(isinstance(result,dict)), result0
+        if result['success']=='success':
+            return result['result']
+        else:
+            raise ConverterError(cmd,result['error'],result.get('longError'))
+    except ConverterError: raise
+    except:
+        e = traceback.format_exc()
+        logging.warning(e)
+        raise ConverterError("Unhandled exception",e)
+
 
 class QWebPageLogging(QWebPage):
     def javaScriptConsoleMessage(self, message, i, sourceID):

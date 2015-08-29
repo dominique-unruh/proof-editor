@@ -83,3 +83,8 @@ mypy : .mypy-stubs
 mypy-nodep :
 	python3 -c "import sys; [print('import '+f[:-3].replace('/','.')) for f in sys.argv[1:]]" $(MYPY_CHECK) >mypy-tmp.py
 	mypy --verbose mypy-tmp.py 2>&1 | sed 's/, line /:/'
+
+run_qtdesigner :
+	LD_PRELOAD="/usr/lib/python3.4/config-3.4m-x86_64-linux-gnu/libpython3.4.so" \
+	PYQTDESIGNERPATH="$(CURDIR)/src/mathview:$(CURDIR)/src/graph/" \
+	designer --qt=5 src/testui/mainwin.ui

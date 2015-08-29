@@ -3,7 +3,7 @@ module Transformations.Compute (compute) where
 
 import Transformations.Common
 import Openmath.Utils (pattern Int', bindP, getSubterm, replaceSubterm, equivalentTerms, pattern OMASym)
-
+import UserError (miniUserError)
 import Openmath.Types
 import Data.Maybe (fromMaybe)
 
@@ -99,11 +99,11 @@ doCompute term =
 
 compute :: Transformation
 compute args = do
-    assert (length args == 1) "The transformation needs exactly one argument"
+    assert (length args == 1) $ miniUserError "The transformation needs exactly one argument"
     let [(arg,path')] = args
     let path = fromMaybe [] path'
     let subterm = getSubterm arg path
     let newterm = doCompute subterm
-    assert (newterm /= subterm) "Could not find anything to compute"
+    assert (newterm /= subterm) $ miniUserError "Could not find anything to compute"
     return $ replaceSubterm arg path newterm
 

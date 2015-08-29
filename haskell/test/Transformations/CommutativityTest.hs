@@ -3,6 +3,7 @@ module Transformations.CommutativityTest where
 import Transformations.Commutativity
 import Test.Framework
 import Openmath.Types
+import Control.Monad.Except (runExcept)
 
 {-# ANN module "HLint: ignore Use camelCase" #-}
 
@@ -13,7 +14,7 @@ test_commutativity :: IO ()
 test_commutativity = do
     let term = apply "arith1" "minus" [apply "arith1" "plus" [1,2], 3]
     let path = [1,0]
-    let res = commutativity [(term, Just path)]
+    res <- assertRight $ runExcept $ commutativity [(term, Just path)]
     let expected = apply "arith1" "minus" [apply "arith1" "plus" [2,1], 3]
-    assertEqual res (return expected)
+    assertEqual expected res
 

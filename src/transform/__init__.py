@@ -2,7 +2,8 @@ from PyQt5.QtCore import QAbstractListModel, QVariant, QModelIndex
 from PyQt5.QtCore import Qt
 from PyQt5.Qt import QMessageBox
 from abc import ABCMeta, abstractmethod
-from mathview import Formula, call_converter, ConverterError, mathedhaskell
+from mathview import Formula, call_converter, ConverterError, mathedhaskell,\
+    call_converter_json
 from typing import List
 
 
@@ -39,7 +40,7 @@ class HaskellTransformation(Transformation):
     def transform(self, formulas:List[Formula], paths:List[str])->Formula:
         mml = [a.get_cmathml() for a in formulas]
         args = [a for aa in zip(mml, paths) for a in aa] # Interleave lists
-        res = call_converter('transform', self.command, *args)
+        res = call_converter_json('transform', self.command, *args)
         return Formula(res)
 
 

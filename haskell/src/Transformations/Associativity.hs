@@ -6,7 +6,7 @@ import Openmath.Types
 import Openmath.Utils
 import Data.Maybe (isJust, fromJust)
 import Transformations.Common
-
+import UserError (miniUserError)
 
 associativeOps :: [(String, String)]
 associativeOps = map splitDot [
@@ -15,19 +15,19 @@ associativeOps = map splitDot [
 
 checkOp :: Openmath -> Openmath -> Error ()
 checkOp op1 op2 = do
-    assert (op1 == op2) "You cannot apply associativity to an expression with two different operations.\nE.g. (a+b)+c is OK, and a*(b*c) is OK, but a+(b*c) is not OK."
+    assert (op1 == op2) $ miniUserError "You cannot apply associativity to an expression with two different operations.\nE.g. (a+b)+c is OK, and a*(b*c) is OK, but a+(b*c) is not OK."
     cdName <- case op1 of
         OMS _ cd name -> return (cd,name)
-        _ -> throwError "The operation you selected should be a builtin symbol (e.g., (a+b)+c, not f(a,f(b,c)) for your own f)"
-    assert (cdName `elem` associativeOps) "The operation is not associative.\n(Associative operations are for example +, * but not -)"
+        _ -> throwError $ miniUserError "The operation you selected should be a builtin symbol (e.g., (a+b)+c, not f(a,f(b,c)) for your own f)"
+    assert (cdName `elem` associativeOps) $ miniUserError "The operation is not associative.\n(Associative operations are for example +, * but not -)"
 
 
 
 associativity :: Transformation
 associativity args = do
-    assert (length args == 1) "The transformation needs exactly one argument"
+    assert (length args == 1) $ miniUserError "The transformation needs exactly one argument"
     let [(arg,path')] = args
-    assert (isJust path') "You need to select the subterm to be transformed (e.g., a term like (a+b)+c)"
+    assert (isJust path') $ miniUserError "You need to select the subterm to be transformed (e.g., a term like (a+b)+c)"
     let path = fromJust path'
     let subterm = getSubterm arg path
     newterm <- case subterm of
@@ -37,5 +37,5 @@ associativity args = do
         OMA sem1 op1 [a, OMA sem2 op2 [b,c]] -> do
             checkOp op1 op2
             return $ OMA sem1 op2 [OMA sem2 op1 [a,b], c]
-        _ -> throwError "Select a subexpression of the form (a+b)+c or a+(b+c) where + is some associative operation"
+        _ -> throwError $ miniUserError "Select a subexpression of the form (a+b)+c or a+(b+c) where + is some associative operation"
     return (replaceSubterm arg path newterm)
