@@ -196,7 +196,7 @@ class Formula():
         if format is None:
             self.cmathml = math
         elif format == 'tex':
-            self.cmathml = call_converter("{}2cmml".format(format), math)
+            self.cmathml = call_converter_json("{}2cmml".format(format), math)
         else:
             self.cmathml = call_converter("{}2cmml".format(format), math)
     
