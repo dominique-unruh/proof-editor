@@ -58,6 +58,10 @@ def dictConfig(config:Dict[str,Any]) -> None: pass
 ### logging
 
 def info(str,*args:Union[str,int]) -> None: pass
+def debug(str,*args:Union[str,int]) -> None: pass
 
 ### unittest.mock
 
+### traceback
+
+def print_exc(limit:int=None, file:IO[Any]=None, chain:bool=True) -> None: pass

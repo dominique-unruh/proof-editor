@@ -12,7 +12,7 @@ import logging
 from graph.graphview import Node, Edge
 from .Ui_mainwin import Ui_MainWindow
 import transform
-from mathview import Formula, call_converter, ConverterError
+from mathview import Formula, ConverterError
 from mathview.widgets import MathGraphicsItem, MathView
 
 
@@ -47,8 +47,10 @@ class MainWin(QMainWindow, Ui_MainWindow):
         # For MyPy; declares types of variables used below
         self.formula = None # type: QLineEdit
         self.lstTransformations = None # type: QListView
-        self.spltTrafoInputs = None # type QSplitter
-        self.lblShortTrafoDescr = None # type QLabel
+        self.spltTrafoInputs = None # type: QSplitter
+        self.lblShortTrafoDescr = None # type: QLabel
+        self.txtShortError = None # type: Qt.QTextBrowser
+        self.txtLongError = None # type: Qt.QTextBrowser
         
         self.setupUi(self)
         
@@ -61,7 +63,7 @@ class MainWin(QMainWindow, Ui_MainWindow):
         
         self.graph.scene().selectionChanged.connect(self.selection_changed)
         
-        self.splitter.setSizes([2000, 1000, 500])
+        self.splitter.setSizes([2000, 1000, 500, 500])
 
         self.trafo_model = transform.example_transformations
         self.proxy_model = QSortFilterProxyModel(self)
@@ -86,15 +88,15 @@ class MainWin(QMainWindow, Ui_MainWindow):
         self.mathviewers[idx].highlight()
 
     @pyqtSlot(QItemSelection, QItemSelection)
-    def trafo_selected(self, selected:QItemSelection, deselected:QItemSelection):
-        selected = [self.proxy_model.mapToSource(i) for i in selected.indexes()]
-        if not selected: 
-            self.selected_trafo = None
+    def trafo_selected(self, selected:QItemSelection, deselected:QItemSelection) -> None:
+        selectedList = [self.proxy_model.mapToSource(i) for i in selected.indexes()]
+        if not selectedList: 
+            self.selected_trafo = None # type:transform.Transformation
             # Remove inputs?
             # Or disallow deselection altogher? TODO
             return
-        assert len(selected)==1
-        trafo = self.trafo_model.get_trafo(selected[0])
+        assert len(selectedList)==1
+        trafo = self.trafo_model.get_trafo(selectedList[0])
         self.selected_trafo = trafo
         self.lblShortTrafoDescr.setText(trafo.short_descr)
         
@@ -120,8 +122,8 @@ class MainWin(QMainWindow, Ui_MainWindow):
             self.mathviewers.append(mv)
             self.arguments.append(None)
             self.spltTrafoInputs.addWidget(mv)
-            mv.mouse_press.connect(lambda: (self.select_mathviewer(idx), self.deselect_in_graph()))
-            mv.empty_html = """[Please select some math.]""" # TODO remove
+            def onPress(): self.select_mathviewer(idx); self.deselect_in_graph()
+            mv.mouse_press.connect(onPress)
 
     def formula_node_into_mathview(self, node, i:Optional[int]=None):
         if i is None: i = self.current_mathviewer

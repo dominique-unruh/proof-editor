@@ -15,7 +15,7 @@ class Transformation(metaclass=ABCMeta):
         self.short_descr = short_descr
 
     @abstractmethod
-    def transform(self, arguments:List[Formula]) -> Formula: pass
+    def transform(self, arguments:List[Formula], paths:List[str]) -> Formula: pass
 
 
 class OCamlTransformation(Transformation):
@@ -28,7 +28,8 @@ class OCamlTransformation(Transformation):
         args = [a for aa in zip(mml, paths) for a in aa] # Interleave lists
         try: res = call_converter('transformation', self.command, *args)
         except ConverterError as e: 
-            QMessageBox.warning(self, 'Transformation "{}" failed'.format(self.name), e.errors); return
+            QMessageBox.warning(None, 'Transformation "{}" failed'.format(self.name), e.error)
+            return None
         #logging.debug("Arguments: "+str(self.arguments))
         return Formula(res)
 

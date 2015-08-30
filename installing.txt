@@ -1,3 +1,10 @@
+This file contains some notes how I installed certain prerequisites locally on my system.
+
+It is outdated, does not match the exactly necessary dependencies, etc.
+
+==============================================================
+
+
 How to install the dependencies locally:
 
 # Install PyQt5

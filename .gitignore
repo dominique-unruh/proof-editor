@@ -14,5 +14,6 @@
 /cmathml.exe
 
 __pycache__/
+.mypy-stubs
 
 src/*/Ui_*.py

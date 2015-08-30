@@ -67,14 +67,14 @@ math-ed-windows-32: $(DEPENDENCIES_WIN)
 	python setup.py build_exe
 	cp -a build/exe.windows-x86-3.4 build/math-ed-windows-32
 
-.mypy-stubs : mypy-stubs.py pyqt-mypy2.py
+.mypy-stubs : scripts/mypy-stubs.py scripts/pyqt-mypy2.py
 	rm -rf $@
-	mypy pyqt-mypy2.py
-	python3 pyqt-mypy2.py
-	python3 mypy-stubs.py
+	mypy scripts/pyqt-mypy2.py
+	python3 scripts/pyqt-mypy2.py
+	python3 scripts/mypy-stubs.py
 
-export MYPYPATH=.mypy-stubs
-export MYPY_CHECK=main.py # $(wildcard */*plugin.py) $(wildcard */tests.py)
+export MYPYPATH=.mypy-stubs:src
+export MYPY_CHECK=main.py # $(wildcard src/*/*plugin.py) $(wildcard src/*/tests.py)
 mypy : .mypy-stubs
 	python3 -c "import sys; [print('import '+f[:-3].replace('/','.')) for f in sys.argv[1:]]" $(MYPY_CHECK) >mypy-tmp.py
 	mypy --verbose mypy-tmp.py 2>&1 | sed 's/, line /:/'
