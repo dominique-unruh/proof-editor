@@ -20,7 +20,7 @@
       <item>
        <widget class="QLineEdit" name="formula">
         <property name="text">
-         <string>1 2 + 3 / 4 / 5 / 6 / 1 2 3 / / + sqrt</string>
+         <string>(1+2) / (3+4)</string>
         </property>
        </widget>
       </item>
@@ -74,14 +74,20 @@
           </layout>
          </item>
          <item>
-          <widget class="QTextBrowser" name="txtShortError">
+          <widget class="QLabel" name="txtShortError">
            <property name="sizePolicy">
-            <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
+            <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
              <horstretch>0</horstretch>
              <verstretch>0</verstretch>
             </sizepolicy>
            </property>
-           <property name="openExternalLinks">
+           <property name="text">
+            <string/>
+           </property>
+           <property name="textFormat">
+            <enum>Qt::RichText</enum>
+           </property>
+           <property name="wordWrap">
             <bool>true</bool>
            </property>
           </widget>
@@ -107,6 +113,9 @@
        </layout>
       </widget>
       <widget class="QTextBrowser" name="txtLongError">
+       <property name="frameShape">
+        <enum>QFrame::NoFrame</enum>
+       </property>
        <property name="placeholderText">
         <string>[No help topic open]</string>
        </property>

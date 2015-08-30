@@ -61,6 +61,15 @@ class MainWin(QMainWindow, Ui_MainWindow):
         self.create_mathviewers(1)
         self.select_mathviewer(0)
         
+#         self.txtShortErrorOrigColor = self.txtShortErrorColor
+        anim = Qt.QPropertyAnimation(self,"txtShortErrorColor",self)
+        anim.setStartValue(Qt.QColor(Qt.Qt.red))
+        anim.setEndValue(self.txtShortErrorColor)
+        anim.setEasingCurve(Qt.QEasingCurve.OutQuad)
+        anim.setDuration(5000)
+        self.txtShortErrorAnim = anim
+#         anim.start()
+        
         self.graph.scene().selectionChanged.connect(self.selection_changed)
         
         self.splitter.setSizes([2000, 1000, 500, 500])
@@ -79,6 +88,17 @@ class MainWin(QMainWindow, Ui_MainWindow):
 
         self.addExamples()
         
+    @Qt.pyqtProperty(Qt.QColor)
+    def txtShortErrorColor(self) -> Qt.QColor:
+        return self.txtShortError.palette().color(self.txtShortError.backgroundRole())
+
+    @txtShortErrorColor.setter
+    def txtShortErrorColor(self, color:Qt.QColor) -> None:
+        #logging.debug("color change "+str(color))
+        self.txtShortError.setAutoFillBackground(True)
+        palette = self.txtShortError.palette()
+        palette.setColor(self.txtShortError.backgroundRole(), color)
+        self.txtShortError.setPalette(palette)
         
     def select_mathviewer(self, idx:int) -> None:
         if self.current_mathviewer == idx: return
@@ -89,6 +109,7 @@ class MainWin(QMainWindow, Ui_MainWindow):
 
     @pyqtSlot(QItemSelection, QItemSelection)
     def trafo_selected(self, selected:QItemSelection, deselected:QItemSelection) -> None:
+        self.clearUserError()
         selectedList = [self.proxy_model.mapToSource(i) for i in selected.indexes()]
         if not selectedList: 
             self.selected_trafo = None # type:transform.Transformation
@@ -153,6 +174,7 @@ class MainWin(QMainWindow, Ui_MainWindow):
 
     def selection_changed(self):
         """Called when the selection in the graph changes"""
+        self.deemphUserError()
         sel = self.graph.selected_items()
         if not sel: return
         if len(sel) != 1: return
@@ -173,7 +195,10 @@ class MainWin(QMainWindow, Ui_MainWindow):
         """Parses and adds a formula to the graph and selects it"""
         assert formula is not None
         try: it = MathGraphicsItem(formula)
-        except ValueError as e: QMessageBox.warning(None, "Cannot add", str(e)); return
+        except ValueError as e: 
+            self.showUserError("Cannot add "+str(e), "<b>TODO</b>")
+#             QMessageBox.warning(None, "Cannot add", str(e)); return
+            return
 
         node = Node(it)
         self.graph.addNode(node)
@@ -208,9 +233,11 @@ class MainWin(QMainWindow, Ui_MainWindow):
 
     @pyqtSlot()
     def on_formula_returnPressed(self):
+        self.deemphUserError()
         try: self.addFormulaText(self.formula.text(),format='tex')
         except ConverterError as e:
-            QMessageBox.warning(self, "Converting formula failed", e.errors)
+            self.showUserError("Converting formula failed: "+str(e.error), e.longError)
+#             QMessageBox.warning(self, "Converting formula failed", e.errors)
 
         
         
@@ -230,16 +257,19 @@ class MainWin(QMainWindow, Ui_MainWindow):
     
     @pyqtSlot(str)
     def onMathSelection(self, path):
+        self.deemphUserError()
         logging.info("onMathSelection: {}".format(path))
         self.math_selection = path
 
     @pyqtSlot(str)
     def on_mathView_selected(self, path):
+        self.deemphUserError()
         logging.info("Selection: {}".format(path))
     
   
     @pyqtSlot()
     def on_btnDelete_clicked(self):
+        self.deemphUserError()
         selection = self.graph.selected_items()
         for it in selection:
             self.graph.removeNode(it)
@@ -253,12 +283,17 @@ class MainWin(QMainWindow, Ui_MainWindow):
 #                 self.addFormula(formula.rstrip())
     
     def deselect_in_graph(self):
+        self.deemphUserError()
         self.graph.clearSelection()
 
     @pyqtSlot()
     def on_btnTrafo_clicked(self) -> None:
+        self.clearUserError()
         trafo = self.selected_trafo
-        if not trafo: QMessageBox.warning(self, "Invalid action","You need to select a transformation first"); return
+        if not trafo: 
+            self.showUserError("You need to select a transformation first", "<b>TODO:</b> long description")
+            return
+#             QMessageBox.warning(self, "Invalid action","You need to select a transformation first"); return
         argnum = trafo.argnum
         assert self.current_argnum == argnum
         
@@ -266,8 +301,9 @@ class MainWin(QMainWindow, Ui_MainWindow):
             if self.mathviewers[i].get_formula() is None:
                 self.select_mathviewer(i)
                 self.deselect_in_graph()
-                QMessageBox.warning(self, "Invalid action",
-                    "You need to choose a formula first for the {}. argument (selected)".format(i+1))
+                self.showUserError("You need to choose a formula first for the {}. argument (selected)".format(i+1), "<b>TODO:</b> long description")
+#                 QMessageBox.warning(self, "Invalid action",
+#                     "You need to choose a formula first for the {}. argument (selected)".format(i+1))
                 return
                 
         nodes = self.arguments[:argnum]
@@ -278,15 +314,22 @@ class MainWin(QMainWindow, Ui_MainWindow):
         #args = [a for aa in zip(mml, path) for a in aa] # Interleave lists
         try: newformula = trafo.transform(formulas, paths)
         except ConverterError as e: # TODO: should be "UserError"
-            self.txtShortError.setHtml(e.error)
-            self.txtLongError.setHtml(e.longError)
-            QMessageBox.warning(self, 'Transformation "{}" failed'.format(trafo.name), e.error)
+            self.showUserError(e.error,e.longError)
+#             QMessageBox.warning(self, 'Transformation "{}" failed'.format(trafo.name), e.error)
             return
         self.addFormula(newformula, sources=nodes)
-        
-#         try: res = call_converter('transformation', trafo.command, *args)
-#         except ConverterError as e: 
-#             QMessageBox.warning(self, 'Transformation "{}" failed'.format(trafo.name), e.errors); return
-#         #logging.debug("Arguments: "+str(self.arguments))
-#         self.addFormula(res, sources=nodes)
-#         logging.info(res)
+
+
+    def showUserError(self,short,long):
+        self.txtShortError.setText(short)
+        self.txtShortErrorAnim.stop()
+        self.txtShortErrorAnim.start()
+        self.txtLongError.setHtml(long)
+
+    def deemphUserError(self):
+        self.txtShortErrorAnim.stop()
+        self.txtShortErrorColor = self.txtShortErrorAnim.endValue()
+
+    def clearUserError(self):
+        self.txtShortError.setText("")
+        self.deemphUserError()
