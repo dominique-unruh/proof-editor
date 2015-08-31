@@ -11,6 +11,8 @@ import qualified Data.Text as T
 import qualified Data.Text.Lazy as TL
 import Control.Monad (when)
 import Data.List (intercalate)
+import System.FilePath (combine)
+import qualified System.IO.Unsafe
 
 {- TODO: Explain: HTML-templates, simple-HTML -}
 
@@ -41,24 +43,28 @@ noPrologue :: X.Prologue
 noPrologue = X.Prologue { X.prologueBefore=[], X.prologueDoctype=Nothing, X.prologueAfter=[] }
 xmlToString :: [X.Node] -> String
 xmlToString xml =
-    let root = X.Element{X.elementName="r", X.elementAttributes=Map.empty, X.elementNodes=xml} in
+    let root = X.Element{X.elementName="{http://www.w3.org/1999/xhtml}r", X.elementAttributes=Map.empty, X.elementNodes=xml} in
     let doc = X.Document {X.documentPrologue=noPrologue, X.documentEpilogue=[], X.documentRoot=root} in
-    let text = X.renderText X.def doc in
-    let text' = TL.dropEnd 4 $ TL.drop 41 text in
+    let text = X.renderText settings doc
+               where settings = X.def { X.rsNamespaces=[("ue","urn:unruh:proofedit:usererror")] } in
+    let text' = TL.drop 119 $ TL.dropEnd 4 text in
     TL.unpack text'
+
+ueXMLName :: String -> X.Name
+ueXMLName name = X.Name { X.nameLocalName=T.pack name,
+                          X.nameNamespace=Just "urn:unruh:proofedit:usererror",
+                          X.namePrefix=Just "ue" }
 
 userErrorFromFile :: FilePath -> IO UserError
 userErrorFromFile file = do
     doc <- X.readFile X.def file
     let root = X.fromDocument doc
-    let body = X.child >=> X.laxElement (T.pack "body") >=> X.child >=> X.anyElement $ root
-    when (null body) $ error "no elements in body"
-    let short' = head body
-    print $ X.node $ head body
-    let short = map X.node $ X.child short'
+    let body = (X.child >=> X.laxElement (T.pack "body") >=> X.child) root
+    let long = map X.node $ X.checkName (\n -> n /= ueXMLName "shortdescription" &&
+                                               n /= ueXMLName "metadata") `concatMap` body
+    let short = map X.node $ (X.checkName (==ueXMLName "shortdescription") >=> X.child) `concatMap` body
     when (null short) $ error "short description empty"
-    let long = map X.node $ tail body
-    when (null short) $ error "long description empty"
+    when (null long) $ error "long description empty"
     return UserError { shortDescription=short, longDescription=long, errorData=Map.empty }
 
 addErrorData :: (Typeable a, Show a) => String -> a -> UserError -> UserError
@@ -91,3 +97,12 @@ miniUserError err = UserError { shortDescription=[X.NodeContent $ T.pack err],
                                 longDescription=[X.NodeContent $ T.pack long],
                                 errorData=Map.empty }
     where long = "No long description available yet.\nSo, instead, some dummy text.\n"++err
+
+{- | Warning: directory must have immutable content -}
+userErrorDB' :: String -> String -> UserError
+userErrorDB' dir errName =
+    let path = combine dir ("ue"++errName++".xhtml") in
+    System.IO.Unsafe.unsafePerformIO $ userErrorFromFile path
+
+userErrorDB :: String -> UserError
+userErrorDB = userErrorDB' "resources/errors"

@@ -2,6 +2,7 @@
 /resources/icons/
 *~
 .~*#
+/resources/errors/*.bak
 
 /haskell/dist/
 /haskell/.HTF/Test.history

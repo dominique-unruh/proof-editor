@@ -12,7 +12,7 @@ modusPonens :: Transformation
 modusPonens args = do
     assert (length args == 2) $ miniUserError "The transformation needs exactly two arguments"
     let [(arg1,path1),(arg2,path2)] = args
-    assert (isNothing path1 && isNothing path2) $ miniUserError "Do not selected any subterms with this transformation."
+    assert (isNothing path1 && isNothing path2) $ miniUserError "Do not select any subterms with this transformation."
     (prem,concl) <- case arg1 of
             OMA _ (OMS _ "logic1" "implies") [p,c] -> return (p,c)
             _ -> throwError $ miniUserError "The first formula must be an implication (e.g., A=>B)"

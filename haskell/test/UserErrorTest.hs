@@ -21,3 +21,8 @@ test_usererror_show_data = do
     print (errorData err')
     print err'
     assertEqual "This is a <i>short</i> description\n    test = 123" $ show err'
+
+test_usererror_from_db :: IO ()
+test_usererror_from_db = do
+    let err = userErrorDB "CommutativityNotCommutative"
+    print err

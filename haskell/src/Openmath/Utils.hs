@@ -102,7 +102,7 @@ replaceIth xs i x = take i xs ++ x : drop (i+1) xs
 replaceSubterm :: Openmath -> Path -> Openmath -> Openmath
 replaceSubterm _ (i:_) _ | i<0 = error "descending into semantics not implemented"
 replaceSubterm _ [] subterm = subterm
-replaceSubterm (OMA sem hd args) (0:path) subterm = 
+replaceSubterm (OMA sem hd args) (0:path) subterm =
     OMA sem (replaceSubterm hd path subterm) args
 replaceSubterm (OMA sem hd args) (1:i:path) subterm =
     OMA sem hd (replaceIth args i (replaceSubterm (args!!i) path subterm))

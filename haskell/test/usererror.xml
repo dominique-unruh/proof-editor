@@ -1,6 +1,8 @@
-<html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:ue="urn:unruh:proofedit:usererror">
+<head></head>
 <body>
-<p>This is a <i>short</i> description</p>
+  <ue:shortdescription>This is a <i>short</i> description</ue:shortdescription>
+  <ue:metadata>formula Arg1, path Path1, formula Symbol</ue:metadata>
 And here follows the long description. With fancy stuff...
 <ul>
   <li>Bla</li>
