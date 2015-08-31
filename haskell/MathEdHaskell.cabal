@@ -1,6 +1,6 @@
 name: MathEdHaskell
 version: 0.1
-cabal-version: >= 1.8
+cabal-version: >=1.8
 build-type: Simple
 license: OtherLicense
 author: Dominique Unruh
@@ -26,6 +26,7 @@ executable MathEdHaskell
         filepath >=1.4.0.0 && <1.5
     hs-source-dirs: src
     other-modules:
+        UserError.ErrorDB
         UserError.UserError
         Openmath.Utils
         Openmath.Cmathml
@@ -62,6 +63,7 @@ test-suite Test
         filepath >=1.4.0.0 && <1.5
     hs-source-dirs: src
     other-modules:
+        UserError.ErrorDB
         UserError.UserErrorTest
         Openmath.TypesTest
         Openmath.CmathmlTest
