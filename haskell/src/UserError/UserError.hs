@@ -99,10 +99,8 @@ miniUserError err = UserError { shortDescription=[X.NodeContent $ T.pack err],
     where long = "No long description available yet.\nSo, instead, some dummy text.\n"++err
 
 {- | Warning: directory must have immutable content -}
-userErrorDB' :: String -> String -> UserError
-userErrorDB' dir errName =
+userErrorDB :: String -> String -> UserError
+userErrorDB dir errName =
     let path = combine dir ("ue"++errName++".xhtml") in
     System.IO.Unsafe.unsafePerformIO $ userErrorFromFile path
 
-userErrorDB :: String -> UserError
-userErrorDB = userErrorDB' "resources/errors"

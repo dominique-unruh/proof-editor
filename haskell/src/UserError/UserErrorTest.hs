@@ -24,5 +24,5 @@ test_usererror_show_data = do
 
 test_usererror_from_db :: IO ()
 test_usererror_from_db = do
-    let err = userErrorDB "CommutativityNotCommutative"
+    let err = userErrorDB "resources/errors" "CommutativityNotCommutative"
     print err

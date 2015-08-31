@@ -30,7 +30,7 @@ test_haskell :
 	cd haskell && dist/build/Test/Test --color=true -q
 
 test_python :
-	python3 -m unittest $(wildcard src/tests.py) $(wildcard src/*/tests.py)
+	PYTHONPATH="src:$$PYTHONPATH" python3 -m unittest $(wildcard src/tests.py) $(wildcard src/*/tests.py)
 
 all : $(DEPENDENCIES)
 	echo $(wildcard haskell/*.hs haskell/src/*.hs haskell/src/*/*.hs haskell/src/*/*/*.hs)
