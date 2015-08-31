@@ -3,7 +3,7 @@ module Transformations.Common where
 import Control.Monad.Except (throwError, Except)
 import Control.Monad (unless)
 import Openmath.Types
-import UserError
+import UserError.UserError
 
 type Error = Except UserError
 type Transformation = [(Openmath,Maybe Path)] -> Error Openmath

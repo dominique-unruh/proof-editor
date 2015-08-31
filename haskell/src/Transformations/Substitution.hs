@@ -5,7 +5,7 @@ import Openmath.Types
 import Control.Monad.Except (throwError)
 import Data.Maybe (isNothing, isJust, fromJust)
 import Openmath.Utils (equivalentTerms, getSubterm, replaceSubterm)
-import UserError (miniUserError)
+import UserError.UserError (miniUserError)
 
 substitution :: Transformation
 substitution args = do

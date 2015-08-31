@@ -6,7 +6,7 @@ import Openmath.Types
 import Openmath.Utils
 import Data.Maybe (isJust, fromJust)
 import Transformations.Common
-import UserError (miniUserError)
+import UserError.UserError (miniUserError)
 
 associativeOps :: [(String, String)]
 associativeOps = map splitDot [

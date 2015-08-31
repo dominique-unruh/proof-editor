@@ -1,6 +1,6 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE OverloadedStrings #-}
-module UserError where
+module UserError.UserError where
 
 import qualified Data.Map as Map
 import Data.Dynamic
@@ -61,8 +61,8 @@ userErrorFromFile file = do
     let root = X.fromDocument doc
     let body = (X.child >=> X.laxElement (T.pack "body") >=> X.child) root
     let long = map X.node $ X.checkName (\n -> n /= ueXMLName "shortdescription" &&
-                                               n /= ueXMLName "metadata") `concatMap` body
-    let short = map X.node $ (X.checkName (==ueXMLName "shortdescription") >=> X.child) `concatMap` body
+                                               n /= ueXMLName "metadata") =<< body
+    let short = map X.node $ (X.checkName (==ueXMLName "shortdescription") >=> X.child) =<< body
     when (null short) $ error "short description empty"
     when (null long) $ error "long description empty"
     return UserError { shortDescription=short, longDescription=long, errorData=Map.empty }

@@ -3,7 +3,7 @@ module Transformations.Compute (compute) where
 
 import Transformations.Common
 import Openmath.Utils (pattern Int', bindP, getSubterm, replaceSubterm, equivalentTerms, pattern OMASym)
-import UserError (miniUserError)
+import UserError.UserError (miniUserError)
 import Openmath.Types
 import Data.Maybe (fromMaybe)
 

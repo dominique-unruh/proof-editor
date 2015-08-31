@@ -8,7 +8,7 @@ import Test.Framework
 
 test_loadfile :: IO ()
 test_loadfile = do
-  ods <- odsFromFile "test/OpenDoc/test.ods"
+  ods <- odsFromFile "src/OpenDoc/test.ods"
   let sheet1 = head (sheets ods)
   let cells1 = cells sheet1
   let cells1_str = map (map cellText) cells1

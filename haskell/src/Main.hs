@@ -1,6 +1,6 @@
 module Main where
 
-import UserError
+import UserError.UserError
        (UserErrorRenderer, renderShortDescription, renderLongDescription)
 import System.Environment (getArgs)
 import Openmath.TeX

@@ -6,7 +6,7 @@ import Openmath.Types
 import Control.Monad.Except (throwError)
 import Data.Maybe (isNothing)
 import Openmath.Utils (equivalentTerms)
-import UserError (miniUserError)
+import UserError.UserError (miniUserError)
 
 modusPonens :: Transformation
 modusPonens args = do

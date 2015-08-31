@@ -19,8 +19,18 @@ MATHEDHASKELL = haskell/dist/build/MathEdHaskell/MathEdHaskell$(EXE_SUFFIX)
 
 DEPENDENCIES=resources/mathjax src/testui/Ui_mainwin.py src/graph/Ui_controls.py resources/icons $(CMATHML) $(MATHEDHASKELL)
 
-test : $(DEPENDENCIES)
+run : $(DEPENDENCIES)
 	python3 src/main.py
+
+test : test_haskell test_python
+
+test_haskell :
+	scripts/haskell-tests.py
+	cd haskell && cabal build
+	cd haskell && dist/build/Test/Test --color=true -q
+
+test_python :
+	python3 -m unittest $(wildcard src/tests.py) $(wildcard src/*/tests.py)
 
 all : $(DEPENDENCIES)
 	echo $(wildcard haskell/*.hs haskell/src/*.hs haskell/src/*/*.hs haskell/src/*/*/*.hs)

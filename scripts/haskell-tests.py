@@ -1,9 +1,9 @@
 #!/usr/bin/python3
 
-import os, sys, subprocess
+import os, sys, subprocess, re
 
 haskelldir = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)),os.path.pardir,'haskell'))
-haskelltestdir = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)),os.path.pardir,'haskell','test'))
+haskelltestdir = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)),os.path.pardir,'haskell','src'))
 print("Scanning",haskelltestdir)
 
 outfile = open(os.path.join(haskelltestdir,"Test.hs"),"wt")
@@ -58,7 +58,8 @@ for (dirpath, _, filenames) in os.walk(haskelltestdir,onerror=raiseExn):
         module = ".".join(splitpath(dirpath_rel)+[base])
         if module == "Test": continue
         if not isTestFile(file): 
-            print("Module {} has no tests".format(module))
+            if re.match("Test\.hs$",file):
+                raise RuntimeError("Module {} has no tests".format(module))
             continue
         outfile.write("import {{-@ HTF_TESTS @-}} {}\n".format(module))
         print("Module",module)
