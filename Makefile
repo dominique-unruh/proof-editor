@@ -2,10 +2,12 @@ ifeq ($(OS),Windows_NT)
   EXE_SUFFIX=.exe
   BITS=32
   OSNAME=windows
+  PYTHON=python
 else
   EXE_SUFFIX=
   BITS=64
   OSNAME=linux
+  PYTHON=python3
 endif
 
 ifeq ($(BITS),32)
@@ -16,21 +18,28 @@ endif
 
 CMATHML = cmathml$(EXE_SUFFIX)
 MATHEDHASKELL = haskell/dist/build/MathEdHaskell/MathEdHaskell$(EXE_SUFFIX)
+MATHEDHASKELL_CWD = MathEdHaskell$(EXE_SUFFIX)
 
-DEPENDENCIES=resources/mathjax src/testui/Ui_mainwin.py src/graph/Ui_controls.py resources/icons $(CMATHML) $(MATHEDHASKELL)
+DEPENDENCIES=resources/mathjax src/testui/Ui_mainwin.py src/graph/Ui_controls.py resources/icons $(CMATHML) $(MATHEDHASKELL) $(MATHEDHASKELL_CWD)
 
 run : $(DEPENDENCIES)
-	python3 src/main.py
+	$(PYTHON) src/main.py
+
+clean :
+	cd haskell && cabal clean
+	rm -f cmathml cmathml.{cmi,cmx,o,exe} *~
 
 test : test_haskell test_python
 
-test_haskell :
+test_haskell : $(MATHEDHASKELL)
 	scripts/haskell-tests.py
-	cd haskell && cabal build
 	cd haskell && dist/build/Test/Test --color=true -q
 
-test_python :
+test_python : $(DEPENDENCIES)
 	PYTHONPATH="src:$$PYTHONPATH" python3 -m unittest $(wildcard src/tests.py) $(wildcard src/*/tests.py)
+
+MathEdHaskell.exe : haskell/dist/build/MathEdHaskell/MathEdHaskell.exe
+	cp -v $< $@
 
 all : $(DEPENDENCIES)
 	echo $(wildcard haskell/*.hs haskell/src/*.hs haskell/src/*/*.hs haskell/src/*/*/*.hs)
@@ -41,7 +50,7 @@ Ui_%.py : %.ui
 $(MATHEDHASKELL) : haskell/MathEdHaskell.cabal \
 		$(wildcard haskell/*.hs haskell/src/*.hs haskell/src/*/*.hs haskell/src/*/*/*.hs)
 	cd haskell && cabal install --only-dependencies --enable-tests
-	cd haskell && cabal configure
+	cd haskell && cabal configure --enable-tests
 	cd haskell && cabal build
 
 cmathml : cmathml.ml cmathml.mli
@@ -72,6 +81,10 @@ proof-editor-$(OSNAME)-$(BITS).zip : $(DEPENDENCIES)
 	python3 setup.py build_exe
 	cp -a build/exe.$(OSNAME)-x86_64-3.4 build/math-ed-linux-64
 	cd build && zip ../$@ math-ed-linux-64
+
+build_win : $(DEPENDENCIES)
+	python scripts/setup.py build_exe --build-exe E:\Dropbox\share\merily-salura\math-ed
+
 
 math-ed-windows-32: $(DEPENDENCIES_WIN)
 	python setup.py build_exe

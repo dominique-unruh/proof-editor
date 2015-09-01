@@ -62,7 +62,7 @@ class MainWin(QMainWindow, Ui_MainWindow):
         self.select_mathviewer(0)
         
 #         self.txtShortErrorOrigColor = self.txtShortErrorColor
-        anim = Qt.QPropertyAnimation(self,"txtShortErrorColor",self)
+        anim = Qt.QPropertyAnimation(self,b"txtShortErrorColor",self)
         anim.setStartValue(Qt.QColor(Qt.Qt.red))
         anim.setEndValue(self.txtShortErrorColor)
         anim.setEasingCurve(Qt.QEasingCurve.OutQuad)

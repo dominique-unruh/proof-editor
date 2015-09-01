@@ -50,7 +50,7 @@ ignore_ext = set(['.ods','.xml'])
 
 for (dirpath, _, filenames) in os.walk(haskelltestdir,onerror=raiseExn):
     dirpath_rel = os.path.relpath(dirpath,haskelltestdir)
-    for filename in filenames:
+    for filename in sorted(filenames):
         file = os.path.join(dirpath,filename)
         (base,ext) = os.path.splitext(filename)
         if ext.endswith("~") or ext in ignore_ext: continue

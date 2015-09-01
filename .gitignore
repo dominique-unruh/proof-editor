@@ -18,3 +18,5 @@ __pycache__/
 .mypy-stubs
 
 src/*/Ui_*.py
+
+MathEdHaskell.exe
