@@ -133,3 +133,4 @@ equivalentTerms a b = a==b
 
 splitDot :: String -> (String, String)
 splitDot str = let (pfx,suffix) = break (=='.') str in (pfx,tail suffix)
+

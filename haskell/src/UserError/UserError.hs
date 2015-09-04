@@ -41,6 +41,7 @@ type UserErrorRenderer = ()
 
 noPrologue :: X.Prologue
 noPrologue = X.Prologue { X.prologueBefore=[], X.prologueDoctype=Nothing, X.prologueAfter=[] }
+-- TODO: create function in Utils
 xmlToString :: [X.Node] -> String
 xmlToString xml =
     let root = X.Element{X.elementName="{http://www.w3.org/1999/xhtml}r", X.elementAttributes=Map.empty, X.elementNodes=xml} in

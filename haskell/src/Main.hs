@@ -17,7 +17,7 @@ import Control.Monad.Except (runExcept)
 import Transformations.Substitution (substitution)
 import Transformations.Compute (compute)
 import Text.JSON
---import Data.Map.Strict (fromList)
+import Openmath.Pmathml
 
 (|>) :: t1 -> (t1 -> t) -> t
 x |> f = f x
@@ -53,8 +53,12 @@ main = do
     args <- getArgs
     case args of
         ["tex2cmml", tex] -> do config <- texDefaultConfiguration
-                                jsonOut [("success","success"),("result",toCmathml $ texToOpenmath config tex)]
+                                jsonOut [("success","success"),
+                                         ("result",toCmathml $ texToOpenmath config tex)]
 --                                putStrLn $ toCmathml $ texToOpenmath config tex
+        ["cmml2pmml", cmml] -> do config <- pmmlDefaultConfiguration
+                                  jsonOut [("success","success"),
+                                           ("result",toPmathml config $ fromCmathml cmml)]
         "transform" : name : rest ->
             case lookup name trafos of
                 Nothing -> error $ "Unknown trafo "++name

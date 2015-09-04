@@ -200,9 +200,14 @@ class Formula():
         else:
             self.cmathml = call_converter("{}2cmml".format(format), math)
     
+#     def get_pmathml(self):
+#         if self.pmathml is not None: return self.pmathml
+#         self.pmathml = call_converter("cmml2pmml", self.cmathml)
+#         return self.pmathml
+
     def get_pmathml(self):
         if self.pmathml is not None: return self.pmathml
-        self.pmathml = call_converter("cmml2pmml", self.cmathml)
+        self.pmathml = call_converter_json("cmml2pmml", self.cmathml)
         return self.pmathml
 
     def get_cmathml(self):

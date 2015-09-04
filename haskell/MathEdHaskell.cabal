@@ -25,6 +25,8 @@ executable MathEdHaskell
         filepath -any
     hs-source-dirs: src
     other-modules:
+        Misc
+        Openmath.Pmathml
         UserError.ErrorDB
         UserError.UserError
         Openmath.Utils
@@ -61,6 +63,9 @@ test-suite Test
         filepath >=1.4.0.0 && <1.5
     hs-source-dirs: src
     other-modules:
+        Misc
+        Openmath.Pmathml
+        Openmath.PmathmlTest
         UserError.ErrorDB
         UserError.UserErrorTest
         Openmath.TypesTest

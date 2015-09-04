@@ -29,7 +29,7 @@ clean :
 	cd haskell && cabal clean
 	rm -f cmathml cmathml.{cmi,cmx,o,exe} *~
 
-test : test_haskell test_python
+test : test_python test_haskell
 
 test_haskell : $(MATHEDHASKELL)
 	scripts/haskell-tests.py
