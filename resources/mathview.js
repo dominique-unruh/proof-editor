@@ -34,8 +34,10 @@ function onMouseUp(e) {
 		highlit[i].classList.remove("highlight");
     }
     
-    if (selected_elem==null)
-	    window.controller.onMathSelection(null);
+    if (selected_elem==null) {
+	window.controller.onMathDeselected();
+	return;
+    }
     
     selected_elem.classList.add("highlight");
 

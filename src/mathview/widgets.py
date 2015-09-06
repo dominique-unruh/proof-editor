@@ -170,6 +170,12 @@ class MathView(QWidget):
         self.selected.emit(path)
 
     @pyqtSlot()
+    def onMathDeselected(self):
+        logging.info("MathView: Deselected")
+        self.selected_path = None
+        self.selected.emit(None)
+
+    @pyqtSlot()
     def onMathRendered(self):
         self.rendered.emit()
     
