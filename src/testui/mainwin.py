@@ -70,7 +70,7 @@ class MainWin(QMainWindow, Ui_MainWindow):
         self.txtShortErrorAnim = anim
 #         anim.start()
         
-        self.graph.scene().selectionChanged.connect(self.selection_changed)
+#         self.graph.scene().selectionChanged.connect(self.selection_changed)
         
         self.splitter.setSizes([2000, 1000, 500, 500])
 
@@ -85,6 +85,8 @@ class MainWin(QMainWindow, Ui_MainWindow):
             self.proxy_model.index(0, 0), QItemSelectionModel.ClearAndSelect)
 
         self.filter.textChanged.connect(lambda txt: self.proxy_model.setFilterFixedString(txt))
+        
+        self.graph.nodeDoubleClick.connect(lambda node,event: self.formulaDoubleClicked(node))
 
         self.addExamples()
         
@@ -159,7 +161,7 @@ class MainWin(QMainWindow, Ui_MainWindow):
         
     def addExamples(self):
         formulas = []
-        examples = ['1+1', '3/2']
+        examples = ['1+1', '3/2', 'a=b']
         for x in examples:
             formulas.append(self.addFormulaText(x))
         logging.debug(formulas)
@@ -173,19 +175,24 @@ class MainWin(QMainWindow, Ui_MainWindow):
     def get_current_mathview(self) -> MathView:
         return self.mathviewers[self.current_mathviewer]
 
-    def selection_changed(self):
-        """Called when the selection in the graph changes"""
+#     def selection_changed(self):
+#         """Called when the selection in the graph changes"""
+#         self.deemphUserError()
+#         sel = self.graph.selected_items()
+#         if not sel: return
+#         if len(sel) != 1: return
+# 
+#         node = sel[0]
+#         self.formula_node_into_mathview(node)
+#         #self.get_current_mathview().set_formula(node.graphics().get_formula())
+#         #if self.current_mathviewer<self.current_argnum-1:
+#         self.select_mathviewer((self.current_mathviewer+1) % self.current_argnum)
+
+    def formulaDoubleClicked(self, node:Node) -> None:
         self.deemphUserError()
-        sel = self.graph.selected_items()
-        if not sel: return
-        if len(sel) != 1: return
-
-        node = sel[0]
         self.formula_node_into_mathview(node)
-        #self.get_current_mathview().set_formula(node.graphics().get_formula())
-        #if self.current_mathviewer<self.current_argnum-1:
         self.select_mathviewer((self.current_mathviewer+1) % self.current_argnum)
-
+        
 
     def addFormulaText(self,  mml:str, sources:List[Formula]=[], format:str='tex') -> Formula:  # @ReservedAssignment
         """Parses and adds a formula to the graph and selects it"""

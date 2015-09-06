@@ -1,10 +1,11 @@
 from PyQt5.QtWidgets import QWidget,  QGraphicsView, QGraphicsScene, QMenu, \
         QGridLayout, QAction, QGraphicsLineItem, QGraphicsItem, QGraphicsObject
-from PyQt5.QtCore import Qt, QLineF, pyqtSignal, QPointF, QObject, QTimer, pyqtSlot
+from PyQt5.QtCore import QLineF, pyqtSignal, QPointF, QObject, QTimer, pyqtSlot
 from PyQt5.QtGui import QPen, QPainter, QIcon
+from PyQt5 import Qt
 import logging, math, random
-import sip 
-from typing import List, Dict
+# import sip  # @UnresolvedImport
+from typing import List, Dict  # @UnusedImport
 
 # Own modules
 from .Ui_controls import Ui_controls
@@ -15,21 +16,21 @@ class Controls(QWidget, Ui_controls):
         super(Controls, self).__init__(parent)
         self.setupUi(self)
 
-# TODO should be in some general utility module
-class QGraphicsItem_ItemChangeAware(QGraphicsItem):
-    # TODO deprecated, remove
-    def __init__(self):
-        super().__init__()
-
-    def change_handler(self, change, value):
-        pass
-        
-    def itemChange(self, change, value):
-        result = super().itemChange(change, value) # type: ignore
-        self.change_handler(change, value)
-        if isinstance(result, QGraphicsItem):
-            result = sip.cast(result, QGraphicsItem)
-        return result
+# # TODO should be in some general utility module
+# class QGraphicsItem_ItemChangeAware(QGraphicsItem):
+#     # TODO deprecated, remove
+#     def __init__(self):
+#         super().__init__()
+# 
+#     def change_handler(self, change, value):
+#         pass
+#         
+#     def itemChange(self, change, value):
+#         result = super().itemChange(change, value) # type: ignore
+#         self.change_handler(change, value)
+#         if isinstance(result, QGraphicsItem):
+#             result = sip.cast(result, QGraphicsItem)
+#         return result
 
 class Node(QObject):
     def __init__(self, graphics):
@@ -42,6 +43,16 @@ class Node(QObject):
         self._edges = []
         self._prev_pos = None
         graphics.setFlags(QGraphicsItem.ItemIsMovable | QGraphicsItem.ItemIsSelectable | QGraphicsItem.ItemSendsGeometryChanges)
+        
+        graphics.mouseDoubleClickEvent = lambda event: self._graph.nodeDoubleClick.emit(self,event)
+
+
+    
+#     def event(self, event):
+#         logging.debug("Event: {}".format(event.type()))
+#         return QGraphicsSvgItem.event(self, event)
+
+
         
 #        def change_handler(change, value):
 #            if change == QGraphicsItem.ItemPositionChange:
@@ -63,7 +74,8 @@ class Node(QObject):
         for e in self._edges:
             e.update()
 
-    position_change = pyqtSignal(QPointF, name='position_change')
+    position_change = pyqtSignal(QPointF)
+#     doubleClick = pyqtSignal(object, Qt.QGraphicsSceneMouseEvent)
     
     def edges(self):
         return self._edges
@@ -150,7 +162,7 @@ class Edge(object):
         """Creates the graphics item visualising this edge."""
         self.graphics = QGraphicsLineItem(QLineF(a.getPivot(), b.getPivot()))
         self.graphics.setZValue(-1)
-        self.graphics.setPen(QPen(Qt.darkGray,3)) # type: ignore
+        self.graphics.setPen(QPen(Qt.Qt.darkGray,3)) # type: ignore
         self._a = a
         self._b = b
         return self.graphics
@@ -196,11 +208,11 @@ class GraphView(QWidget):
         self.selection_mode_action = QAction("Selection mode",self)
         self.selection_mode_action.triggered.connect(self.selection_mode)
     
-        self.view.contextMenuPolicy = Qt.NoContextMenu # type: ignore
+        self.view.contextMenuPolicy = Qt.Qt.NoContextMenu # type: ignore
         self.view.customContextMenuRequested.connect(self.show_context_menu) # type: ignore
         
         self.controls = Controls(parent=self)
-        layout.addWidget(self.controls, 0, 0, Qt.AlignTop | Qt.AlignLeft) # type: ignore
+        layout.addWidget(self.controls, 0, 0, Qt.Qt.AlignTop | Qt.Qt.AlignLeft) # type: ignore
         
         self.controls.btnZoomIn.clicked.connect(self.zoomIn) # type: ignore
         self.controls.btnZoomOut.clicked.connect(self.zoomOut) # type: ignore
@@ -211,11 +223,13 @@ class GraphView(QWidget):
         
         self._scene = self.view.scene()
 
+    nodeDoubleClick = pyqtSignal(Node, Qt.QGraphicsSceneMouseEvent)
+
     def selection_mode(self):
-         self.view.setDragMode(QGraphicsView.RubberBandDrag)
+        self.view.setDragMode(QGraphicsView.RubberBandDrag)
     
     def scroll_hand_mode(self):
-         self.view.setDragMode(QGraphicsView.ScrollHandDrag)
+        self.view.setDragMode(QGraphicsView.ScrollHandDrag)
          
     def show_context_menu(self, pos):
         menu = QMenu(self)
@@ -226,15 +240,15 @@ class GraphView(QWidget):
         
     def scene(self):
         return self._scene
-        
+
     zoom_factor = 1.5
-    
+
     def zoomOut(self):
         self.view.scale(1/self.zoom_factor, 1/self.zoom_factor)
-    
+
     def zoomIn(self):
         self.view.scale(self.zoom_factor, self.zoom_factor)
-    
+
     def addNode(self, node):
         logging.debug("ADDING")
         assert node._graph is None
@@ -242,6 +256,7 @@ class GraphView(QWidget):
         self._nodes.append(node)
         self._scene.addItem(node._graphics)
         node.position_change.connect(self.node_position_change)
+#         node.doubleClick.connect(self.nodeDoubleClick)
         self.start_layout()
 
     def clearSelection(self):

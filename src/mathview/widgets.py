@@ -1,9 +1,10 @@
-from PyQt5.QtWebKitWidgets import QWebView,  QWebPage
+from PyQt5.QtWebKitWidgets import QWebView
 from PyQt5.QtWebKit import QWebSettings
 from PyQt5.QtWidgets import QWidget,  QGridLayout
-from PyQt5.QtCore import pyqtProperty, pyqtSlot, pyqtSignal, QUrl, QObject
-from PyQt5.Qt import QImage,  QPainter, QColor, QBrush,  QMouseEvent
-from PyQt5.QtCore import Qt,  QSize
+from PyQt5.QtCore import pyqtProperty, pyqtSlot, pyqtSignal, QUrl
+from PyQt5.Qt import QColor, QBrush,  QMouseEvent
+# from PyQt5.QtCore import Qt
+from PyQt5 import Qt
 from PyQt5.QtSvg import QGraphicsSvgItem
 from lxml import etree  # @UnresolvedImport
 import logging, sys
@@ -41,13 +42,12 @@ class MathGraphicsItem(QGraphicsSvgItem):
         self.bgcolor_select = QColor(0xd0d0d0)
         
     def paint(self, painter, option, widget=None):
-        painter.setPen(Qt.NoPen)
+        painter.setPen(Qt.Qt.NoPen)
         color = self.bgcolor_select if self.isSelected() else self.bgcolor
         painter.setBrush(QBrush(color))
         painter.drawRect(self.boundingRect())
         super().paint(painter, option, widget)
-        
-
+    
     def get_formula(self):
         return self.formula
 
@@ -65,44 +65,44 @@ class MathGraphicsItem(QGraphicsSvgItem):
         self.setElementId("") # Seems only way to trigger recalculation of bounding box
 
  
-class MathPicture(QObject):
-    """@deprecated"""
-    def __init__(self):
-        super(MathPicture, self).__init__()
-        webpage = QWebPage()
-        webpage.settings().setUserStyleSheetUrl(base_url.resolved(QUrl("mathpicture.css"))) 
-        webpage.mainFrame().javaScriptWindowObjectCleared.connect(self.javaScriptWindowObjectCleared)
-        webpage.mainFrame().setScrollBarPolicy(Qt.Vertical, Qt.ScrollBarAlwaysOff);
-        webpage.mainFrame().setScrollBarPolicy(Qt.Horizontal, Qt.ScrollBarAlwaysOff);
-        self.webpage = webpage
-        self.format = "auto"
-    
-        
-    def close(self):
-        self.webpage.setParent(None)
-        self.webpage.deleteLater()
-  
-    def javaScriptWindowObjectCleared(self):
-        self.webpage.mainFrame().addToJavaScriptWindowObject("controller", self)
-    
-    rendered = pyqtSignal(QImage, arguments=["image"])
-    
-    @pyqtSlot()
-    def onMathRendered(self):
-        frame = self.webpage.mainFrame()
-        size = frame.contentsSize()
-        self.webpage.setViewportSize(QSize(size.width(), size.height()+100)) # +100 to make sure the progress tooltip is not drawn in the image
-
-        image = QImage(size, QImage.Format_RGB888) 
-        painter = QPainter(image) 
-        frame.render(painter)
-        painter.end()
-        self.rendered.emit(image)
-        
-    def render(self, math):
-        assert isinstance(math, Formula), "isinstance({}, Formula)".format(type(math))
-        html = mathjax_page.format(math.get_pmathml())
-        self.webpage.mainFrame().setHtml(html,base_url)
+# class MathPicture(QObject):
+#     """@deprecated"""
+#     def __init__(self):
+#         super(MathPicture, self).__init__()
+#         webpage = QWebPage()
+#         webpage.settings().setUserStyleSheetUrl(base_url.resolved(QUrl("mathpicture.css"))) 
+#         webpage.mainFrame().javaScriptWindowObjectCleared.connect(self.javaScriptWindowObjectCleared)
+#         webpage.mainFrame().setScrollBarPolicy(Qt.Vertical, Qt.ScrollBarAlwaysOff);
+#         webpage.mainFrame().setScrollBarPolicy(Qt.Horizontal, Qt.ScrollBarAlwaysOff);
+#         self.webpage = webpage
+#         self.format = "auto"
+#     
+#         
+#     def close(self):
+#         self.webpage.setParent(None)
+#         self.webpage.deleteLater()
+#   
+#     def javaScriptWindowObjectCleared(self):
+#         self.webpage.mainFrame().addToJavaScriptWindowObject("controller", self)
+#     
+#     rendered = pyqtSignal(QImage, arguments=["image"])
+#     
+#     @pyqtSlot()
+#     def onMathRendered(self):
+#         frame = self.webpage.mainFrame()
+#         size = frame.contentsSize()
+#         self.webpage.setViewportSize(QSize(size.width(), size.height()+100)) # +100 to make sure the progress tooltip is not drawn in the image
+# 
+#         image = QImage(size, QImage.Format_RGB888) 
+#         painter = QPainter(image) 
+#         frame.render(painter)
+#         painter.end()
+#         self.rendered.emit(image)
+#         
+#     def render(self, math):
+#         assert isinstance(math, Formula), "isinstance({}, Formula)".format(type(math))
+#         html = mathjax_page.format(math.get_pmathml())
+#         self.webpage.mainFrame().setHtml(html,base_url)
         
         
 

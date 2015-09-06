@@ -84,7 +84,7 @@ class SVGConverter(QObject):
         #self.lock = threading.Lock()
         self.webpage = QWebPageLogging()
         self.html_file = utils.file_path("resources/svg_convert.html")
-        
+
 #        import __main__
 #        win = __main__.win
 #        view = QWebView(win)
