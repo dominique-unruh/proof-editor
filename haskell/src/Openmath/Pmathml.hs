@@ -12,9 +12,9 @@ import Openmath.Utils
 import qualified Data.Text as T
 import qualified Data.Text.Lazy as TL
 import Control.Arrow ((***))
-import Data.List (intersperse)
+import Data.List (intersperse, intercalate)
 import Misc
---import Debug.Trace (trace)
+import Debug.Trace (trace)
 import Control.Exception (throw)
 
 data PMMLOperator = PMMLOperator {
@@ -22,6 +22,7 @@ data PMMLOperator = PMMLOperator {
     pmmlOpStandalone :: Maybe X.Element,
     pmmlOpRender :: PMMLConfiguration
                  -> Int -- ^ upper level priority
+                 -> Path -- ^ Path (in reverse) of the current element (does not need to be added to the element itself, but may be needed for children)
                  -> [Openmath] -- ^ symbol arguments
                  -> Maybe X.Element
 } deriving (Typeable)
@@ -39,12 +40,12 @@ mathmlRead str =
         Right _ -> error "unexpected shape"
         Left err -> throw err
 
-triplicate :: a -> a -> a -> [b] -> [(a,b)]
+triplicate :: a -> a -> a -> [b] -> [(a,Int,b)]
 triplicate _ _ _ [] = []
-triplicate a b c (x:xs) = (a,x):trip xs
-    where trip [] = []
-          trip [y] = [(c,y)]
-          trip (y:ys) = (b,y):trip ys
+triplicate a b c (x:xs) = (a,0,x):trip 1 xs
+    where trip _ [] = []
+          trip i [y] = [(c,i,y)]
+          trip i (y:ys) = (b,i,y):trip (i+1) ys
 
 
 templateToOp :: Int -> String -> PMMLOperator
@@ -55,15 +56,19 @@ templateToOp prio templ =
     let priosInfix = triplicate (prio+1) (prio+1) (prio+1) in
     let priosInfixL = triplicate prio (prio+1) (prio+1) in
     let priosInfixR = triplicate (prio+1) (prio+1) prio in
-    let infixRender _ _ _ [] = Nothing
-        infixRender _ _ _ [_] = Nothing
-        infixRender prios config _ args =
-            Just $ mrow (intersperse xml $
-                         map (uncurry (pmmlRender' config)) $ prios args) in
-    let prefixRender config _ [a] = Just $ mrow [xml, pmmlRender' config (prio+1) a]
-        prefixRender _ _ _ = Nothing in
-    let postfixRender config _ [a] = Just $ mrow [pmmlRender' config (prio+1) a, xml]
-        postfixRender _ _ _ = Nothing in
+    let infixRender _ _ _ _ [] = Nothing
+        infixRender _ _ _ _ [_] = Nothing
+        infixRender prios config _ path args =
+            Just $ mrow (intersperse (addPath (0:path) $ addClasses ["leaf","symbol"] xml) $
+                         map (\(pri,i,a) -> pmmlRender' config pri (i:1:path) a) $ prios args) in
+    let prefixRender config _ path [a] =
+            Just $ mrow [addPath (0:path) $ addClasses ["leaf","symbol"] xml,
+                         pmmlRender' config (prio+1) (0:1:path) a]
+        prefixRender _ _ _ _ = Nothing in
+    let postfixRender config _ path [a] =
+            Just $ mrow [pmmlRender' config (prio+1) (0:1:path) a,
+                         addPath (0:path) $ addClasses ["leaf","symbol"] xml]
+        postfixRender _ _ _ _ = Nothing in
     let renderfun = case kind of "infix" -> infixRender priosInfix
                                  "infixl" -> infixRender priosInfixL
                                  "infixr" -> infixRender priosInfixR
@@ -134,46 +139,63 @@ mfenced ms = mrow $ moFence "(" : ms ++ [moFence ")"]
 applyFunction :: X.Element
 applyFunction = moInfix "\x2061" -- &ApplyFunction;
 
+addPath :: Path -- ^ path (in reverse)
+           -> X.Element -> X.Element
+addPath path xml =
+    xml { X.elementAttributes = Map.insert pathattr pathstr $ X.elementAttributes xml }
+        where pathattr = trace "SHOULD BE TRACED ONLY ONCE" $ unqName "path"
+              pathstr = T.pack $ intercalate "." $ map show $ reverse path
+addClasses :: [String] -> X.Element -> X.Element
+addClasses classes =
+    let classtxt = T.pack (unwords classes) in
+    let classattr = unqName "class" in
+    \xml ->
+    xml { X.elementAttributes = Map.insert classattr classtxt $ X.elementAttributes xml }
+
 maxPri :: Int
 maxPri = 1000
 
-pmmlRender' :: PMMLConfiguration -> Int -> Openmath -> X.Element
-pmmlRender' _ _ (OMI _ i) = pmmlElem "mn" [] [txt $ show i]
-pmmlRender' _ _ (OMF _ f) = pmmlElem "mn" [] [txt $ show f]
-pmmlRender' _ _ (OMV _ v) = pmmlElem "mi" [] [txt v]
-pmmlRender' _ _ (OMSTR _ s) = pmmlElem "mtext" [] [txt $ show s] -- TODO should be enclosed in quotes?
-pmmlRender' _ _ (OMB _ _) = merror "rendering of OMB not implemented" -- TODO
+pmmlRender' :: PMMLConfiguration
+            -> Int -- ^ priority
+            -> Path -- ^ (in reverse)
+            -> Openmath -> X.Element
+pmmlRender' _ _ path (OMI _ i) = addPath path $ addClasses ["leaf","number","integer"] $ pmmlElem "mn" [] [txt $ show i]
+pmmlRender' _ _ path (OMF _ f) = addPath path $ addClasses ["leaf","number","float"] $ pmmlElem "mn" [] [txt $ show f]
+pmmlRender' _ _ path (OMV _ v) = addPath path $ addClasses ["leaf","variable"] $ pmmlElem "mi" [] [txt v]
+pmmlRender' _ _ path (OMSTR _ s) = addPath path $ addClasses ["leaf","string"] $ pmmlElem "mtext" [] [txt $ show s] -- TODO should be enclosed in quotes?
+pmmlRender' _ _ _ (OMB _ _) = merror "rendering of OMB not implemented" -- TODO
 
-pmmlRender' config _ (OMS _ cd name)
+pmmlRender' config _ path (OMS _ cd name)
     | Just op <- Map.lookup (cd,name) (pmmlConfigOperators config),
       Just xml <- pmmlOpStandalone op
-    = xml
+    = addPath path $ addClasses ["leaf","symbol"] xml
 
-pmmlRender' _ _ (OMS _ cd name) = mi $ cd++"."++name
+pmmlRender' _ _ path (OMS _ cd name) = addPath path $ addClasses ["leaf","symbol"] $ mi $ cd++"."++name
 
-pmmlRender' config pri (OMA [] (OMS _ cd name) args)
+pmmlRender' config pri path (OMA [] (OMS _ cd name) args)
     | Just op <- Map.lookup (cd,name) (pmmlConfigOperators config),
-      Just xml <- pmmlOpRender op config pri args
+      Just xml <- pmmlOpRender op config pri path args
     = -- trace ("PRI "++show pri++" X "++show (pmmlOpPriority op))
-            if pri > pmmlOpPriority op then mfenced [xml] else xml
+            addPath path $ addClasses ["apply"] $
+                if pri > pmmlOpPriority op then mfenced [xml] else xml
 
-pmmlRender' config _ (OMA _ hd args) = mrow [
-    pmmlRender' config maxPri hd,
+pmmlRender' config _ path (OMA _ hd args) = addPath path $ addClasses ["apply"] $ mrow [
+    pmmlRender' config maxPri (0:path) hd,
     applyFunction,
-    mfencedSep $ map (pmmlRender' config 0) args]
+    mfencedSep $ zipWith (\i a -> pmmlRender' config 0 (i:1:path) a) [0..] args]
 
 
-pmmlRender' config _ (OMBIND _ hd bvars arg) = mrow $
-    pmmlRender' config maxPri hd
-    : map (pmmlRender' config maxPri . bvarToOMV) bvars
-    ++ [moInfix ".", pmmlRender' config 0 arg]
+pmmlRender' config _ path (OMBIND _ hd bvars arg) = addPath path $ addClasses ["bind"] $ mrow $
+    pmmlRender' config maxPri (0:path) hd
+    : zipWith (\i -> pmmlRender' config maxPri (i:1:path) . bvarToOMV) [0..] bvars
+    ++ [moInfix ".", pmmlRender' config 0 (2:path) arg]
 
-pmmlRender' _ _ (OME{}) = merror "rendering of OME not implemented" -- TODO
+pmmlRender' _ _ _ (OME{}) = merror "rendering of OME not implemented" -- TODO
 --pmmlRender' _ _ _ = merror "pmmlRender: not implemented" -- TODO
 
 
 pmmlRender :: PMMLConfiguration -> Openmath -> X.Element
-pmmlRender config = pmmlRender' config 0
+pmmlRender config = pmmlRender' config 0 []
 
 toPmathml :: PMMLConfiguration -> Openmath -> String
 toPmathml config math =

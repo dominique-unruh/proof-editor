@@ -2,7 +2,7 @@ from PyQt5.QtCore import QAbstractListModel, QVariant, QModelIndex
 from PyQt5.QtCore import Qt
 from PyQt5.Qt import QMessageBox
 from abc import ABCMeta, abstractmethod
-from mathview import Formula, call_converter, ConverterError, mathedhaskell,\
+from mathview import Formula, ConverterError, mathedhaskell,\
     call_converter_json
 from typing import List
 
@@ -18,20 +18,20 @@ class Transformation(metaclass=ABCMeta):
     def transform(self, arguments:List[Formula], paths:List[str]) -> Formula: pass
 
 
-class OCamlTransformation(Transformation):
-    def __init__(self, name, command, short_descr, argnum=1):
-        super().__init__(name,short_descr,argnum)
-        self.command = command
-        
-    def transform(self, formulas:List[Formula], paths:List[str])->Formula:
-        mml = [a.get_cmathml() for a in formulas]
-        args = [a for aa in zip(mml, paths) for a in aa] # Interleave lists
-        try: res = call_converter('transformation', self.command, *args)
-        except ConverterError as e: 
-            QMessageBox.warning(None, 'Transformation "{}" failed'.format(self.name), e.error)
-            return None
-        #logging.debug("Arguments: "+str(self.arguments))
-        return Formula(res)
+# class OCamlTransformation(Transformation):
+#     def __init__(self, name, command, short_descr, argnum=1):
+#         super().__init__(name,short_descr,argnum)
+#         self.command = command
+#         
+#     def transform(self, formulas:List[Formula], paths:List[str])->Formula:
+#         mml = [a.get_cmathml() for a in formulas]
+#         args = [a for aa in zip(mml, paths) for a in aa] # Interleave lists
+#         try: res = call_converter('transformation', self.command, *args)
+#         except ConverterError as e: 
+#             QMessageBox.warning(None, 'Transformation "{}" failed'.format(self.name), e.error)
+#             return None
+#         #logging.debug("Arguments: "+str(self.arguments))
+#         return Formula(res)
 
 class HaskellTransformation(Transformation):
     def __init__(self, name, command, short_descr, argnum=1):

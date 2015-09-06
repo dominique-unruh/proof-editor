@@ -21,30 +21,30 @@ class ConverterError(RuntimeError):
         self.error = error
         self.longError = longError
         self.cmd = cmd
-def call_converter(command, *args):
-    if command in ('tex2cmml','transform'):
-        converter = mathedhaskell
-    else:
-        converter = cmathml
-
-    cmd = [converter, command]+list(args)
-    cmdstr = " ".join("'{}'".format(x) for x in cmd)
-    logging.info("Calling {}".format(cmdstr))
-
-    try:
-        proc = Popen(cmd, cwd=utils.base_path, env={'OCAMLRUNPARAM':'b'},  stdin=PIPE, stdout=PIPE, stderr=PIPE)
-        (result, errors) = proc.communicate()
-        if proc.returncode != 0:
-            errors = str(errors, encoding='utf-8')
-            logging.warning("Converter call failed: {}".format(cmdstr, errors))
-            raise ConverterError(cmd, errors)
-        result = str(result, encoding="utf-8")
-        return result
-    except ConverterError: raise
-    except:
-        e = traceback.format_exc()
-        logging.warning(e)
-        raise ConverterError("Unhandled exception",e)
+# def call_converter(command, *args):
+#     if command in ('tex2cmml','transform'):
+#         converter = mathedhaskell
+#     else:
+#         converter = cmathml
+# 
+#     cmd = [converter, command]+list(args)
+#     cmdstr = " ".join("'{}'".format(x) for x in cmd)
+#     logging.info("Calling {}".format(cmdstr))
+# 
+#     try:
+#         proc = Popen(cmd, cwd=utils.base_path, env={'OCAMLRUNPARAM':'b'},  stdin=PIPE, stdout=PIPE, stderr=PIPE)
+#         (result, errors) = proc.communicate()
+#         if proc.returncode != 0:
+#             errors = str(errors, encoding='utf-8')
+#             logging.warning("Converter call failed: {}".format(cmdstr, errors))
+#             raise ConverterError(cmd, errors)
+#         result = str(result, encoding="utf-8")
+#         return result
+#     except ConverterError: raise
+#     except:
+#         e = traceback.format_exc()
+#         logging.warning(e)
+#         raise ConverterError("Unhandled exception",e)
         
 
 def call_converter_json(command,*args):
@@ -196,9 +196,9 @@ class Formula():
         if format is None:
             self.cmathml = math
         elif format == 'tex':
-            self.cmathml = call_converter_json("{}2cmml".format(format), math)
+            self.cmathml = call_converter_json("tex2cmml".format(format), math)
         else:
-            self.cmathml = call_converter("{}2cmml".format(format), math)
+            raise ValueError("Unknown format '{}'".format(format))
     
 #     def get_pmathml(self):
 #         if self.pmathml is not None: return self.pmathml

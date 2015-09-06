@@ -2,7 +2,7 @@
 
 
 from PyQt5.QtCore import pyqtSlot, QItemSelection
-from PyQt5.QtWidgets import QMainWindow, QMessageBox, QLineEdit, QListView, QSplitter, QLabel
+from PyQt5.QtWidgets import QMainWindow, QLineEdit, QListView, QSplitter, QLabel
 from PyQt5.Qt import QItemSelectionModel, QPointF, QSortFilterProxyModel
 from PyQt5 import Qt
 from typing import Optional, List
@@ -159,8 +159,9 @@ class MainWin(QMainWindow, Ui_MainWindow):
         
     def addExamples(self):
         formulas = []
-        for i in range(10):
-            formulas.append(self.addFormulaText("example"+str(i+1)))
+        examples = ['1+1', '3/2']
+        for x in examples:
+            formulas.append(self.addFormulaText(x))
         logging.debug(formulas)
         self.clear_mathviewers()
         self.graph.clearSelection()
@@ -186,7 +187,7 @@ class MainWin(QMainWindow, Ui_MainWindow):
         self.select_mathviewer((self.current_mathviewer+1) % self.current_argnum)
 
 
-    def addFormulaText(self,  mml:str, sources:List[Formula]=[], format:str='auto') -> Formula:  # @ReservedAssignment
+    def addFormulaText(self,  mml:str, sources:List[Formula]=[], format:str='tex') -> Formula:  # @ReservedAssignment
         """Parses and adds a formula to the graph and selects it"""
         formula = Formula(mml,format=format)
         self.addFormula(formula, sources=sources)

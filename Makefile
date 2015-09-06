@@ -16,11 +16,11 @@ else
   ARCH=x86_64
 endif
 
-CMATHML = cmathml$(EXE_SUFFIX)
+#CMATHML = cmathml$(EXE_SUFFIX)
 MATHEDHASKELL = haskell/dist/build/MathEdHaskell/MathEdHaskell$(EXE_SUFFIX)
 MATHEDHASKELL_CWD = MathEdHaskell$(EXE_SUFFIX)
 
-DEPENDENCIES=resources/mathjax src/testui/Ui_mainwin.py src/graph/Ui_controls.py resources/icons $(CMATHML) $(MATHEDHASKELL) $(MATHEDHASKELL_CWD)
+DEPENDENCIES=resources/mathjax src/testui/Ui_mainwin.py src/graph/Ui_controls.py resources/icons $(MATHEDHASKELL) $(MATHEDHASKELL_CWD)
 
 run : $(DEPENDENCIES)
 	$(PYTHON) src/main.py
@@ -53,11 +53,11 @@ $(MATHEDHASKELL) : haskell/MathEdHaskell.cabal \
 	cd haskell && cabal configure --enable-tests
 	cd haskell && cabal build
 
-cmathml : cmathml.ml cmathml.mli
-	ocamlfind ocamlopt -package batteries,xml-light -linkpkg cmathml.mli cmathml.ml -g -o cmathml 
+#cmathml : cmathml.ml cmathml.mli
+#	ocamlfind ocamlopt -package batteries,xml-light -linkpkg cmathml.mli cmathml.ml -g -o cmathml 
 
-cmathml.exe : cmathml.ml cmathml.mli Makefile
-	ocamlfind ocamlopt xml-light.cmxa -package batteries -linkpkg cmathml.mli cmathml.ml -g -o cmathml.exe 
+#cmathml.exe : cmathml.ml cmathml.mli Makefile
+#	ocamlfind ocamlopt xml-light.cmxa -package batteries -linkpkg cmathml.mli cmathml.ml -g -o cmathml.exe 
 
 resources/mathjax : 
 	rm -rf $@ /tmp/mathjax.zip
