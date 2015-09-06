@@ -1,4 +1,5 @@
 {-# OPTIONS_GHC -F -pgmF htfpp #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module Openmath.PmathmlTest where
 
@@ -6,8 +7,9 @@ import Test.Framework
 import Openmath.Types
 import Openmath.Pmathml
 import Misc
+import qualified Text.XML as X
 
-{-# ANN module "HLint: ignore Use camelCase" #-}
+{-# ANN module ("HLint: ignore Use camelCase" :: String) #-}
 
 
 test_int :: IO ()
@@ -90,3 +92,12 @@ test_parens4 = do
     let res = xmlText xml
     let expect = "1+2\8901\&3"
     assertEqual expect res
+
+test_frac :: IO ()
+test_frac = do
+    config <- pmmlDefaultConfiguration
+    let xml = pmmlRender config $ 1/2
+    let text = xmlToString [] xml
+    assertEqual "12" text
+    let tag = X.nameLocalName $ X.elementName xml
+    assertEqual tag "mfrac"

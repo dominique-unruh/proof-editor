@@ -16,15 +16,18 @@ import Data.List (intersperse, intercalate)
 import Misc
 import Debug.Trace (trace)
 import Control.Exception (throw)
+import Text.Read (readMaybe)
+
+type RenderFunction = PMMLConfiguration
+                   -> Int -- ^ upper level priority
+                   -> Path -- ^ Path (in reverse) of the current element (does not need to be added to the element itself, but may be needed for children)
+                   -> [Openmath] -- ^ symbol arguments
+                   -> Maybe X.Element
 
 data PMMLOperator = PMMLOperator {
     pmmlOpPriority :: Int,
     pmmlOpStandalone :: Maybe X.Element,
-    pmmlOpRender :: PMMLConfiguration
-                 -> Int -- ^ upper level priority
-                 -> Path -- ^ Path (in reverse) of the current element (does not need to be added to the element itself, but may be needed for children)
-                 -> [Openmath] -- ^ symbol arguments
-                 -> Maybe X.Element
+    pmmlOpRender :: RenderFunction
 } deriving (Typeable)
 
 data PMMLConfiguration = PMMLConfiguration {
@@ -46,6 +49,26 @@ triplicate a b c (x:xs) = (a,0,x):trip 1 xs
     where trip _ [] = []
           trip i [y] = [(c,i,y)]
           trip i (y:ys) = (b,i,y):trip (i+1) ys
+
+
+mkTemplateRender :: X.Element -> RenderFunction
+mkTemplateRender xml =
+    let len = f xml + 1 -- number of arguments in template
+            where f X.Element{X.elementName=X.Name{X.nameLocalName=tagName}}
+                    | Just i <- readMaybe $ T.unpack tagName = i
+                  f e = maximum $ map f' $ X.elementNodes e
+                  f' (X.NodeElement e) = f e
+                  f' _ = 0 in
+    \config _ path args ->
+    let render X.Element{X.elementName=X.Name{X.nameLocalName=tagName}}
+               | Just i <- readMaybe $ T.unpack tagName
+               = pmmlRender' config argPrio (i:1:path) $ args!!i
+                    where argPrio = 0
+        render elm = elm { X.elementNodes=map render' $ X.elementNodes elm }
+        render' (X.NodeElement elm) = X.NodeElement $ render elm
+        render' node = node
+    in
+    if length args == len then Just $ render xml else Nothing
 
 
 templateToOp :: Int -> String -> PMMLOperator
@@ -74,9 +97,12 @@ templateToOp prio templ =
                                  "infixr" -> infixRender priosInfixR
                                  "prefix" -> prefixRender
                                  "postfix" -> postfixRender
+                                 "template" -> mkTemplateRender xml
                                  _ -> error $ "unsupported kind "++kind in
+    let standalone = case kind of "template" -> Nothing
+                                  _ -> Just xml in
     PMMLOperator { pmmlOpPriority=prio,
-                   pmmlOpStandalone=Just xml,
+                   pmmlOpStandalone=standalone,
                    pmmlOpRender=renderfun }
 
 pmmlDefaultConfiguration :: IO PMMLConfiguration
