@@ -60,7 +60,7 @@ test-suite Test
         xml-conduit -any,
         xml-types -any,
         zip-archive -any,
-        filepath >=1.4.0.0 && <1.5
+        filepath -any
     hs-source-dirs: src
     other-modules:
         Misc

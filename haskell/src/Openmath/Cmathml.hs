@@ -7,7 +7,7 @@ import Text.XML.Light.Output
 import Text.XML.Light.Proc
 import Text.XML.Light.Input (parseXML)
 import Data.Char (isSpace)
-import Openmath.Utils (bvarToOMV, pattern Attribution, removeAttribution, mapAttribution)
+import Openmath.Utils (pattern Attribution, removeAttribution, mapAttribution)
 --import Numeric (readSigned, readFloat)
 import Data.Ratio (denominator, numerator)
 
@@ -33,8 +33,8 @@ toElement :: Openmath -> Content
 toElement (math @ (Attribution sem)) =
     let math' = removeAttribution math in
     let attribs = map attrToXML sem
-            where attrToXML (cd,name,AttributeOM ann) = elm "annotation-xml" [attr "cd" cd, attr "name" name, attr "encoding" "MathML-Content"] [toElement ann]
-                  attrToXML (_,_,AttributeForeign{}) = error "nyi foreign attribute" in
+            where attrToXML (cd,name,False,ann) = elm "annotation-xml" [attr "cd" cd, attr "name" name, attr "encoding" "MathML-Content"] [toElement ann]
+                  attrToXML (_,_,True,_) = error "nyi foreign attribute" in
     elm "semantics" [] (toElement math' : attribs)
 toElement (OMS _ cd name) = elm "csymbol" [attr "cd" cd] [text name]
 toElement (OMA _ hd body) = elm "apply" [] (map toElement (hd:body))
@@ -42,7 +42,7 @@ toElement (OMV _ name) = elm "ci" [] [text name]
 toElement (OMBIND _ hd vars arg) =
     elm "bind" []
         (toElement hd :
-         map (\v -> elm "bvar" [] [toElement (bvarToOMV v)]) vars ++
+         map (\v -> elm "bvar" [] [toElement v]) vars ++
          [toElement arg])
 toElement (OMI _ i) =
     elm "cn" [attr "type" "integer"] [text (show i)]
@@ -124,13 +124,13 @@ fromElement (CRef _) = error "CRef in Content MathML"
 fromElement (Elem _) = error "unreachable code"
 
 
-fromElementAttr :: Content -> (String,String,Attribute)
+fromElementAttr :: Content -> Attribute
 fromElementAttr (Elm "annotation" _ _) = error "not implemented: annotation-tag"
 fromElementAttr (Elm "annotation-xml" (attrs @ (EncodingAttr "MathML-Content")) [body]) =
   case (attrP "cd" attrs, attrP "name" attrs) of
     (Nothing,_) -> error "annotation-xml lacking cd-attribute"
     (_,Nothing) -> error "annotation-xml lacking name-attribute"
-    (Just cd, Just name) -> (cd,name,AttributeOM $ fromElement body)
+    (Just cd, Just name) -> (cd,name,False,fromElement body)
 fromElementAttr (Elm "annotation-xml" (EncodingAttr "MathML-Content") _) =
     error "annotation-xml with encoding MathML3-Content must have exactly one argument"
 fromElementAttr (Elm "annotation-xml" _ _) =
@@ -141,10 +141,10 @@ fromElementAttr _ =
     error $ "expecting annotation or annotation-xml in semantics, not a non-element"
 
 
-bvarFromElement :: Content -> Bvar
+bvarFromElement :: Content -> Openmath
 bvarFromElement (Elm "bvar" _ [v]) =
     case fromElement v of
-        OMV sem name -> (sem,name)
+        e @ (OMV _ _) -> e
         _ -> error "below bvar, not ci or semantics-ci"
 bvarFromElement (Elm "bvar" _ _) = error "bvar must have exactly one child"
 bvarFromElement (Elm tag _ _) = error $ "unexpected tag "++tag++" instead of bvar"

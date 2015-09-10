@@ -1,20 +1,16 @@
+{-# LANGUAGE DeriveDataTypeable #-}
 module Openmath.Types
-    (Openmath(..), Attribution, Bvar, Attribute(..),
-     Path, PathRange, )
+    (Openmath(..), Attribution, Attribute,
+     Path, PathRange )
 where
 
 import qualified Data.ByteString as B
-import qualified Data.XML.Types
+--import qualified Data.XML.Types
 import Data.Typeable (Typeable)
---import qualified Data.Text
+import Data.Data (Data)
 
 
 
-type Foreign = (String,Data.XML.Types.Node) -- encoding, content
-data Error = ErrorOM Openmath | ErrorForeign Foreign
-  deriving (Eq, Show, Typeable)
---data Number = Int Integer | IEEE Double | Real Rational
---    deriving (Eq, Show)
 {- | Constraints: cd-name must be non-empty everywhere,
      name of bvars and ci's must be nonempty
      whatever conditions CMML standard imposes on identifiers
@@ -26,16 +22,15 @@ data Openmath =
   | OMS Attribution String String -- cd, name
   | OMSTR Attribution String
   | OMA Attribution Openmath [Openmath]
-  | OMBIND Attribution Openmath [Bvar] Openmath
-  | OME Attribution String String [Error] -- cd name contents
+  | OMBIND Attribution Openmath [Openmath] Openmath -- Valid Openmath objects have only OMV's in the third argument
+  | OME Attribution String String [(Bool,Openmath)] -- cd name contents
   | OMB Attribution B.ByteString
-    deriving (Eq, Show, Typeable)
-type Attribution = [(String,String,Attribute)] -- cd name value
-data Attribute =
-    AttributeOM Openmath -- for encoding "MathML-Content"
-    | AttributeForeign Foreign
-    deriving (Eq, Show, Typeable)
-type Bvar = (Attribution,String)
+    deriving (Eq, Show, Typeable, Data)
+type Attribution = [Attribute] -- cd name value
+type Attribute = (String,String,Bool,Openmath)
+        -- Bool -> foreign attribute
+--type Bvar = (Attribution,String)
+
 
 {- | Describes a path within a formula (i.e., a pointer to a subterm).
      [] denotes the formula itself.

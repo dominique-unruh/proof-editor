@@ -5,7 +5,7 @@ import Openmath.Types
 
 
 import Test.Framework
-import Openmath.Utils (bvarToOMV, omvToBvar)
+--import Openmath.Utils (bvarToOMV, omvToBvar)
 import Openmath.QuickCheck()
 
 {-# ANN module "HLint: ignore Use camelCase" #-}
@@ -19,7 +19,7 @@ nonleaf size = do
     let sizeHd = size `div` 5
     let sizeBvars = size `div` 5
     let sizeArgs = size-semSize-sizeHd
-    let sizeArg = size-semSize-sizeBvars 
+    let sizeArg = size-semSize-sizeBvars
     sem <- semanticsGen semSize
     hd <- cmathml sizeHd
     args <- sized_list cmathml sizeArgs
@@ -34,7 +34,7 @@ bvar size = do
     return (sem,name)
 
 cmathml :: Int -> Gen Openmath
-cmathml size = 
+cmathml size =
     if size<=1 then leaf size
     else oneof [ leaf size, nonleaf size ]
 
@@ -59,7 +59,7 @@ leaf size = do
     str <- arbitrary
 --    bytes <- arbitrary
     i <- arbitrary
-    oneof (map return [ CN sem (Int i), CI sem name, CSymbol sem cd name, CS sem str]) -- TODO CError, CBytes 
+    oneof (map return [ CN sem (Int i), CI sem name, CSymbol sem cd name, CS sem str]) -- TODO CError, CBytes
 
 instance Arbitrary Bvar where
     arbitrary = sized bvar
@@ -67,11 +67,11 @@ tmp :: Gen Bvar
 tmp = arbitrary :: Gen Bvar -- to avoid "orphan instance" warning
 -}
 
-prop_ci_bvar :: Bvar -> Bool
-prop_ci_bvar b = 
-    b == omvToBvar (bvarToOMV b)
+--prop_ci_bvar :: Bvar -> Bool
+--prop_ci_bvar b =
+--    b == omvToBvar (bvarToOMV b)
 
-    
+
 test_plus :: IO ()
 test_plus = assertEqual (1+2) (OMA[] (OMS [] "arith1" "plus") [OMI [] 1, OMI [] 2])
 

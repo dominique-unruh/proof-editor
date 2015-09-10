@@ -55,7 +55,7 @@ test_known_apply = do
 test_forall :: IO ()
 test_forall = do
     config <- pmmlDefaultConfiguration
-    let xml = pmmlRender config $ OMBIND [] (OMS [] "quant1" "forall") [([],"x")] (OMS [] "logic1" "true")
+    let xml = pmmlRender config $ OMBIND [] (OMS [] "quant1" "forall") [OMV [] "x"] (OMS [] "logic1" "true")
     let res = xmlText xml
     let expect = "\8704x.true"
     assertEqual expect res
@@ -97,7 +97,7 @@ test_frac :: IO ()
 test_frac = do
     config <- pmmlDefaultConfiguration
     let xml = pmmlRender config $ 1/2
-    let text = xmlToString [] xml
+    let text = xmlText xml
     assertEqual "12" text
     let tag = X.nameLocalName $ X.elementName xml
     assertEqual tag "mfrac"

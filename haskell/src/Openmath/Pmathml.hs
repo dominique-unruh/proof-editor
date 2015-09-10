@@ -213,7 +213,7 @@ pmmlRender' config _ path (OMA _ hd args) = addPath path $ addClasses ["apply"] 
 
 pmmlRender' config _ path (OMBIND _ hd bvars arg) = addPath path $ addClasses ["bind"] $ mrow $
     pmmlRender' config maxPri (0:path) hd
-    : zipWith (\i -> pmmlRender' config maxPri (i:1:path) . bvarToOMV) [0..] bvars
+    : zipWith (\i -> pmmlRender' config maxPri (i:1:path)) [0..] bvars
     ++ [moInfix ".", pmmlRender' config 0 (2:path) arg]
 
 pmmlRender' _ _ _ (OME{}) = merror "rendering of OME not implemented" -- TODO

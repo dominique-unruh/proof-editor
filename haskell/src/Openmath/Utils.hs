@@ -1,8 +1,8 @@
 {-# LANGUAGE RankNTypes, ScopedTypeVariables, PatternSynonyms, ViewPatterns #-}
 module Openmath.Utils
  (getSubterm, replaceSubterm, equivalentTerms, isAtom, pattern Attribution, pattern Attribution',
-  bvarToOMV, omvToBvar, pattern Int', pattern OMASym, bindP, removeAttribution, mapAttribution,
-  splitDot)
+  pattern Int', pattern OMASym, bindP, removeAttribution, mapAttribution,
+  splitDot, semantics')
 where
 
 import Openmath.Types
@@ -11,7 +11,7 @@ pattern OMASym cd name args <- (OMA _ (OMS _ cd name) args)
 pattern Int' i <- OMI _ i
 
 -- TODO replace by PatternSynonym
-bindP :: Openmath -> Maybe (String, String, [Bvar], Openmath)
+bindP :: Openmath -> Maybe (String, String, [Openmath], Openmath)
 bindP (OMBIND _ (OMS _ cd name) bvars arg) = Just (cd,name,bvars,arg)
 bindP _ = Nothing
 
@@ -52,14 +52,14 @@ pattern Attribution s <- (semantics -> Just s)
      If the semantics is empty ([]), returns Nothing.
      Useful for pattern matching. -}
 
--- | Converts a bound variable (Bvar) to a Openmath identifier (CI)
-bvarToOMV :: Bvar -> Openmath
-bvarToOMV (sem,name) = OMV sem name
-
--- | Converts a Openmath identifier (CI) to a bound variable (Bvar)
-omvToBvar :: Openmath -> (Attribution, String)
-omvToBvar (OMV sem name) = (sem,name)
-omvToBvar _ = error "expecting CI"
+---- | Converts a bound variable (Bvar) to a Openmath identifier (CI)
+--bvarToOMV :: Bvar -> Openmath
+--bvarToOMV (sem,name) = OMV sem name
+--
+---- | Converts a Openmath identifier (CI) to a bound variable (Bvar)
+--omvToBvar :: Openmath -> (Attribution, String)
+--omvToBvar (OMV sem name) = (sem,name)
+--omvToBvar _ = error "expecting CI"
 
 
 {- | Returns True the formula is an atom, i.e., contains no further subterms.
@@ -83,8 +83,8 @@ getSubterm (OMA _ hd _) (0:path) = getSubterm hd path
 getSubterm (OMA _ _ args) (1:i:path) = getSubterm (args!!i) path
 getSubterm (OMA{}) (i:_) = error $ "accessing subelement "++show i ++ " of OMA"
 getSubterm (OMBIND _ hd _ _) (0:path) = getSubterm hd path
-getSubterm (OMBIND _ _ bvars _) (1:i:path) =
-    case bvars!!i of (sem,name) -> getSubterm (OMV sem name) path
+getSubterm (OMBIND _ _ bvars _) (1:i:path) = getSubterm (bvars!!i) path
+--    case bvars!!i of (sem,name) -> getSubterm (OMV sem name) path
 getSubterm (OMBIND _ _ _ arg) (2:path) = getSubterm arg path
 getSubterm (OMBIND{}) (i:_) = error $ "accessing subelement "++show i ++ " of OMBIND"
 getSubterm (OME{}) _ = error "OME subterms not supported"
@@ -109,7 +109,7 @@ replaceSubterm (OMA sem hd args) (1:i:path) subterm =
 replaceSubterm (OMA{}) (i:_) _ = error $ "accessing subelement "++show i ++ " of OMA"
 replaceSubterm (OMBIND sem hd bvars arg) (0:path) subterm = OMBIND sem (replaceSubterm hd path subterm) bvars arg
 replaceSubterm (OMBIND sem hd bvars arg) (1:i:path) subterm =
-    let newbvar =  omvToBvar (replaceSubterm (bvarToOMV (bvars!!i)) path subterm) in
+    let newbvar =  replaceSubterm (bvars!!i) path subterm in
     OMBIND sem hd (replaceIth bvars i newbvar) arg
 replaceSubterm (OMBIND sem hd bvars arg) (2:path) subterm = OMBIND sem hd bvars (replaceSubterm arg path subterm)
 replaceSubterm (OMBIND{}) (i:_) _ = error $ "accessing subelement "++show i++" of OMBIND"

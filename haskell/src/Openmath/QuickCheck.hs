@@ -3,9 +3,10 @@
 module Openmath.QuickCheck where
 
 import Control.Monad (replicateM)
-import Test.QuickCheck (sized, resize, Gen, oneof, arbitrary, elements, Arbitrary)
+import Test.QuickCheck (sized, resize, Gen, oneof, arbitrary, elements, Arbitrary, choose)
 import Openmath.Types
-import Openmath.Utils (omvToBvar)
+import Openmath.Utils
+--import Openmath.Zipper
 
 {-# ANN module "HLint: ignore Reduce duplication" #-}
 
@@ -49,11 +50,11 @@ attributionGen =
     oneof [shrinkingList annot, return []]
             where annot = do
                     (cd,name) <- arbitrary
-                    a <- attribGen
-                    return (cd,name,a)
+                    a <- openmathGen
+                    return (cd,name,False,a)
 
-attribGen :: Gen Attribute
-attribGen = fmap AttributeOM openmathGen
+--attribGen :: Gen Attribute
+--attribGen = fmap AttributeOM openmathGen
 
 omiGen :: Gen Openmath
 omiGen = do
@@ -108,11 +109,11 @@ omaGen = do
 
 ombindGen :: Gen Openmath
 ombindGen = do
-    (sem,hd,bvars,arg) <- shrinkingTuple4 attributionGen openmathGen (shrinkingList bvarGen) openmathGen
+    (sem,hd,bvars,arg) <- shrinkingTuple4 attributionGen openmathGen (shrinkingList omvGen) openmathGen
     return $ OMBIND sem hd bvars arg
 
-bvarGen :: Gen Bvar
-bvarGen = fmap omvToBvar omvGen
+--bvarGen :: Gen Bvar
+--bvarGen = omvGen
 
 leafGens :: [Gen Openmath]
 leafGens = [ omiGen, omfGen, omstrGen, omvGen, omsGen ]
@@ -123,10 +124,41 @@ nonleafGens = [ omaGen, ombindGen ]
 openmathGen :: Gen Openmath
 openmathGen = sized (\size -> if size<=1 then oneof leafGens else oneof $ leafGens++nonleafGens)
 
+omPathGen :: Openmath -> Gen Path
+omPathGen om = do
+    let pc = pathComponents om
+    p1 <- elements $ if null pc then [[]] else pc
+    p <- if null p1 then return [] else omPathGen $ getSubterm om p1
+    return $ p1++p
+    where pathComponents (OMS s _ _) = semComponents s
+          pathComponents (OMF s _) = semComponents s
+          pathComponents (OMV s _) = semComponents s
+          pathComponents (OMI s _) = semComponents s
+          pathComponents (OMB s _) = semComponents s
+          pathComponents (OMSTR s _) = semComponents s
+          pathComponents (OMA s _ args) = semComponents s ++ [0] : [[1,i] | (i,_) <- zip [0..] args]
+          pathComponents (OMBIND s _ bvars _) = semComponents s ++ [0] : [2] : [[1,i] | (i,_) <- zip [0..] bvars]
+          pathComponents (OME s _ _ e) = semComponents s ++ [[i] | (i,_) <- zip [0..] e]
+          semComponents s = [[-i-1] | (i,_) <- zip [0..] s]
+
+omPathGenHalf :: Openmath -> Gen Path
+omPathGenHalf om = do
+    path <- omPathGen om
+    len <- choose (0,length path)
+    return $ take len path
+
+--omZipperGen :: Gen OpenmathZipper
+--omZipperGen = do
+--    om <- openmathGen
+--    path <- omPathGenHalf om
+--    return (pathToZipper path om)
+
+--instance Arbitrary OpenmathZipper where
+--    arbitrary = omZipperGen
 
 instance Arbitrary Openmath where
     arbitrary = openmathGen
 
-instance Arbitrary Attribute where
-    arbitrary = attribGen
+--instance Arbitrary Attribute where
+--    arbitrary = attribGen
 
