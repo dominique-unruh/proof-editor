@@ -15,26 +15,17 @@ import transform, utils
 from mathview import Formula, ConverterError
 from mathview.widgets import MathGraphicsItem, MathView
 
-
-#mathjax_page = """
-#<html>
-#<meta charset="utf-8" /> 
-#<head>
-#<script src='qrc:///testui/mathview.js'></script>
-#<script src='https://cdn.mathjax.org/mathjax/latest/MathJax.js'></script>
-#</head>
-#<body onload="onLoad()">
-#<p style="text-align: center">
-#<span id="formula-span">
-#<math xmlns="http://www.w3.org/1998/Math/MathML" display="{display}">
-#{math}
-#</math>
-#</span>
-#</p>
-#<span id="selection-rect"></span>
-#</body>
-#</html>
-#"""
+userErrorTemplate = """
+<html>
+<meta charset="utf-8" /> 
+<head>
+<script src='../mathjax/MathJax.js?config=MML_HTMLorMML'></script>
+</head>
+<body>
+{body}
+</body>
+</html>
+"""
 
 class MainWin(QMainWindow, Ui_MainWindow):
     """
@@ -68,9 +59,10 @@ class MainWin(QMainWindow, Ui_MainWindow):
         anim.setEasingCurve(Qt.QEasingCurve.OutQuad)
         anim.setDuration(5000)
         self.txtShortErrorAnim = anim
-        
-        with open(utils.file_path("resources/errors/error.css")) as f:
-            self.txtLongError.document().setDefaultStyleSheet(f.read())
+
+        self.error_base_url = Qt.QUrl.fromLocalFile(utils.file_path("resources/errors/error.html"))
+        self.txtLongError.settings().setUserStyleSheetUrl(self.error_base_url.resolved(Qt.QUrl("error.css"))) 
+        self.txtLongError.setHtml('<span style="color:gray">[No help topic open]</span>')
         
         self.splitter.setSizes([2000, 1000, 500, 500])
 
@@ -332,7 +324,8 @@ class MainWin(QMainWindow, Ui_MainWindow):
         self.txtShortError.setText(short)
         self.txtShortErrorAnim.stop()
         self.txtShortErrorAnim.start()
-        self.txtLongError.setHtml(long)
+        logging.debug(long)
+        self.txtLongError.setHtml(userErrorTemplate.format(body=long),self.error_base_url)
 
     def deemphUserError(self):
         self.txtShortErrorAnim.stop()

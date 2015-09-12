@@ -21,3 +21,8 @@ xmlToString ns =
 xmlText :: X.Element -> String
 xmlText xml =
     concatMap T.unpack $ (X.descendant >=> X.content) $ X.fromNode $ X.NodeElement xml
+
+unqName :: String -> X.Name
+unqName name = X.Name { X.nameLocalName=T.pack name,
+                        X.nameNamespace=Nothing,
+                        X.namePrefix=Nothing }

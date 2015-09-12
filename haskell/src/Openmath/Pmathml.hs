@@ -1,5 +1,7 @@
 {-# LANGUAGE PatternGuards #-}
-module Openmath.Pmathml where
+module Openmath.Pmathml (
+    toPmathml, pmmlRender, PMMLConfiguration(..), pmmlDefaultConfiguration
+    ) where
 
 import qualified Data.Map as Map
 import qualified Text.XML as X
@@ -17,6 +19,7 @@ import Misc
 import Debug.Trace (trace)
 import Control.Exception (throw)
 import Text.Read (readMaybe)
+import System.IO.Unsafe (unsafePerformIO)
 
 type RenderFunction = PMMLConfiguration
                    -> Int -- ^ upper level priority
@@ -105,8 +108,8 @@ templateToOp prio templ =
                    pmmlOpStandalone=standalone,
                    pmmlOpRender=renderfun }
 
-pmmlDefaultConfiguration :: IO PMMLConfiguration
-pmmlDefaultConfiguration = do
+pmmlDefaultConfiguration :: PMMLConfiguration
+pmmlDefaultConfiguration = unsafePerformIO $ do
     let readCols (sym:pri:_:pmml:_) = (sym,pri,pmml)
         readCols _ = error "Row with too few columns in symbols.ods"
     doc <- odsFromFile "resources/symbols.ods"
@@ -122,10 +125,6 @@ pmmlName :: String -> X.Name
 pmmlName name = X.Name { X.nameLocalName=T.pack name,
                          X.nameNamespace=Just $ T.pack "http://www.w3.org/1998/Math/MathML",
                          X.namePrefix=Nothing }
-unqName :: String -> X.Name
-unqName name = X.Name { X.nameLocalName=T.pack name,
-                        X.nameNamespace=Nothing,
-                        X.namePrefix=Nothing }
 
 pmmlElem :: String -> [(String,String)] -> [X.Node] -> X.Element
 pmmlElem name attr childr = X.Element {
@@ -221,7 +220,9 @@ pmmlRender' _ _ _ (OME{}) = merror "rendering of OME not implemented" -- TODO
 
 
 pmmlRender :: PMMLConfiguration -> Openmath -> X.Element
-pmmlRender config = pmmlRender' config 0 []
+pmmlRender config math =
+    let pmml = pmmlRender' config 0 [] math in
+    pmmlElem "math" [] [X.NodeElement pmml]
 
 toPmathml :: PMMLConfiguration -> Openmath -> String
 toPmathml config math =

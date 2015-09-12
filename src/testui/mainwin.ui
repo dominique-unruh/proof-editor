@@ -112,15 +112,17 @@
         </item>
        </layout>
       </widget>
-      <widget class="QTextBrowser" name="txtLongError">
-       <property name="frameShape">
-        <enum>QFrame::NoFrame</enum>
+      <widget class="QWebView" name="txtLongError">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
        </property>
-       <property name="placeholderText">
-        <string>[No help topic open]</string>
-       </property>
-       <property name="openExternalLinks">
-        <bool>true</bool>
+       <property name="url">
+        <url>
+         <string>about:blank</string>
+        </url>
        </property>
       </widget>
      </widget>
@@ -138,6 +140,11 @@
    <class>GraphView</class>
    <extends>QWidget</extends>
    <header>graph.graphview</header>
+  </customwidget>
+  <customwidget>
+   <class>QWebView</class>
+   <extends>QWidget</extends>
+   <header>QtWebKitWidgets/QWebView</header>
   </customwidget>
  </customwidgets>
  <resources/>
