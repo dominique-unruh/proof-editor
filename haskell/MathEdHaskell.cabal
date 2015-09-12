@@ -28,6 +28,7 @@ executable MathEdHaskell
         Misc
         Openmath.Pmathml
         UserError.ErrorDB
+        UserError.Renderer
         UserError.UserError
         Openmath.Utils
         Openmath.Cmathml
@@ -67,6 +68,7 @@ test-suite Test
         Openmath.Pmathml
         Openmath.PmathmlTest
         UserError.ErrorDB
+        UserError.Renderer
         UserError.UserErrorTest
         Openmath.TypesTest
         Openmath.CmathmlTest

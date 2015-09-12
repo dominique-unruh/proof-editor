@@ -3,7 +3,7 @@
 
 from PyQt5.QtCore import pyqtSlot, QItemSelection
 from PyQt5.QtWidgets import QMainWindow, QLineEdit, QListView, QSplitter, QLabel
-from PyQt5.Qt import QItemSelectionModel, QPointF, QSortFilterProxyModel
+from PyQt5.Qt import QPointF, QSortFilterProxyModel
 from PyQt5 import Qt
 from typing import Optional, List
 import logging
@@ -11,7 +11,7 @@ import logging
 # Own modules
 from graph.graphview import Node, Edge
 from .Ui_mainwin import Ui_MainWindow
-import transform
+import transform, utils
 from mathview import Formula, ConverterError
 from mathview.widgets import MathGraphicsItem, MathView
 
@@ -68,9 +68,9 @@ class MainWin(QMainWindow, Ui_MainWindow):
         anim.setEasingCurve(Qt.QEasingCurve.OutQuad)
         anim.setDuration(5000)
         self.txtShortErrorAnim = anim
-#         anim.start()
         
-#         self.graph.scene().selectionChanged.connect(self.selection_changed)
+        with open(utils.file_path("resources/errors/error.css")) as f:
+            self.txtLongError.document().setDefaultStyleSheet(f.read())
         
         self.splitter.setSizes([2000, 1000, 500, 500])
 
@@ -82,7 +82,7 @@ class MainWin(QMainWindow, Ui_MainWindow):
         self.lstTransformations.setModel(self.proxy_model)
         self.lstTransformations.selectionChanged = self.trafo_selected
         self.lstTransformations.selectionModel().select(
-            self.proxy_model.index(0, 0), QItemSelectionModel.ClearAndSelect)
+            self.proxy_model.index(0, 0), Qt.QItemSelectionModel.ClearAndSelect)
 
         self.filter.textChanged.connect(lambda txt: self.proxy_model.setFilterFixedString(txt))
         
@@ -90,11 +90,11 @@ class MainWin(QMainWindow, Ui_MainWindow):
 
         self.addExamples()
         
-    @Qt.pyqtProperty(Qt.QColor)
+    @Qt.pyqtProperty(Qt.QColor)  # type: ignore
     def txtShortErrorColor(self) -> Qt.QColor:
         return self.txtShortError.palette().color(self.txtShortError.backgroundRole())
 
-    @txtShortErrorColor.setter
+    @txtShortErrorColor.setter  # type: ignore
     def txtShortErrorColor(self, color:Qt.QColor) -> None:
         #logging.debug("color change "+str(color))
         self.txtShortError.setAutoFillBackground(True)

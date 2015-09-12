@@ -18,6 +18,7 @@ import Transformations.Substitution (substitution)
 import Transformations.Compute (compute)
 import Text.JSON
 import Openmath.Pmathml
+import qualified UserError.Renderer
 
 (|>) :: t1 -> (t1 -> t) -> t
 x |> f = f x
@@ -46,7 +47,7 @@ jsonOut :: JSON a => [(String,a)] -> IO ()
 jsonOut = putStr . encode . showJSON . toJSObject
 
 ueRender :: UserErrorRenderer
-ueRender = ()
+ueRender = UserError.Renderer.renderer pmmlDefaultConfiguration
 
 main:: IO()
 main = do
@@ -56,7 +57,7 @@ main = do
                                 jsonOut [("success","success"),
                                          ("result",toCmathml $ texToOpenmath config tex)]
 --                                putStrLn $ toCmathml $ texToOpenmath config tex
-        ["cmml2pmml", cmml] -> do config <- pmmlDefaultConfiguration
+        ["cmml2pmml", cmml] -> do let config = pmmlDefaultConfiguration
                                   jsonOut [("success","success"),
                                            ("result",toPmathml config $ fromCmathml cmml)]
         "transform" : name : rest ->

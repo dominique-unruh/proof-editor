@@ -1,5 +1,4 @@
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards, ScopedTypeVariables, OverloadedStrings #-}
 module UserError.UserError where
 
 import qualified Data.Map as Map
@@ -13,6 +12,7 @@ import Control.Monad (when)
 import Data.List (intercalate)
 import System.FilePath (combine)
 import qualified System.IO.Unsafe
+import Misc (unqName)
 
 {- TODO: Explain: HTML-templates, simple-HTML -}
 
@@ -24,6 +24,8 @@ instance Show Dyn where
 
 {- | Represents an error for presenting to the user. -}
 data UserError = UserError {
+    {- | Unique ID, used for disambiguation, e.g., in bugreports -}
+    userErrorID :: String,
     {- | A short description of the error.
        Should be suitable for presentation in, e.g., a dialog box.
        Must be an HTML-template that results in simple HTML. -}
@@ -36,7 +38,8 @@ data UserError = UserError {
 }
     deriving (Typeable)
 
-type UserErrorRenderer = ()
+data UserErrorRenderer = UserErrorRenderer {
+    rendererTransform :: UserError -> X.Element -> [X.Node] }
 
 
 noPrologue :: X.Prologue
@@ -56,8 +59,8 @@ ueXMLName name = X.Name { X.nameLocalName=T.pack name,
                           X.nameNamespace=Just "urn:unruh:proofedit:usererror",
                           X.namePrefix=Just "ue" }
 
-userErrorFromFile :: FilePath -> IO UserError
-userErrorFromFile file = do
+userErrorFromFile :: String -> FilePath -> IO UserError
+userErrorFromFile ueId file = do
     doc <- X.readFile X.def file
     let root = X.fromDocument doc
     let body = (X.child >=> X.laxElement (T.pack "body") >=> X.child) root
@@ -66,7 +69,7 @@ userErrorFromFile file = do
     let short = map X.node $ (X.checkName (==ueXMLName "shortdescription") >=> X.child) =<< body
     when (null short) $ error "short description empty"
     when (null long) $ error "long description empty"
-    return UserError { shortDescription=short, longDescription=long, errorData=Map.empty }
+    return UserError { userErrorID=ueId, shortDescription=short, longDescription=long, errorData=Map.empty }
 
 addErrorData :: (Typeable a, Show a) => String -> a -> UserError -> UserError
 addErrorData name dat err =
@@ -75,10 +78,15 @@ addErrorData name dat err =
 
 -- TODO: proper rendering
 renderDescription :: UserErrorRenderer -> UserError -> [X.Node] -> String
-renderDescription _ err descr =
-     intercalate "\n" (xmlToString descr:datas)
-     where
-         datas = map (\(k,v) -> "    <p>"++k++" = "++show v++"</p>") $ Map.assocs $ errorData err
+renderDescription renderer err descr =
+    xmlToString $ concatMap render descr
+    where render (X.NodeElement X.Element{..}) =
+            let elem' = X.Element{elementName=elementName,elementAttributes=elementAttributes,
+                                  elementNodes=concatMap render elementNodes} in
+            if X.nameNamespace elementName == (Just $ T.pack "urn:unruh:proofedit:usererror")
+            then rendererTransform renderer err elem'
+            else [X.NodeElement elem']
+          render node = [node]
 
 renderShortDescription :: UserErrorRenderer -> UserError -> String
 renderShortDescription renderer err = renderDescription renderer err $ shortDescription err
@@ -94,7 +102,8 @@ instance Show UserError where
 
 -- TODO: remove this
 miniUserError :: String -> UserError
-miniUserError err = UserError { shortDescription=[X.NodeContent $ T.pack err],
+miniUserError err = UserError { userErrorID="minierror",
+                                shortDescription=[X.NodeContent $ T.pack err],
                                 longDescription=[X.NodeContent $ T.pack long],
                                 errorData=Map.empty }
     where long = "No long description available yet.\nSo, instead, some dummy text.\n"++err
@@ -103,5 +112,38 @@ miniUserError err = UserError { shortDescription=[X.NodeContent $ T.pack err],
 userErrorDB :: String -> String -> UserError
 userErrorDB dir errName =
     let path = combine dir ("ue"++errName++".xhtml") in
-    System.IO.Unsafe.unsafePerformIO $ userErrorFromFile path
+    System.IO.Unsafe.unsafePerformIO $ userErrorFromFile errName path
+
+
+htmlXMLName :: String -> X.Name
+htmlXMLName name = X.Name { X.nameLocalName=T.pack name,
+                            X.nameNamespace=Just "http://www.w3.org/1999/xhtml",
+                            X.namePrefix=Nothing }
+
+internalError :: UserError -> String -> [X.Node]
+internalError err msg =
+    let fullMsg = T.concat ["Internal error, please report: ",
+                            T.pack (userErrorID err), ", ",
+                            T.pack msg] in
+    [X.NodeElement X.Element {X.elementName=htmlXMLName "span",
+                              X.elementAttributes=Map.singleton (unqName "class") "internalerror",
+                              X.elementNodes=[X.NodeContent fullMsg]}]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
