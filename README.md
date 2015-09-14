@@ -27,11 +27,17 @@ example:
 * `cabal update`
 * `cabal install happy`  # On my system, this dependency was not installed automatically
 
-# Python3 and libraries
+### Python3 and libraries
 
 * `sudo apt-get install python3 python3-pip`
 * `sudo pip3 install mypy-lang`
 
-# PyQt5
+### PyQt5
 
 * `sudo apt-get install python3-pyqt5 python3-pyqt5.qtsvg python3-pyqt5.qtwebkit`
+
+# Running
+
+* `make run` (in the root of the repository)
+
+
