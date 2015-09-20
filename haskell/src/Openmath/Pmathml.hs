@@ -1,3 +1,4 @@
+{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE PatternGuards #-}
 module Openmath.Pmathml (
     toPmathml, pmmlRender, PMMLConfiguration(..), pmmlDefaultConfiguration
@@ -20,6 +21,7 @@ import Debug.Trace (trace)
 import Control.Exception (throw)
 import Text.Read (readMaybe)
 import System.IO.Unsafe (unsafePerformIO)
+import FFIExports (exportFFI)
 
 type RenderFunction = PMMLConfiguration
                    -> Int -- ^ upper level priority
@@ -109,17 +111,20 @@ templateToOp prio templ =
                    pmmlOpRender=renderfun }
 
 pmmlDefaultConfiguration :: PMMLConfiguration
-pmmlDefaultConfiguration = unsafePerformIO $ do
-    let readCols (sym:pri:_:pmml:_) = (sym,pri,pmml)
-        readCols _ = error "Row with too few columns in symbols.ods"
-    doc <- odsFromFile "resources/symbols.ods"
-    let (row1:table) = map (map cellText) $ cells $ head $ sheets doc
-    when (readCols row1 /= ("CMML symbol","Priority","PMML")) $ error "Bad columns"
-    let table' = filter (\(_,_,t) -> t/="") $ map readCols table
-
-    let opMap = Map.fromList $ map rowToOp table'
-                where rowToOp (sym,pri,templ) = (splitDot sym, templateToOp (read pri) templ)
-    return PMMLConfiguration { pmmlConfigOperators=opMap }
+{-# NOINLINE pmmlDefaultConfiguration #-}
+pmmlDefaultConfiguration
+  = unsafePerformIO $
+      do let readCols (sym : (pri : (_ : (pmml : _)))) = (sym, pri, pmml)
+             readCols _ = error "Row with too few columns in symbols.ods"
+         doc <- odsFromFile "resources/symbols.ods"
+         let (row1 : table) = map (map cellText) $ cells $ head $ sheets doc
+         when (readCols row1 /= ("CMML symbol", "Priority", "PMML")) $
+           error "Bad columns"
+         let table' = filter (\ (_, _, t) -> t /= "") $ map readCols table
+         let opMap = Map.fromList $ map rowToOp table'
+               where rowToOp (sym, pri, templ)
+                       = (splitDot sym, templateToOp (read pri) templ)
+         return PMMLConfiguration{pmmlConfigOperators = opMap}
 
 pmmlName :: String -> X.Name
 pmmlName name = X.Name { X.nameLocalName=T.pack name,
@@ -229,3 +234,6 @@ toPmathml config math =
     let pmml = pmmlRender config math in
     xmlToString [] $ pmmlElem "math" [] [X.NodeElement pmml]
 
+
+exportFFI 'toPmathml
+exportFFI 'pmmlDefaultConfiguration

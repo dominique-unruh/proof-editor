@@ -10,6 +10,8 @@ from PyQt5.QtCore import pyqtSlot, QUrl, QObject
 # Own modules
 import utils
 import json
+import haskell
+from haskell.ffi import HaskellPtr
 
 cmathml = utils.file_path("cmathml" if sys.platform!="win32" else "cmathml.exe")
 mathedhaskell = utils.file_path("MathEdHaskell" if sys.platform!="win32" else "MathEdHaskell.exe")
@@ -47,30 +49,30 @@ class ConverterError(RuntimeError):
 #         raise ConverterError("Unhandled exception",e)
         
 
-def call_converter_json(command,*args):
-    cmd = [mathedhaskell, command]+list(args)
-    cmdstr = " ".join("'{}'".format(x) for x in cmd)
-    logging.info("Calling {}".format(cmdstr))
-
-    try:
-        proc = Popen(cmd, cwd=utils.base_path, stdin=PIPE, stdout=PIPE, stderr=PIPE)
-        (result, errors) = proc.communicate()
-        if proc.returncode != 0:
-            errors = str(errors, encoding='utf-8')
-            logging.warning("Converter call failed: {}".format(cmdstr, errors))
-            raise ConverterError(cmd, errors)
-        result0 = str(result, encoding="utf-8")
-        result = json.loads(result0)
-        assert(isinstance(result,dict)), result0
-        if result['success']=='success':
-            return result['result']
-        else:
-            raise ConverterError(cmd,result['error'],result.get('longError'))
-    except ConverterError: raise
-    except:
-        e = traceback.format_exc()
-        logging.warning(e)
-        raise ConverterError("Unhandled exception",e)
+# def call_converter_json(command,*args):
+#     cmd = [mathedhaskell, command]+list(args)
+#     cmdstr = " ".join("'{}'".format(x) for x in cmd)
+#     logging.info("Calling {}".format(cmdstr))
+# 
+#     try:
+#         proc = Popen(cmd, cwd=utils.base_path, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+#         (result, errors) = proc.communicate()
+#         if proc.returncode != 0:
+#             errors = str(errors, encoding='utf-8')
+#             logging.warning("Converter call failed: {}".format(cmdstr, errors))
+#             raise ConverterError(cmd, errors)
+#         result0 = str(result, encoding="utf-8")
+#         result = json.loads(result0)
+#         assert(isinstance(result,dict)), result0
+#         if result['success']=='success':
+#             return result['result']
+#         else:
+#             raise ConverterError(cmd,result['error'],result.get('longError'))
+#     except ConverterError: raise
+#     except:
+#         e = traceback.format_exc()
+#         logging.warning(e)
+#         raise ConverterError("Unhandled exception",e)
 
 
 class QWebPageLogging(QWebPage):
@@ -188,15 +190,24 @@ class SVGConverter(QObject):
             singleton_SVGConverter = SVGConverter()
         return singleton_SVGConverter
 
+texDefaultConfiguration = haskell.lib.texDefaultConfiguration()
+pmmlDefaultConfiguration = haskell.lib.pmmlDefaultConfiguration()
 
 class Formula():
     def __init__(self, math, format=None):  # @ReservedAssignment
         self.svg = None
         self.pmathml = None
-        if format is None:
+        self.cmathml = None
+        if isinstance(math,HaskellPtr):
+            self.haskell = math
+        elif format is None:
             self.cmathml = math
+            self.haskell = haskell.lib.fromCmathml(math)
         elif format == 'tex':
-            self.cmathml = call_converter_json("tex2cmml".format(format), math)
+            self.haskell = haskell.lib.texToOpenmath(texDefaultConfiguration,math)
+#             self.cmathml = haskell.lib.toCmathml(self.haskell) # TODO: only on demand 
+                # call_converter_json("tex2cmml".format(format), math) 
+                    
         else:
             raise ValueError("Unknown format '{}'".format(format))
     
@@ -205,12 +216,17 @@ class Formula():
 #         self.pmathml = call_converter("cmml2pmml", self.cmathml)
 #         return self.pmathml
 
+    def get_haskell(self):
+        return self.haskell
+
     def get_pmathml(self):
         if self.pmathml is not None: return self.pmathml
-        self.pmathml = call_converter_json("cmml2pmml", self.cmathml)
+        self.pmathml = haskell.lib.toPmathml(pmmlDefaultConfiguration,self.haskell) #call_converter_json("cmml2pmml", self.cmathml)
         return self.pmathml
 
     def get_cmathml(self):
+        if self.cmathml is not None: return self.cmathml
+        self.cmathml = haskell.lib.toCmathml(self.haskell) 
         return self.cmathml
 
     def get_svg(self, callback):

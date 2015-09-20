@@ -1,3 +1,4 @@
+{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 module Transformations.Associativity (associativity) where
 
@@ -7,6 +8,7 @@ import Openmath.Utils
 import Data.Maybe (isJust, fromJust)
 import Transformations.Common
 import UserError.UserError (miniUserError)
+import FFIExports (exportFFI)
 
 associativeOps :: [(String, String)]
 associativeOps = map splitDot [
@@ -39,3 +41,5 @@ associativity args = do
             return $ OMA sem1 op2 [OMA sem2 op1 [a,b], c]
         _ -> throwError $ miniUserError "Select a subexpression of the form (a+b)+c or a+(b+c) where + is some associative operation"
     return (replaceSubterm arg path newterm)
+
+exportFFI 'associativity

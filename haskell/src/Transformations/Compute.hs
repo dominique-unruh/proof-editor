@@ -1,3 +1,4 @@
+{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE ViewPatterns, PatternGuards, PatternSynonyms #-}
 module Transformations.Compute (compute) where
 
@@ -6,6 +7,7 @@ import Openmath.Utils (pattern Int', bindP, getSubterm, replaceSubterm, equivale
 import UserError.UserError (miniUserError)
 import Openmath.Types
 import Data.Maybe (fromMaybe)
+import FFIExports (exportFFI)
 
 intExp :: Integer -> Integer -> Integer
 intExp 0 0 = error "0**0"
@@ -107,3 +109,4 @@ compute args = do
     assert (newterm /= subterm) $ miniUserError "Could not find anything to compute"
     return $ replaceSubterm arg path newterm
 
+exportFFI 'compute

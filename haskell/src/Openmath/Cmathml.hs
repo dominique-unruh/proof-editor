@@ -1,3 +1,4 @@
+{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE PatternSynonyms, ViewPatterns #-}
 module Openmath.Cmathml (fromCmathml, toCmathml) where
 
@@ -10,6 +11,7 @@ import Data.Char (isSpace)
 import Openmath.Utils (pattern Attribution, removeAttribution, mapAttribution)
 --import Numeric (readSigned, readFloat)
 import Data.Ratio (denominator, numerator)
+import FFIExports (exportFFI)
 
 --elCSymbol :: QName
 --elCSymbol = blank_name {qName="csymbol"}
@@ -171,3 +173,5 @@ fromCmathml xml =
         [] -> error "empty XML"
         _ -> error "more than one root element in XML"
 
+exportFFI 'toCmathml
+exportFFI 'fromCmathml

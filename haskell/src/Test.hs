@@ -3,6 +3,7 @@ module Main where
 
 import Test.Framework
 
+import {-@ HTF_TESTS @-} FFIExportsTest
 import {-@ HTF_TESTS @-} Openmath.CmathmlTest
 import {-@ HTF_TESTS @-} Openmath.PmathmlTest
 import {-@ HTF_TESTS @-} Openmath.TeXTest

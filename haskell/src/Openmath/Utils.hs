@@ -1,11 +1,14 @@
+{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE RankNTypes, ScopedTypeVariables, PatternSynonyms, ViewPatterns #-}
 module Openmath.Utils
  (getSubterm, replaceSubterm, equivalentTerms, isAtom, pattern Attribution, pattern Attribution',
   pattern Int', pattern OMASym, bindP, removeAttribution, mapAttribution,
-  splitDot, semantics')
+  parsePath, splitDot, semantics')
 where
 
 import Openmath.Types
+import FFIExports (exportFFI)
+import Data.List.Split (splitOn)
 
 pattern OMASym cd name args <- (OMA _ (OMS _ cd name) args)
 pattern Int' i <- OMI _ i
@@ -134,3 +137,8 @@ equivalentTerms a b = a==b
 splitDot :: String -> (String, String)
 splitDot str = let (pfx,suffix) = break (=='.') str in (pfx,tail suffix)
 
+parsePath :: String -> Maybe Path
+parsePath "-" = Nothing
+parsePath "" = Just []
+parsePath path = Just (map read (splitOn "." path))
+exportFFI 'parsePath

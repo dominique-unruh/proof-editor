@@ -6,10 +6,10 @@ import Openmath.Types
 import UserError.UserError
 
 type Error = Except UserError
+
+-- TODO remove
 type Transformation = [(Openmath,Maybe Path)] -> Error Openmath
 
 assert :: Bool -> UserError -> Error ()
 assert condition err = unless condition $ throwError err
-
-
 

@@ -5,7 +5,7 @@ import UserError.UserError
 import System.Environment (getArgs)
 import Openmath.TeX
 import Openmath.Cmathml
-import Data.List.Split (splitOn)
+--import Data.List.Split (splitOn)
 import Openmath.Types
 import Transformations.Commutativity
 --import System.IO (stderr, hPutStr)
@@ -19,15 +19,11 @@ import Transformations.Compute (compute)
 import Text.JSON
 import Openmath.Pmathml
 import qualified UserError.Renderer
+--import FFIExports (exportFFI)
+import Openmath.Utils (parsePath)
 
 (|>) :: t1 -> (t1 -> t) -> t
 x |> f = f x
-
-parsePath :: String -> Maybe Path
-parsePath "-" = Nothing
-parsePath "" = Just []
-parsePath path = Just (map read (splitOn "." path))
-
 
 cmmlPathPairs :: [String] -> [(Openmath,Maybe Path)]
 cmmlPathPairs [] = []

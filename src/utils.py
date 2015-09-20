@@ -45,3 +45,10 @@ def dump_xml(xml, depth=2):
         return new
     
     return etree.tostring(copy(xml, depth))
+
+
+def foldr(f, start, xs):
+    "[x1,x2,x3] -> f(x1,f(x2,f(x3,start)))"
+    for x in reversed(xs):
+        start = f(x,start)
+    return start

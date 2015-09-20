@@ -1,3 +1,4 @@
+{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 module Transformations.ModusPonens (modusPonens) where
 
@@ -7,6 +8,7 @@ import Control.Monad.Except (throwError)
 import Data.Maybe (isNothing)
 import Openmath.Utils (equivalentTerms)
 import UserError.UserError (miniUserError)
+import FFIExports (exportFFI)
 
 modusPonens :: Transformation
 modusPonens args = do
@@ -19,3 +21,5 @@ modusPonens args = do
     -- TODO: be more flexible with the equality (e.g., modulo AC)
     assert (equivalentTerms prem arg2) $ miniUserError "Second formula must match premise of first formula.\nE.g. A=>B and A,  not A=>B and C."
     return concl
+
+exportFFI 'modusPonens

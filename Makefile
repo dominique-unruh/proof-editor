@@ -17,21 +17,24 @@ else
 endif
 
 #CMATHML = cmathml$(EXE_SUFFIX)
-MATHEDHASKELL = haskell/dist/build/MathEdHaskell/MathEdHaskell$(EXE_SUFFIX)
-MATHEDHASKELL_CWD = MathEdHaskell$(EXE_SUFFIX)
+#MATHEDHASKELL = haskell/dist/build/MathEdHaskell/MathEdHaskell$(EXE_SUFFIX)
+#MATHEDHASKELL_CWD = MathEdHaskell$(EXE_SUFFIX)
 
-DEPENDENCIES=resources/mathjax src/testui/Ui_mainwin.py src/graph/Ui_controls.py resources/icons $(MATHEDHASKELL) $(MATHEDHASKELL_CWD)
+DEPENDENCIES=resources/mathjax src/testui/Ui_mainwin.py src/graph/Ui_controls.py resources/icons libHSMathEdHaskell.so
+HASKELLSOURCES=haskell/MathEdHaskell.cabal $(wildcard haskell/*.hs haskell/src/*.hs haskell/src/*/*.hs haskell/src/*/*/*.hs)
+HASKELLTEST=dist/build/Test/Test
+
 
 run : $(DEPENDENCIES)
 	$(PYTHON) src/main.py
 
 clean :
 	cd haskell && cabal clean
-	rm -f cmathml cmathml.{cmi,cmx,o,exe} *~
+	rm -f cmathml cmathml.{cmi,cmx,o,exe} *~ MathEdHaskell libHSMathEdHaskell.so
 
 test : test_python test_haskell
 
-test_haskell : $(MATHEDHASKELL)
+test_haskell : dist/build/Test/Test
 	scripts/haskell-tests.py
 	cd haskell && dist/build/Test/Test --color=true -q
 
@@ -47,17 +50,13 @@ all : $(DEPENDENCIES)
 Ui_%.py : %.ui
 	pyuic5 -o $@ $<
 
-$(MATHEDHASKELL) : haskell/MathEdHaskell.cabal \
-		$(wildcard haskell/*.hs haskell/src/*.hs haskell/src/*/*.hs haskell/src/*/*/*.hs)
+libHSMathEdHaskell.so $(HASKELLTEST) : $(HASKELLSOURCES)
 	cd haskell && cabal install --only-dependencies --enable-tests
 	cd haskell && cabal configure --enable-tests
 	cd haskell && cabal build
+	rm -f libHSMathEdHaskell.so
+	python3 scripts/find-haskell-lib.py
 
-#cmathml : cmathml.ml cmathml.mli
-#	ocamlfind ocamlopt -package batteries,xml-light -linkpkg cmathml.mli cmathml.ml -g -o cmathml 
-
-#cmathml.exe : cmathml.ml cmathml.mli Makefile
-#	ocamlfind ocamlopt xml-light.cmxa -package batteries -linkpkg cmathml.mli cmathml.ml -g -o cmathml.exe 
 
 resources/mathjax : 
 	rm -rf $@ /tmp/mathjax.zip

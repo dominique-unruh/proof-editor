@@ -1,47 +1,53 @@
 name: MathEdHaskell
 version: 0.1
-cabal-version: >=1.8
+cabal-version: >= 1.8
 build-type: Simple
 license: OtherLicense
 author: Dominique Unruh
+tested-with: GHC ==7.10.2
 
-executable MathEdHaskell
-    main-is: Main.hs
+library
+    exposed-modules:
+        FFIExports
+        Misc
+        OpenDoc.ODS
+        Openmath.Cmathml
+        Openmath.Pmathml
+        Openmath.TeX
+        Openmath.Types
+        Openmath.Utils
+        Transformations.Associativity
+        Transformations.Common
+        Transformations.Commutativity
+        Transformations.Compute
+        Transformations.ModusPonens
+        Transformations.Substitution
+        UserError.ErrorDB
+        UserError.Renderer
+        UserError.UserError
     build-depends:
         HTF >0.9,
         QuickCheck -any,
         base >=4,
         bytestring -any,
         containers -any,
+        filepath -any,
         json -any,
         mtl -any,
         parsec -any,
         split -any,
+        template-haskell -any,
         text -any,
         xml -any,
         xml-conduit -any,
         xml-types -any,
-        zip-archive -any,
-        filepath -any
+        zip-archive -any
+    extra-libraries:
+        HSrts-ghc7.10.2
     hs-source-dirs: src
     other-modules:
-        Misc
-        Openmath.Pmathml
-        UserError.ErrorDB
-        UserError.Renderer
-        UserError.UserError
-        Openmath.Utils
-        Openmath.Cmathml
-        Openmath.TeX
-        Openmath.Types
-        OpenDoc.ODS
-        Transformations.Associativity
-        Transformations.Common
-        Transformations.Commutativity
-        Transformations.ModusPonens
-        Transformations.Substitution
-        Transformations.Compute
-    ghc-options: -Wall
+        FFIHelpers
+    ghc-options: -Wall -rtsopts -ddump-splices -ddump-to-file
 
 test-suite Test
     type: exitcode-stdio-1.0
@@ -52,42 +58,29 @@ test-suite Test
         base >=4,
         bytestring -any,
         containers -any,
+        filepath -any,
         json -any,
         mtl -any,
         parsec -any,
         split -any,
+        template-haskell -any,
         text -any,
         xml -any,
         xml-conduit -any,
         xml-types -any,
         zip-archive -any,
-        filepath -any
+        MathEdHaskell -any
     hs-source-dirs: src
     other-modules:
-        Misc
-        Openmath.Pmathml
-        Openmath.PmathmlTest
-        UserError.ErrorDB
-        UserError.Renderer
-        UserError.UserErrorTest
+        FFIExportsTest
         Openmath.TypesTest
         Openmath.CmathmlTest
         Openmath.QuickCheck
         Openmath.UtilsTest
         Openmath.TeXTest
+        Openmath.PmathmlTest
         OpenDoc.ODSTest
+        UserError.UserErrorTest
         Transformations.CommutativityTest
         Transformations.ComputeTest
-        UserError.UserError
-        Openmath.Utils
-        Openmath.Cmathml
-        Openmath.TeX
-        Openmath.Types
-        OpenDoc.ODS
-        Transformations.Associativity
-        Transformations.Common
-        Transformations.Commutativity
-        Transformations.ModusPonens
-        Transformations.Substitution
-        Transformations.Compute
-    ghc-options: -Wall -rtsopts
+    ghc-options: -Wall -rtsopts -ddump-splices -ddump-to-file

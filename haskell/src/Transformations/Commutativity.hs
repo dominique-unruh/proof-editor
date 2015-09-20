@@ -1,4 +1,5 @@
-{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE ScopedTypeVariables, ForeignFunctionInterface #-}
 module Transformations.Commutativity (commutativity) where
 
 import Control.Monad.Except
@@ -8,6 +9,7 @@ import Data.Maybe (isJust, fromJust)
 import Transformations.Common
 import UserError.UserError (miniUserError)
 import UserError.ErrorDB as UE
+import FFIExports (exportFFI)
 
 commutativeOps :: [(String, String)]
 commutativeOps = map splitDot [
@@ -15,7 +17,7 @@ commutativeOps = map splitDot [
   "logic1.equivalent", "logic1.or", "logic1.and", "relation1.neq"
   ]
 
-commutativity :: Transformation
+commutativity :: [(Openmath,Maybe Path)] -> Error Openmath
 commutativity args = do
     assert (length args == 1) $ miniUserError "The transformation needs exactly one argument"
     let [(arg,path')] = args
@@ -32,3 +34,5 @@ commutativity args = do
             -- miniUserError "The operation you selected is not commutative (e.g, a+b is OK, a/b is not)"
     let newterm = OMA sem op [rhs,lhs]
     return (replaceSubterm arg path newterm)
+
+exportFFI 'commutativity

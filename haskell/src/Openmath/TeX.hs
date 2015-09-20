@@ -1,3 +1,4 @@
+{-# LANGUAGE TemplateHaskell, ForeignFunctionInterface #-}
 module Openmath.TeX (texToOpenmath', texToOpenmath, completeConfiguration,
     TexOperator(..), TexConfiguration(..), TexConfigurationFull,
     texDefaultConfiguration) where
@@ -12,6 +13,9 @@ import Data.Char (isAlpha, digitToInt, isDigit)
 import Data.List (groupBy, sortOn)
 import Data.Function (on)
 import OpenDoc.ODS (odsFromFile, sheets, cells, cellText)
+import FFIExports (exportFFI)
+--import Foreign.StablePtr (StablePtr, newStablePtr)
+--import System.IO.Unsafe (unsafePerformIO)
 
 data TexToken = TexToken { tokenContent :: String, tokenSource :: String, tokenPos :: SourcePos }
     deriving (Eq)
@@ -222,3 +226,5 @@ texToOpenmath config tex =
       Left err -> error err
       Right math -> math
 
+exportFFI 'texDefaultConfiguration
+exportFFI 'texToOpenmath
