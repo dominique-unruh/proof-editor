@@ -36,7 +36,7 @@ test : test_python test_haskell
 
 test_haskell : dist/build/Test/Test
 	scripts/haskell-tests.py
-	cd haskell && dist/build/Test/Test --color=true -q
+	cd haskell && LD_LIBRARY_PATH=/usr/local/lib/ghc-7.10.2/rts dist/build/Test/Test --color=true -q
 
 test_python : $(DEPENDENCIES)
 	PYTHONPATH="src:$$PYTHONPATH" python3 -m unittest $(wildcard src/tests.py) $(wildcard src/*/tests.py)
