@@ -42,12 +42,14 @@ library
         xml-conduit -any,
         xml-types -any,
         zip-archive -any,
+        simple-smt >=0.6.0 && <0.7,
         doctest >=0.10.1 && <0.11
     extra-libraries:
         HSrts-ghc7.10.2
     hs-source-dirs: src
     other-modules:
         FFIHelpers
+        Transformations.SMT
     ghc-options: -Wall -rtsopts -ddump-splices -ddump-to-file
 
 test-suite Test
@@ -71,6 +73,7 @@ test-suite Test
         xml-types -any,
         zip-archive -any,
         MathEdHaskell -any,
+        simple-smt >=0.6.0 && <0.7,
         doctest >=0.10.1 && <0.11
     hs-source-dirs: test
     other-modules:
