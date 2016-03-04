@@ -20,3 +20,7 @@ __pycache__/
 src/*/Ui_*.py
 
 MathEdHaskell.exe
+Mathedhaskell.exe
+haskell/.HTF
+haskell/.stack-work
+haskell/stack.yaml

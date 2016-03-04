@@ -34,7 +34,7 @@ clean :
 
 test : test_python test_haskell
 
-test_haskell : dist/build/Test/Test
+test_haskell : $(MATHEDHASKELL)
 	scripts/haskell-tests.py
 	cd haskell && dist/build/Test/Test --color=true -q
 
@@ -50,13 +50,17 @@ all : $(DEPENDENCIES)
 Ui_%.py : %.ui
 	pyuic5 -o $@ $<
 
-libHSMathEdHaskell.so $(HASKELLTEST) : $(HASKELLSOURCES)
+$(MATHEDHASKELL) : haskell/MathEdHaskell.cabal \
+		$(wildcard haskell/*.hs haskell/src/*.hs haskell/src/*/*.hs haskell/src/*/*/*.hs)
 	cd haskell && cabal install --only-dependencies --enable-tests
 	cd haskell && cabal configure --enable-tests
 	cd haskell && cabal build
-	rm -f libHSMathEdHaskell.so
-	python3 scripts/find-haskell-lib.py
 
+#cmathml : cmathml.ml cmathml.mli
+#	ocamlfind ocamlopt -package batteries,xml-light -linkpkg cmathml.mli cmathml.ml -g -o cmathml 
+
+#cmathml.exe : cmathml.ml cmathml.mli Makefile
+#	ocamlfind ocamlopt xml-light.cmxa -package batteries -linkpkg cmathml.mli cmathml.ml -g -o cmathml.exe 
 
 resources/mathjax : 
 	rm -rf $@ /tmp/mathjax.zip
