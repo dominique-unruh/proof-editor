@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+  <head>
+
+    <!-- JQuery -->
+    <script
+       src="http://code.jquery.com/jquery-2.2.2.min.js"
+       integrity="sha256-36cp2Co+/62rEAAYHLmRCPIych47CvdM+uTBJwSzWjI="
+       crossorigin="anonymous"></script>
+    
+    <!--
+	<script
+	   src="https://code.jquery.com/ui/1.11.4/jquery-ui.min.js"
+	   integrity="sha256-xNjb53/rY+WmG+4L6tTl9m6PpqknWZvRt0rO1SRnJzw="
+	   crossorigin="anonymous"></script> -->
+    
+    <!-- MathQuill -->
+    <link rel="stylesheet" href="mathquill/build/mathquill.css"/>    
+    <script src="mathquill/build/mathquill.js"></script>
+
+    <script>MathQuillInterface2 = MathQuill.getInterface(2);</script>
+
+    <script language="javascript" src=misc.js></script>
+    <link rel="stylesheet" href="misc.css"/>    
+
+    <!-- the app -->
+    <script language="javascript" src="proof-editor/rts.js"></script>
+    <script language="javascript" src="proof-editor/lib.js"></script>
+    <script language="javascript" src="proof-editor/out.js"></script>
+    <script language="javascript" src="proof-editor/runmain.js" defer></script>
+  </head>
+  <body>
+
+<button onclick="m_to_pmml()">m_to_pmml</button>
+
+<span id=mathspan style="border:solid"/>
+
+  </body>
+</html>

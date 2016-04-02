@@ -1,0 +1,21 @@
+@namespace m url(http://www.w3.org/1998/Math/MathML);
+
+mo {
+    color: blue;
+}
+
+mrow {
+    border: solid 1px;
+}
+
+mi {
+    color: red;
+}
+
+mn {
+    color: green;
+}
+
+.from-mq-Digit {
+    border: solid 1px green;
+}

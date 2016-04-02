@@ -20,3 +20,5 @@ __pycache__/
 src/*/Ui_*.py
 
 MathEdHaskell.exe
+
+haskell/gui/.stack-work
