@@ -56,15 +56,18 @@ openmathToSexpr' :: Openmath -> Writer (Set String) SExpr
 
 openmathToSexpr' (OMA _ (OMS _ "arith1" "plus") args) = appl "+" args
 openmathToSexpr' (OMA _ (OMS _ "arith1" "minus") args) = appl "-" args
+openmathToSexpr' (OMA _ (OMS _ "arith1" "divide") args) = appl "/" args
+openmathToSexpr' (OMA _ (OMS _ cd name) args) = appl (cd++"."++name) args
+openmathToSexpr' (OMA _ hd args) = appl "applyFunction" (hd:args)
 
+openmathToSexpr' (OMI _ i) = return $ Atom $ show i
+openmathToSexpr' (OMF _ n) = return $ Atom $ show n
 openmathToSexpr' (OMV _ name) = do
     tell (singleton $ name++"$")
     return $ Atom (name++"$")
+
 openmathToSexpr' OME{} = error "openmathToSexpr: OME"
-openmathToSexpr' (OMA _ hd _) = error $ "openmathToSexpr: (OMA ("++show hd++"))"
-openmathToSexpr' OMI{} = error "openmathToSexpr: OMI"
 openmathToSexpr' OMSTR{} = error "openmathToSexpr: OMSTR"
-openmathToSexpr' OMF{} = error "openmathToSexpr: OMF"
 openmathToSexpr' OMBIND{} = error "openmathToSexpr: OMBIND"
 openmathToSexpr' OMS{} = error "openmathToSexpr: OMS"
 openmathToSexpr' OMB{} = error "openmathToSexpr: OMB"

@@ -153,7 +153,7 @@ class MainWin(QMainWindow, Ui_MainWindow):
         
     def addExamples(self):
         formulas = []
-        examples = ['1+1', '3/2', 'a=b']
+        examples = ['(a+a)/2 = 5', '3/2', 'a=b']
         for x in examples:
             formulas.append(self.addFormulaText(x))
         logging.debug(formulas)
