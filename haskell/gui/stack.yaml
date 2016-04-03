@@ -10,7 +10,13 @@ resolver: lts-5.9
 
 extra-deps:
 - ghcjs-dom-0.2.3.1
-#- data-default-class-0.0.1 # Needed for conduit-xml to install (?)
+- data-default-class-0.0.1 # Needed for ghcjs-jquery to install
 #- blaze-builder-0.4.0.1
 
 flags: {}
+
+packages:
+- .
+- location:
+    git: https://github.com/ghcjs/ghcjs-jquery.git
+    commit: 6e8023229342eaf78204cde3189865be891e5aa4

@@ -11,7 +11,7 @@ import GHCJS.DOM
 import GHCJS.DOM.Document (getBody, createElement, createTextNode, click)
 import GHCJS.DOM.Element (setInnerHTML, focus)
 import GHCJS.DOM.Node (appendChild)
-import GHCJS.DOM.Types (Element, ToJSString, FromJSString, toJSString, fromJSString)
+import GHCJS.DOM.Types (Nullable, nullableToMaybe, Element(..), ToJSString, FromJSString, toJSString, fromJSString)
 import GHCJS.DOM.EventM (on, mouseClientXY)
 import GHCJS.Types (JSVal, JSString)
 import Control.Monad.IO.Class (liftIO)
@@ -23,6 +23,7 @@ import qualified Data.Text.Lazy as TL
 import qualified Data.Text as T
 import Control.Arrow ((***))
 import qualified Text.XML.Light.Output
+import qualified JavaScript.JQuery as J
 
 import ParseMathQuillLatex (parseMathQuillLatex)
 import MathQuill
@@ -63,13 +64,24 @@ console_log s v = do
 --     let text' = TL.drop 38 text in
 --     TL.unpack text'
 
+-- TODO: should return a maybe?
+foreign import javascript unsafe "$1[$2]"
+  js_jQueryElement :: J.JQuery -> Int -> IO (Nullable JSVal)
+jQueryElement :: J.JQuery -> Int -> IO (Maybe Element)
+jQueryElement jq i = do
+  el <- nullableToMaybe <$> js_jQueryElement jq i
+  return $ case el of Nothing -> Nothing; Just el' -> Just (Element el')
+
 main = runWebGUI $ \ webView -> do
     enableInspector webView
     Just doc <- webViewGetDomDocument webView
     Just body <- getBody doc
-    Just span <- createElement doc (Just "span")
-    appendChild body $ Just span
-    math <- mathQuill span
+    -- Just span <- createElement doc (Just "span")
+    span <- J.select $ toJSString "#mathfield"
+    Just span' <- jQueryElement span 0
+    console_log "span'" span'
+    -- appendChild body $ Just span'
+    math <- mathQuill span'
     publish "m" math
 
     addEditHandler math $ do
