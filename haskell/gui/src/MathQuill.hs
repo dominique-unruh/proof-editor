@@ -1,6 +1,6 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module MathQuill (MathQuill, mathQuill, setLatex, getLatex, addEditHandler, getPMathMLDom, getPMathML) where
+module MathQuill (MathQuill, mathQuill, setLatex, getLatex, addEditHandler, getPMathMLDom, getPMathML, mqToElement, mqFocus) where
 
 import GHCJS.DOM.Types (Element, ToJSString, FromJSString, toJSString, fromJSString)
 import GHCJS.Types (JSVal, JSString)
@@ -16,6 +16,17 @@ newtype MathQuill = MathQuill JSVal
 
 instance ToJSVal MathQuill where
     toJSVal (MathQuill m) = return m
+
+mqToElement :: MathQuill -> IO Element
+mqToElement (MathQuill m) = js_mqToElement m
+foreign import javascript unsafe "$r = $1.el()"
+  js_mqToElement :: JSVal -> IO Element
+
+mqFocus :: MathQuill -> IO ()
+mqFocus (MathQuill m) = js_mqFocus m
+foreign import javascript unsafe "$1.focus()"
+  js_mqFocus :: JSVal -> IO ()
+
 
 {-| Creates a MathQuill editor field. Expects an empty <div> element
 that will be transformed into the editor -}

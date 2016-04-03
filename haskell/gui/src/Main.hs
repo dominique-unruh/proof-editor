@@ -9,7 +9,7 @@ import Control.Applicative ((<$>))
 import GHCJS.DOM
        (enableInspector, webViewGetDomDocument, runWebGUI)
 import GHCJS.DOM.Document (getBody, createElement, createTextNode, click)
-import GHCJS.DOM.Element (setInnerHTML)
+import GHCJS.DOM.Element (setInnerHTML, focus)
 import GHCJS.DOM.Node (appendChild)
 import GHCJS.DOM.Types (Element, ToJSString, FromJSString, toJSString, fromJSString)
 import GHCJS.DOM.EventM (on, mouseClientXY)
@@ -76,6 +76,8 @@ main = runWebGUI $ \ webView -> do
       void $ rawJS "m_to_pmml()" (1::Int)
 
     setLatex math ("\\left[x\\right]")
+
+    mqFocus math
 
     pmml <- getPMathML math
     print $ Text.XML.Light.Output.showElement pmml
