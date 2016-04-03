@@ -75,7 +75,7 @@ main = runWebGUI $ \ webView -> do
     addEditHandler math $ do
       void $ rawJS "m_to_pmml()" (1::Int)
 
-    setLatex math ("\\left[x\\right]")
+    setLatex math ("\\left[x^2\\right]")
 
     mqFocus math
 
