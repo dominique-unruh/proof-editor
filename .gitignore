@@ -21,4 +21,7 @@ src/*/Ui_*.py
 
 MathEdHaskell.exe
 
-haskell/gui/.stack-work
+/haskell/gui/.stack-work
+/haskell/gui/html/font
+/haskell/gui/html/mathquill.js
+/haskell/gui/html/mathquill.css
