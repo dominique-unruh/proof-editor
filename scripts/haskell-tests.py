@@ -3,7 +3,7 @@
 import os, sys, subprocess, re
 
 haskelldir = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)),os.path.pardir,'haskell'))
-haskelltestdir = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)),os.path.pardir,'haskell','src'))
+haskelltestdir = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)),os.path.pardir,'haskell','test'))
 print("Scanning",haskelltestdir)
 
 outfile = open(os.path.join(haskelltestdir,"Test.hs"),"wt")

@@ -1,6 +1,6 @@
 name: MathEdHaskell
 version: 0.1
-cabal-version: >= 1.8
+cabal-version: >=1.8
 build-type: Simple
 license: OtherLicense
 author: Dominique Unruh
@@ -41,12 +41,15 @@ library
         xml -any,
         xml-conduit -any,
         xml-types -any,
-        zip-archive -any
+        zip-archive -any,
+        simple-smt >=0.6.0 && <0.7,
+        doctest >=0.10.1 && <0.11
     extra-libraries:
         HSrts-ghc7.10.2
     hs-source-dirs: src
     other-modules:
         FFIHelpers
+        Transformations.SMT
     ghc-options: -Wall -rtsopts -ddump-splices -ddump-to-file
 
 test-suite Test
@@ -69,8 +72,10 @@ test-suite Test
         xml-conduit -any,
         xml-types -any,
         zip-archive -any,
-        MathEdHaskell -any
-    hs-source-dirs: src
+        MathEdHaskell -any,
+        simple-smt >=0.6.0 && <0.7,
+        doctest >=0.10.1 && <0.11
+    hs-source-dirs: test
     other-modules:
         FFIExportsTest
         Openmath.TypesTest

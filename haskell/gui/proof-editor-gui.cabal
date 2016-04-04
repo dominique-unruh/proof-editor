@@ -1,0 +1,34 @@
+name: proof-editor-gui
+version: 0.1
+cabal-version: >=1.10
+build-type: Simple
+license: OtherLicense
+author: Dominique Unruh
+tested-with: GHCJS ==7.10.2
+
+executable proof-editor
+    main-is: Main.hs
+    build-depends:
+        base -any,
+        ghcjs-base -any,
+        ghcjs-dom -any,
+        transformers >=0.4.3.0 && <0.5,
+        parsec, text, xml, ghcjs-jquery
+    default-language: Haskell2010
+    hs-source-dirs: src
+    other-modules:
+        ParseMathQuillLatex MathQuill
+--    ghc-options: -ferror-spans
+
+-- test-suite test
+--     type: exitcode-stdio-1.0
+--     main-is: Main.hs
+--     build-depends:
+--         base -any,
+--         ghcjs-dom -any,
+--         transformers >=0.4.3.0 && <0.5
+--     default-language: Haskell2010
+--     hs-source-dirs: ../test
+--     other-modules:
+--         Main
+--     ghc-options: -ferror-spans
