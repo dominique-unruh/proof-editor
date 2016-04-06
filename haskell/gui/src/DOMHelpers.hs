@@ -2,6 +2,7 @@ module DOMHelpers where
 
 import GHCJS.DOM.Types (Attr, Node, Element, ToJSString, FromJSString, toJSString, fromJSString, castToElement, castToText, castToAttr)
 import GHCJS.DOM.Element (getTagName, getAttributes)
+import GHCJS.DOM.Node (getNamespaceURI)
 import qualified GHCJS.DOM.Node
 import qualified GHCJS.DOM.Text
 import qualified GHCJS.DOM.Attr
@@ -33,8 +34,9 @@ domGetAttributes el = do
 domToXML :: Element -> IO XML.Element
 domToXML elem = do
   Just tagName <- getTagName elem
+  namespace <- getNamespaceURI elem
   let tag = XML.QName {XML.qName=map Data.Char.toLower tagName,
-                       XML.qURI=Nothing, -- TODO
+                       XML.qURI=namespace,
                        XML.qPrefix=Nothing}
   attr <- domGetAttributes elem
   attr' <- mapM attrToXML attr
@@ -47,8 +49,9 @@ domToXML elem = do
       where attrToXML attr = do
                   Just name <- GHCJS.DOM.Attr.getName attr
                   Just val <- GHCJS.DOM.Attr.getValue attr
+                  namespace <- getNamespaceURI attr
                   return XML.Attr {XML.attrKey=XML.QName {XML.qName=name,
-                                                          XML.qURI=Nothing, -- TODO
+                                                          XML.qURI=namespace,
                                                           XML.qPrefix=Nothing},
                                    XML.attrVal=val}
 

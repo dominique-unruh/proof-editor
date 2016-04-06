@@ -23,8 +23,9 @@ import qualified Data.Text.Lazy as TL
 import qualified Data.Text as T
 import Control.Arrow ((***))
 import qualified Text.XML.Light.Output
+import qualified Text.XML.Light.Types as X
 
-import ParseMathQuillLatex (parseMathQuillLatex)
+-- import ParseMathQuillLatex (parseMathQuillLatex)
 import MathQuill
 
 
@@ -80,7 +81,7 @@ main = runWebGUI $ \ webView -> do
     mqFocus math
 
     pmml <- getPMathML math
-    print $ Text.XML.Light.Output.showElement pmml
+    putStrLn $ Text.XML.Light.Output.ppElement pmml
 
     return ()
 
