@@ -24,4 +24,5 @@ MathEdHaskell.exe
 /haskell/gui/.stack-work
 /haskell/gui/html/font
 /haskell/gui/html/mathquill.js
+/haskell/gui/html/jquery-2.2.2.min.js
 /haskell/gui/html/mathquill.css

@@ -9,7 +9,7 @@ clean :
 	make -C mathquill clean
 	rm -rf mathquill/build mathquill/node_modules
 
-html/proof-editor/out.js : $(wildcard src/*.hs) Makefile
+html/proof-editor/out.js : $(wildcard src/*.hs) $(wildcard ../src/*/*.hs) Makefile
 	bash -c 'stack build proof-editor-gui |& grep -v "^Ignoring that the GHCJS boot package"; test $${PIPESTATUS[0]} -eq 0'
 
 html/mathquill.js : mathquill/src/*.js mathquill/src/*/*.js mathquill/src/*/*/*.js

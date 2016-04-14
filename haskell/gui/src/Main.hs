@@ -25,9 +25,10 @@ import Control.Arrow ((***))
 import qualified Text.XML.Light.Output
 import qualified JavaScript.JQuery as J
 
-import ParseMathQuillLatex (parseMathQuillLatex)
+-- import ParseMathQuillLatex (parseMathQuillLatex)
 import MathQuill
-
+import PMML2Openmath (pmml2Openmath)
+import Openmath.Popcorn (openmathToPopcorn)
 
 foreign import javascript unsafe "$1.latex($2)"
     js_setLatex :: JSVal -> JSString -> IO ()
@@ -88,9 +89,12 @@ main = runWebGUI $ \ webView -> do
     publish "m2" math2
 
     addEditHandler math $ do
+      pmml <- getPMathML math
+      print $ openmathToPopcorn $ pmml2Openmath pmml
       void $ rawJS "copy_via_pmml()" (1::Int)
 
---    setLatex math ("\\left[x^2\\right]")
+
+    setLatex math ("\\left(ab\\right)+\\left(cd\\right)")
 
     mqFocus math
 
