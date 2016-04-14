@@ -13,5 +13,5 @@ html/proof-editor/out.js : $(wildcard src/*.hs) Makefile
 	bash -c 'stack build proof-editor-gui |& grep -v "^Ignoring that the GHCJS boot package"; test $${PIPESTATUS[0]} -eq 0'
 
 html/mathquill.js : mathquill/src/*.js mathquill/src/*/*.js mathquill/src/*/*/*.js
-	make -C mathquill
+	make -C mathquill js css font
 	cp -ur mathquill/build/mathquill.js mathquill/build/mathquill.css mathquill/build/font html/
