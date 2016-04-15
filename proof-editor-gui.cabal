@@ -16,7 +16,7 @@ executable proof-editor
         parsec, text, xml, ghcjs-jquery,
         bytestring, containers
     default-language: Haskell2010
-    hs-source-dirs: src, ../src
+    hs-source-dirs: frontend, shared
     other-modules:
         MathQuill PMML2Openmath Openmath.Types Openmath.Popcorn
     default-extensions: NamedFieldPuns

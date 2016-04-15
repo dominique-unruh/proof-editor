@@ -7,7 +7,7 @@ module Openmath.Utils
 where
 
 import Openmath.Types
-import FFIExports (exportFFI)
+-- import FFIExports (exportFFI)
 import Data.List.Split (splitOn)
 
 pattern OMASym cd name args <- (OMA _ (OMS _ cd name) args)
@@ -141,4 +141,4 @@ parsePath :: String -> Maybe Path
 parsePath "-" = Nothing
 parsePath "" = Just []
 parsePath path = Just (map read (splitOn "." path))
-exportFFI 'parsePath
+--exportFFI 'parsePath
