@@ -5,18 +5,51 @@ import Openmath.Types
 import Text.XML.Light
 import qualified Data.Map.Strict as M
 import qualified Data.Text as T
+import Text.Parsec.Prim
+import Text.Parsec.Combinator
+import Text.Parsec.Expr
+import Data.Functor.Identity
+import Debug.Trace
 
 data Token = Op String | Math Openmath
+             deriving (Eq, Show)
 
 strip :: String -> IO String
 strip = return . T.unpack . T.strip . T.pack
 
-operators :: M.Map String (Int,String,String)
+--satisfy :: (Token -> Bool) -> Parsec [Token] () Token
+--satisfy test = tokenPrim show (\pos _ _ -> pos) (\t -> if test t then Just t else Nothing)
+
+operators :: OperatorTable [Token] () Identity Openmath
+operators = [
+ [prefix "\8722" "arith1" "minus" {-minus sign-}],
+
+ [left "\x2062" {-invisible times-} "arith1" "times",
+  left "\183" {-middot-} "arith1" "times", 
+  left "/" "arith1" "divide"],
+
+ [left "+" "arith1" "plus", 
+  left "\8722" "arith1" "minus" {-minus sign-}]
+ ]
+
+prefix op cd name =
+    Prefix (opToken op >> return (\t -> apply cd name [t]))
+left op cd name =
+    Infix (opToken op >> return (\t u -> apply cd name [t,u])) AssocLeft
+opToken :: String -> Parsec [Token] () ()
+opToken op = tokenPrim show (\pos _ _ -> pos) 
+             (\t -> if t == Op op then Just() else Nothing)
+
+mathToken = tokenPrim show (\pos _ _ -> pos) (\t -> case t of Math om -> Just om;  _ -> Nothing)
+
+
+
+{- operators :: M.Map String (Int,String,String)
 operators = M.fromList [
              ("-",(150,"arith1","minus")),
              ("+",(150,"arith1","plus")),
              ("\x2062",(200,"arith1","times"))
-            ]
+            ] -}
 
 invisibleTimes = Op "\x2062"
 
@@ -24,6 +57,8 @@ invisibleTimes = Op "\x2062"
 preprocess :: [Element] -> [Token]
 preprocess els = reverse (pp els [])
     where pp [] toks = toks
+          pp (el:els) toks | qName (elName el) == "mrow" =
+                               pp ((onlyElems $ elContent el) ++ els) toks
           pp (el:els) toks = 
               let nextTok = pp' el in
               case (nextTok, toks) of
@@ -46,22 +81,41 @@ pmml2Openmath el = p2o (qName $ elName el) (onlyElems $ elContent el)
               let Just close = attr "close" el in
               case (open,close) of
                 ("(",")") -> row cont
+                ("|","|") -> apply "arith1" "abs" [row cont]
                 _ -> error ("Unsupported parentheses: '"++open++"', '"++close++"'")
               
+          p2o "msup" [base, exp] = apply "arith1" "power" [pmml2Openmath base, pmml2Openmath exp]
+          p2o "msup" _ = error ("p2o: msup has wrong number of operands")
+
+          p2o "mn" _ = fromInteger $ read (strContent el)
+
+          p2o "msqrt" cont = apply "arith1" "root" [row cont, fromInteger 2]
+
           p2o tag _ = error ("p2o: unsupported tag "++tag)
 
           attr name el = findAttr (unqual name) el
                       
           row cont = parseLinear $ preprocess $ cont
 
+apply :: String -> String -> [Openmath] -> Openmath
+apply cd name args = OMA [] (OMS [] cd name) args
+
 parseLinear :: [Token] -> Openmath
+parseLinear toks = 
+    case runP exprParser () "" toks of
+      Left err -> error ("parsing formula fragment: "++show err)
+      Right math -> math
+      where
+        exprParser = buildExpressionParser operators mathToken <* eof
+
+
 -- TODO: This ignores priorities!
-parseLinear (Math m : Op op : toks) = 
-    case M.lookup op operators of
-      Nothing -> error ("Unknown operator '"++op++"'")
-      Just (_,cd,name) -> OMA [] (OMS [] cd name) [m,parseLinear toks]
-parseLinear [Math m] = m
-parseLinear [] = error "malformed math"
+-- parseLinear (Math m : Op op : toks) = 
+--    case M.lookup op operators of
+--      Nothing -> error ("Unknown operator '"++op++"'")
+--      Just (_,cd,name) -> apply cd name [m, parseLinear toks]
+-- parseLinear [Math m] = m
+-- parseLinear [] = error "malformed math"
 
 
 {-

@@ -3,6 +3,13 @@
 {-# LANGUAGE TemplateHaskell, ForeignFunctionInterface, BangPatterns, ParallelListComp, RecordWildCards #-}
 module FFIExports (exportFFI) where
 
+#ifdef __GHCJS__
+
+import Language.Haskell.TH.Syntax
+exportFFI :: Name -> Q [Dec]
+exportFFI _ = return []
+
+#else
 import Language.Haskell.TH.Syntax
 import Foreign.StablePtr (deRefStablePtr, newStablePtr, StablePtr)
 import Foreign.C.String (CString)
@@ -282,6 +289,8 @@ showJSONType ListT = showJSON "List"
 showJSONType (TupleT i) = showJSON $ "Tuple-"++show i
 showJSONType t = error $ "not implemented: showJSON: "++show t
 
+
+#endif
 
 {-
 foreign export ccall testFun :: Int -> Int -> Int

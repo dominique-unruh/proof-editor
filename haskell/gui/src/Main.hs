@@ -90,11 +90,14 @@ main = runWebGUI $ \ webView -> do
 
     addEditHandler math $ do
       pmml <- getPMathML math
+      print $ Text.XML.Light.Output.showElement pmml
       print $ openmathToPopcorn $ pmml2Openmath pmml
       void $ rawJS "copy_via_pmml()" (1::Int)
 
 
-    setLatex math ("\\left(ab\\right)+\\left(cd\\right)")
+    setLatex math ("a\\cdot b+c\\cdot d")
+--    setLatex math ("\\left(ab\\right)+\\left(cd\\right)")
+
 
     mqFocus math
 
