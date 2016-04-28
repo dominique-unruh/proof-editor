@@ -1,11 +1,14 @@
 This lists all sources from which we include code.
 This makes it easier to clarify license questions.
 
-MathJax:
+MathJax: # Not currently
 - Not included in source
 - But downloaded automatically during build
 
-Tango Icons:
+Tango Icons: # Not currently
 - Not included in source
 - But downloaded automatically during build
 
+MathQuill:
+- Own fork as submodule
+- Included during build

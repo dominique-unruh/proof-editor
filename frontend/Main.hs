@@ -25,9 +25,10 @@ import Control.Arrow ((***))
 import qualified Text.XML.Light.Output
 import qualified JavaScript.JQuery as J
 
-import ParseMathQuillLatex (parseMathQuillLatex)
+-- import ParseMathQuillLatex (parseMathQuillLatex)
 import MathQuill
-
+import PMML2Openmath (pmml2Openmath)
+import Openmath.Popcorn (openmathToPopcorn)
 
 foreign import javascript unsafe "$1.latex($2)"
     js_setLatex :: JSVal -> JSString -> IO ()
@@ -76,23 +77,34 @@ main = runWebGUI $ \ webView -> do
     enableInspector webView
     Just doc <- webViewGetDomDocument webView
     Just body <- getBody doc
-    -- Just span <- createElement doc (Just "span")
+
     span <- J.select $ toJSString "#mathfield"
     Just span' <- jQueryElement span 0
-    console_log "span'" span'
-    -- appendChild body $ Just span'
     math <- mathQuill span'
     publish "m" math
 
-    addEditHandler math $ do
-      void $ rawJS "m_to_pmml()" (1::Int)
+    span2 <- J.select $ toJSString "#mathfield2"
+    Just span2' <- jQueryElement span2 0
+    math2 <- mathQuill span2'
+    publish "m2" math2
 
-    setLatex math ("\\left[x^2\\right]")
+    addEditHandler math $ do
+      pmml <- getPMathML math
+      print $ Text.XML.Light.Output.showElement pmml
+      print $ openmathToPopcorn $ pmml2Openmath pmml
+      void $ rawJS "copy_via_pmml()" (1::Int)
+
+
+    setLatex math ("a\\cdot b+c\\cdot d")
+--    setLatex math ("\\left(ab\\right)+\\left(cd\\right)")
+
 
     mqFocus math
 
-    pmml <- getPMathML math
-    print $ Text.XML.Light.Output.showElement pmml
+--    pmml <- getPMathML math
+--    print $ Text.XML.Light.Output.showElement pmml
+
+--    void $ rawJS "pmml_to_m()" (1::Int)
 
     return ()
 
