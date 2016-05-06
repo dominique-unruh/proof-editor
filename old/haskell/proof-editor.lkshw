@@ -1,14 +1,14 @@
 Version of workspace file format:
                2
 Time of storage:
-               "Fri Aug 28 13:11:47 EEST 2015"
+               "Mon Jan  4 14:50:46 EET 2016"
 Name of the workspace:
                "proof-editor"
 File paths of contained packages:
-               ["MathEdHaskell.cabal"]
+               ["/home/unruh/svn/mathlint/mathlint.cabal","MathEdHaskell.cabal"]
 Maybe file path of an active package:
-               Just "MathEdHaskell.cabal"
+               Just "/home/unruh/svn/mathlint/mathlint.cabal"
 Maybe name of an active executable:
-               Nothing
+               Just "test-mathlint"
 Version Control System configurations for packages:
                fromList []

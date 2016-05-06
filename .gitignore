@@ -20,8 +20,7 @@ __pycache__/
 src/*/Ui_*.py
 
 MathEdHaskell.exe
-
-/haskell/gui/.stack-work
-/haskell/gui/html/font
-/haskell/gui/html/mathquill.js
-/haskell/gui/html/mathquill.css
+Mathedhaskell.exe
+haskell/.HTF
+haskell/.stack-work
+haskell/stack.yaml
