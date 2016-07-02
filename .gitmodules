@@ -1,3 +1,0 @@
-[submodule "haskell/gui/html/mathquill"]
-	path = mathquill
-	url = ../mathquill.git
