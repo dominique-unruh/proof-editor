@@ -24,6 +24,7 @@
 body {
     cursor: default;
     background-color: white;
+    margin: 0 0 0 0;
 }
 
 .highlight-bg {
