@@ -48,36 +48,4 @@ object MathViewMQ {
   </body>
 </html>"""
 
-  @Pure
-  private def renderList(args:Seq[CMathML],path:PathRev) : Seq[String] =
-    args.zipWithIndex.map {case(a,i) => cmathmlToLatex(a,path.append(i+1))}
-
-  @Pure
-  private def cmathmlToLatexApplyDefault(hd:String,args:Seq[String]) : String =
-    s"$hd(${args.mkString(",")})"
-
-  val applyRenderers : Map[(String,String),Seq[String] => String] = Map(
-    ("arith1","plus") -> {case Seq(x,y) => s"{$x}+{$y}"},
-    ("arith1","minus") -> {case Seq(x,y) => s"{$x}-{$y}"}
-  )
-
-  @Pure
-  def addPath(tex:String,path:PathRev) : String = s"\\class{path-$path}{$tex}"
-
-  @Pure
-  def cmathmlToLatex(m:CMathML, path:PathRev) : String = m match {
-    case CN(n) => addPath(s"\\class{number}{$n}",path)
-    case CI(v) => addPath(s"\\class{variable}{$v}",path)
-    case CSymbol(cd,name) => s"\\class{symbol}{\\text{$cd.$name}}"
-    case Apply(hd,args @ _*) =>
-      val renderer = hd match { case CSymbol(cd,name) => applyRenderers.get((cd,name)); case _ => None }
-      val renderedArgs = renderList(args,path)
-      val result : Option[String] = renderer match { case None => None;
-                      case Some(r) => try { Some(r(renderedArgs)) } catch { case _ : MatchError => None } }
-      val result2 : String = result match {
-        case None => cmathmlToLatexApplyDefault(cmathmlToLatex(hd,path.append(0)),renderedArgs)
-        case Some(r) => r }
-      addPath(result2,path)
-  }
-  def cmathmlToLatex(m:CMathML) : String = cmathmlToLatex(m,Path.emptyRev)
 }

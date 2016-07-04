@@ -4,10 +4,10 @@ package misc
   * Created by unruh on 7/3/16.
   */
 abstract class CMathML
-case class Apply(hd:CMathML, args: CMathML*) extends CMathML
-case class CI(v:String) extends CMathML
-case class CN(n:BigDecimal) extends CMathML
-case class CSymbol(cd:String, name:String) extends CMathML
+case class Apply(hd: CMathML, args: CMathML*) extends CMathML
+case class CI(v: String) extends CMathML
+case class CN(n: BigDecimal) extends CMathML
+case class CSymbol(cd: String, name: String) extends CMathML
 
 case class Path(path : List[Int]) extends AnyVal {
   def prepend(i:Int) = new Path(i::path)
