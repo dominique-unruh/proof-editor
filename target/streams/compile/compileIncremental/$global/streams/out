@@ -1,0 +1,184 @@
+[0m[[0mdebug[0m] [0m[naha] [0m
+[0m[[0mdebug[0m] [0m[naha] Initial source changes: [0m
+[0m[[0mdebug[0m] [0m[naha] 	removed:Set()[0m
+[0m[[0mdebug[0m] [0m[naha] 	added: Set(/home/unruh/svn/proof-editor/src/main/scala/mathview/MathViewMQ.scala, /home/unruh/svn/proof-editor/target/scala-2.11/src_managed/main/antlr4/webview/MQLatexVisitor.java, /home/unruh/svn/proof-editor/target/scala-2.11/src_managed/main/antlr4/webview/MQLatexBaseVisitor.java, /home/unruh/svn/proof-editor/src/main/scala/misc/Utils.scala, /home/unruh/svn/proof-editor/src/main/scala/misc/Pure.scala, /home/unruh/svn/proof-editor/src/main/scala/misc/TestApp.scala, /home/unruh/svn/proof-editor/src/main/scala/misc/CMathML.scala, /home/unruh/svn/proof-editor/target/scala-2.11/src_managed/main/antlr4/webview/MQLatexParser.java, /home/unruh/svn/proof-editor/src/main/scala/mathview/MQLatex.scala, /home/unruh/svn/proof-editor/target/scala-2.11/src_managed/main/antlr4/webview/MQLatexLexer.java, /home/unruh/svn/proof-editor/src/main/scala/misc/MathView.scala)[0m
+[0m[[0mdebug[0m] [0m[naha] 	modified: Set()[0m
+[0m[[0mdebug[0m] [0m[naha] Invalidated products: Set()[0m
+[0m[[0mdebug[0m] [0m[naha] External API changes: API Changes: Set()[0m
+[0m[[0mdebug[0m] [0m[naha] Modified binary dependencies: Set()[0m
+[0m[[0mdebug[0m] [0m[naha] Initial directly invalidated sources: Set(/home/unruh/svn/proof-editor/src/main/scala/mathview/MathViewMQ.scala, /home/unruh/svn/proof-editor/target/scala-2.11/src_managed/main/antlr4/webview/MQLatexVisitor.java, /home/unruh/svn/proof-editor/target/scala-2.11/src_managed/main/antlr4/webview/MQLatexBaseVisitor.java, /home/unruh/svn/proof-editor/src/main/scala/misc/Utils.scala, /home/unruh/svn/proof-editor/src/main/scala/misc/Pure.scala, /home/unruh/svn/proof-editor/src/main/scala/misc/TestApp.scala, /home/unruh/svn/proof-editor/src/main/scala/misc/CMathML.scala, /home/unruh/svn/proof-editor/target/scala-2.11/src_managed/main/antlr4/webview/MQLatexParser.java, /home/unruh/svn/proof-editor/src/main/scala/mathview/MQLatex.scala, /home/unruh/svn/proof-editor/target/scala-2.11/src_managed/main/antlr4/webview/MQLatexLexer.java, /home/unruh/svn/proof-editor/src/main/scala/misc/MathView.scala)[0m
+[0m[[0mdebug[0m] [0m[naha] [0m
+[0m[[0mdebug[0m] [0m[naha] Sources indirectly invalidated by:[0m
+[0m[[0mdebug[0m] [0m[naha] 	product: Set()[0m
+[0m[[0mdebug[0m] [0m[naha] 	binary dep: Set()[0m
+[0m[[0mdebug[0m] [0m[naha] 	external source: Set()[0m
+[0m[[0mdebug[0m] [0mAll initially invalidated sources: Set(/home/unruh/svn/proof-editor/src/main/scala/mathview/MathViewMQ.scala, /home/unruh/svn/proof-editor/target/scala-2.11/src_managed/main/antlr4/webview/MQLatexVisitor.java, /home/unruh/svn/proof-editor/target/scala-2.11/src_managed/main/antlr4/webview/MQLatexBaseVisitor.java, /home/unruh/svn/proof-editor/src/main/scala/misc/Utils.scala, /home/unruh/svn/proof-editor/src/main/scala/misc/Pure.scala, /home/unruh/svn/proof-editor/src/main/scala/misc/TestApp.scala, /home/unruh/svn/proof-editor/src/main/scala/misc/CMathML.scala, /home/unruh/svn/proof-editor/target/scala-2.11/src_managed/main/antlr4/webview/MQLatexParser.java, /home/unruh/svn/proof-editor/src/main/scala/mathview/MQLatex.scala, /home/unruh/svn/proof-editor/target/scala-2.11/src_managed/main/antlr4/webview/MQLatexLexer.java, /home/unruh/svn/proof-editor/src/main/scala/misc/MathView.scala)[0m
+[0m[[0mdebug[0m] [0m[naha] Recompiling all 11 sources: invalidated sources (11) exceeded 50.0% of all sources[0m
+[0m[[0minfo[0m] [0mCompiling 7 Scala sources and 4 Java sources to /home/unruh/svn/proof-editor/target/scala-2.11/classes...[0m
+[0m[[0mdebug[0m] [0mGetting org.scala-sbt:compiler-interface:0.13.11:component from component compiler for Scala 2.11.8[0m
+[0m[[0mdebug[0m] [0mGetting org.scala-sbt:compiler-interface:0.13.11:component from component compiler for Scala 2.11.8[0m
+[0m[[0mdebug[0m] [0mRunning cached compiler 4f36c0fa, interfacing (CompilerInterface) with Scala compiler version 2.11.8[0m
+[0m[[0mdebug[0m] [0mCalling Scala compiler with arguments  (CompilerInterface):[0m
+[0m[[0mdebug[0m] [0m	-bootclasspath[0m
+[0m[[0mdebug[0m] [0m	/usr/lib/jvm/java-7-openjdk-amd64/jre/lib/resources.jar:/usr/lib/jvm/java-7-openjdk-amd64/jre/lib/rt.jar:/usr/lib/jvm/java-7-openjdk-amd64/jre/lib/sunrsasign.jar:/usr/lib/jvm/java-7-openjdk-amd64/jre/lib/jsse.jar:/usr/lib/jvm/java-7-openjdk-amd64/jre/lib/jce.jar:/usr/lib/jvm/java-7-openjdk-amd64/jre/lib/charsets.jar:/usr/lib/jvm/java-7-openjdk-amd64/jre/lib/rhino.jar:/usr/lib/jvm/java-7-openjdk-amd64/jre/lib/jfr.jar:/usr/lib/jvm/java-7-openjdk-amd64/jre/classes:/home/unruh/.ivy2/cache/org.scala-lang/scala-library/jars/scala-library-2.11.8.jar[0m
+[0m[[0mdebug[0m] [0m	-classpath[0m
+[0m[[0mdebug[0m] [0m	/home/unruh/svn/proof-editor/target/scala-2.11/classes:/home/unruh/.ivy2/cache/org.scala-lang.modules/scala-xml_2.11/bundles/scala-xml_2.11-1.0.5.jar:/home/unruh/.ivy2/cache/org.antlr/antlr4-runtime/jars/antlr4-runtime-4.5.3.jar[0m
+[0m[[31merror[0m] [0m/home/unruh/svn/proof-editor/src/main/scala/mathview/MQLatex.scala:3: object MQLatexParser is not a member of package mathview[0m
+[0m[[31merror[0m] [0mimport mathview.MQLatexParser._[0m
+[0m[[31merror[0m] [0m                ^[0m
+[0m[[31merror[0m] [0m/home/unruh/svn/proof-editor/src/main/scala/mathview/MQLatex.scala:24: not found: type PlusContext[0m
+[0m[[31merror[0m] [0m    case Ast(_:PlusContext,x,_,y) => Apply(CSymbol("arith1","plus"),pp(x),pp(y))[0m
+[0m[[31merror[0m] [0m               ^[0m
+[0m[[31merror[0m] [0m/home/unruh/svn/proof-editor/src/main/scala/mathview/MQLatex.scala:25: not found: type MinusContext[0m
+[0m[[31merror[0m] [0m    case Ast(_:MinusContext,x,_,y) => Apply(CSymbol("arith1","minus"),pp(x),pp(y))[0m
+[0m[[31merror[0m] [0m               ^[0m
+[0m[[31merror[0m] [0m/home/unruh/svn/proof-editor/src/main/scala/mathview/MQLatex.scala:26: not found: type TimesContext[0m
+[0m[[31merror[0m] [0m    case Ast(_:TimesContext,x,_,y) => Apply(CSymbol("arith1","times"),pp(x),pp(y))[0m
+[0m[[31merror[0m] [0m               ^[0m
+[0m[[31merror[0m] [0m/home/unruh/svn/proof-editor/src/main/scala/mathview/MQLatex.scala:27: not found: type NumberContext[0m
+[0m[[31merror[0m] [0m    case _:NumberContext => CN(BigDecimal(ast.getText))[0m
+[0m[[31merror[0m] [0m           ^[0m
+[0m[[31merror[0m] [0m/home/unruh/svn/proof-editor/src/main/scala/mathview/MQLatex.scala:33: not found: type MQLatexLexer[0m
+[0m[[31merror[0m] [0m    val lexer = new MQLatexLexer(stream)[0m
+[0m[[31merror[0m] [0m                    ^[0m
+[0m[[31merror[0m] [0m/home/unruh/svn/proof-editor/src/main/scala/mathview/MQLatex.scala:35: not found: type MQLatexParser[0m
+[0m[[31merror[0m] [0m    val parser = new MQLatexParser(tokens)[0m
+[0m[[31merror[0m] [0m                     ^[0m
+[0m[[31merror[0m] [0m/home/unruh/svn/proof-editor/src/main/scala/mathview/MathViewMQ.scala:3: not found: object javafx[0m
+[0m[[31merror[0m] [0mimport javafx.scene.layout.BorderPane[0m
+[0m[[31merror[0m] [0m       ^[0m
+[0m[[31merror[0m] [0m/home/unruh/svn/proof-editor/src/main/scala/mathview/MathViewMQ.scala:4: not found: object javafx[0m
+[0m[[31merror[0m] [0mimport javafx.scene.web.WebView[0m
+[0m[[31merror[0m] [0m       ^[0m
+[0m[[31merror[0m] [0m/home/unruh/svn/proof-editor/src/main/scala/mathview/MathViewMQ.scala:7: not found: object netscape[0m
+[0m[[31merror[0m] [0mimport netscape.javascript.JSObject[0m
+[0m[[31merror[0m] [0m       ^[0m
+[0m[[31merror[0m] [0m/home/unruh/svn/proof-editor/src/main/scala/mathview/MathViewMQ.scala:9: not found: type BorderPane[0m
+[0m[[31merror[0m] [0mclass MathViewMQ(math:String) extends BorderPane {[0m
+[0m[[31merror[0m] [0m                                      ^[0m
+[0m[[31merror[0m] [0m/home/unruh/svn/proof-editor/src/main/scala/mathview/MathViewMQ.scala:10: not found: type WebView[0m
+[0m[[31merror[0m] [0m  private val web = new WebView[0m
+[0m[[31merror[0m] [0m                        ^[0m
+[0m[[31merror[0m] [0m/home/unruh/svn/proof-editor/src/main/scala/mathview/MathViewMQ.scala:18: not found: type JSObject[0m
+[0m[[31merror[0m] [0m    val window = web.getEngine.executeScript("window").asInstanceOf[JSObject][0m
+[0m[[31merror[0m] [0m                                                                    ^[0m
+[0m[[31merror[0m] [0m/home/unruh/svn/proof-editor/src/main/scala/mathview/MathViewMQ.scala:14: not found: value setCenter[0m
+[0m[[31merror[0m] [0m  setCenter(web)[0m
+[0m[[31merror[0m] [0m  ^[0m
+[0m[[31merror[0m] [0m/home/unruh/svn/proof-editor/src/main/scala/mathview/MathViewMQ.scala:15: not found: value getStyleClass[0m
+[0m[[31merror[0m] [0m  getStyleClass.add("mathview")[0m
+[0m[[31merror[0m] [0m  ^[0m
+[0m[[31merror[0m] [0m/home/unruh/svn/proof-editor/src/main/scala/misc/MathView.scala:3: not found: object javafx[0m
+[0m[[31merror[0m] [0mimport javafx.scene.layout.BorderPane[0m
+[0m[[31merror[0m] [0m       ^[0m
+[0m[[31merror[0m] [0m/home/unruh/svn/proof-editor/src/main/scala/misc/MathView.scala:4: not found: object javafx[0m
+[0m[[31merror[0m] [0mimport javafx.scene.web.WebView[0m
+[0m[[31merror[0m] [0m       ^[0m
+[0m[[31merror[0m] [0m/home/unruh/svn/proof-editor/src/main/scala/misc/MathView.scala:6: object MQLatexParser is not a member of package mathview[0m
+[0m[[31merror[0m] [0mimport mathview.MQLatexParser.{MathContext, PlusContext}[0m
+[0m[[31merror[0m] [0m                ^[0m
+[0m[[31merror[0m] [0m/home/unruh/svn/proof-editor/src/main/scala/misc/MathView.scala:7: not found: object netscape[0m
+[0m[[31merror[0m] [0mimport netscape.javascript.JSObject[0m
+[0m[[31merror[0m] [0m       ^[0m
+[0m[[31merror[0m] [0m/home/unruh/svn/proof-editor/src/main/scala/misc/MathView.scala:13: not found: type BorderPane[0m
+[0m[[31merror[0m] [0mclass MathView(math:String) extends BorderPane {[0m
+[0m[[31merror[0m] [0m                                    ^[0m
+[0m[[31merror[0m] [0m/home/unruh/svn/proof-editor/src/main/scala/misc/MathView.scala:14: not found: type WebView[0m
+[0m[[31merror[0m] [0m  private val web = new WebView[0m
+[0m[[31merror[0m] [0m                        ^[0m
+[0m[[31merror[0m] [0m/home/unruh/svn/proof-editor/src/main/scala/misc/MathView.scala:21: not found: type JSObject[0m
+[0m[[31merror[0m] [0m    val window = web.getEngine.executeScript("window").asInstanceOf[JSObject][0m
+[0m[[31merror[0m] [0m                                                                    ^[0m
+[0m[[31merror[0m] [0m/home/unruh/svn/proof-editor/src/main/scala/misc/MathView.scala:18: not found: value setCenter[0m
+[0m[[31merror[0m] [0m  setCenter(web)[0m
+[0m[[31merror[0m] [0m  ^[0m
+[0m[[31merror[0m] [0m/home/unruh/svn/proof-editor/src/main/scala/misc/TestApp.scala:7: not found: object javafx[0m
+[0m[[31merror[0m] [0mimport javafx.application.Application[0m
+[0m[[31merror[0m] [0m       ^[0m
+[0m[[31merror[0m] [0m/home/unruh/svn/proof-editor/src/main/scala/misc/TestApp.scala:8: not found: object javafx[0m
+[0m[[31merror[0m] [0mimport javafx.event.ActionEvent[0m
+[0m[[31merror[0m] [0m       ^[0m
+[0m[[31merror[0m] [0m/home/unruh/svn/proof-editor/src/main/scala/misc/TestApp.scala:9: not found: object javafx[0m
+[0m[[31merror[0m] [0mimport javafx.scene.Scene[0m
+[0m[[31merror[0m] [0m       ^[0m
+[0m[[31merror[0m] [0m/home/unruh/svn/proof-editor/src/main/scala/misc/TestApp.scala:10: not found: object javafx[0m
+[0m[[31merror[0m] [0mimport javafx.scene.control.{Button, ScrollPane, ToolBar}[0m
+[0m[[31merror[0m] [0m       ^[0m
+[0m[[31merror[0m] [0m/home/unruh/svn/proof-editor/src/main/scala/misc/TestApp.scala:11: not found: object javafx[0m
+[0m[[31merror[0m] [0mimport javafx.scene.control.ScrollPane.ScrollBarPolicy[0m
+[0m[[31merror[0m] [0m       ^[0m
+[0m[[31merror[0m] [0m/home/unruh/svn/proof-editor/src/main/scala/misc/TestApp.scala:12: not found: object javafx[0m
+[0m[[31merror[0m] [0mimport javafx.scene.layout.{BorderPane, HBox, StackPane, VBox}[0m
+[0m[[31merror[0m] [0m       ^[0m
+[0m[[31merror[0m] [0m/home/unruh/svn/proof-editor/src/main/scala/misc/TestApp.scala:13: not found: object javafx[0m
+[0m[[31merror[0m] [0mimport javafx.scene.text.{Text, TextFlow}[0m
+[0m[[31merror[0m] [0m       ^[0m
+[0m[[31merror[0m] [0m/home/unruh/svn/proof-editor/src/main/scala/misc/TestApp.scala:14: not found: object javafx[0m
+[0m[[31merror[0m] [0mimport javafx.scene.web.WebView[0m
+[0m[[31merror[0m] [0m       ^[0m
+[0m[[31merror[0m] [0m/home/unruh/svn/proof-editor/src/main/scala/misc/TestApp.scala:15: not found: object javafx[0m
+[0m[[31merror[0m] [0mimport javafx.stage.Stage[0m
+[0m[[31merror[0m] [0m       ^[0m
+[0m[[31merror[0m] [0m/home/unruh/svn/proof-editor/src/main/scala/misc/TestApp.scala:17: object javafx is not a member of package com.sun[0m
+[0m[[31merror[0m] [0mimport com.sun.javafx.webkit.WebConsoleListener[0m
+[0m[[31merror[0m] [0m               ^[0m
+[0m[[31merror[0m] [0m/home/unruh/svn/proof-editor/src/main/scala/misc/TestApp.scala:27: not found: type Application[0m
+[0m[[31merror[0m] [0mclass TestApp extends Application {[0m
+[0m[[31merror[0m] [0m                      ^[0m
+[0m[[31merror[0m] [0m/home/unruh/svn/proof-editor/src/main/scala/misc/TestApp.scala:24: not found: value Application[0m
+[0m[[31merror[0m] [0m  def main(args: Array[String]) = Application.launch(classOf[TestApp], args:_*)[0m
+[0m[[31merror[0m] [0m                                  ^[0m
+[0m[[31merror[0m] [0m/home/unruh/svn/proof-editor/src/main/scala/misc/TestApp.scala:28: not found: type Stage[0m
+[0m[[31merror[0m] [0m  def start(primaryStage: Stage) {[0m
+[0m[[31merror[0m] [0m                          ^[0m
+[0m[[31merror[0m] [0m/home/unruh/svn/proof-editor/src/main/scala/misc/TestApp.scala:34: not found: value WebConsoleListener[0m
+[0m[[31merror[0m] [0m    WebConsoleListener.setDefaultListener((webView: WebView, message: String, lineNumber: Int, sourceId: String) =>[0m
+[0m[[31merror[0m] [0m    ^[0m
+[0m[[31merror[0m] [0m/home/unruh/svn/proof-editor/src/main/scala/misc/TestApp.scala:34: not found: type WebView[0m
+[0m[[31merror[0m] [0m    WebConsoleListener.setDefaultListener((webView: WebView, message: String, lineNumber: Int, sourceId: String) =>[0m
+[0m[[31merror[0m] [0m                                                    ^[0m
+[0m[[31merror[0m] [0m/home/unruh/svn/proof-editor/src/main/scala/misc/TestApp.scala:36: not found: type ScrollPane[0m
+[0m[[31merror[0m] [0m    val scroll = new ScrollPane()[0m
+[0m[[31merror[0m] [0m                     ^[0m
+[0m[[31merror[0m] [0m/home/unruh/svn/proof-editor/src/main/scala/misc/TestApp.scala:37: not found: type BorderPane[0m
+[0m[[31merror[0m] [0m    val root = new BorderPane()[0m
+[0m[[31merror[0m] [0m                   ^[0m
+[0m[[31merror[0m] [0m/home/unruh/svn/proof-editor/src/main/scala/misc/TestApp.scala:39: not found: type Button[0m
+[0m[[31merror[0m] [0m    val btnNew = new Button("New formula")[0m
+[0m[[31merror[0m] [0m                     ^[0m
+[0m[[31merror[0m] [0m/home/unruh/svn/proof-editor/src/main/scala/misc/TestApp.scala:41: not found: type ToolBar[0m
+[0m[[31merror[0m] [0m    val toolbar = new ToolBar(btnNew)[0m
+[0m[[31merror[0m] [0m                      ^[0m
+[0m[[31merror[0m] [0m/home/unruh/svn/proof-editor/src/main/scala/misc/TestApp.scala:43: not found: type TextFlow[0m
+[0m[[31merror[0m] [0m    val text = new TextFlow()[0m
+[0m[[31merror[0m] [0m                   ^[0m
+[0m[[31merror[0m] [0m/home/unruh/svn/proof-editor/src/main/scala/misc/Utils.scala:3: not found: object javafx[0m
+[0m[[31merror[0m] [0mimport javafx.event.{ActionEvent, Event}[0m
+[0m[[31merror[0m] [0m       ^[0m
+[0m[[31merror[0m] [0m/home/unruh/svn/proof-editor/src/main/scala/misc/Utils.scala:4: not found: object javafx[0m
+[0m[[31merror[0m] [0mimport javafx.scene.web.WebView[0m
+[0m[[31merror[0m] [0m       ^[0m
+[0m[[31merror[0m] [0m/home/unruh/svn/proof-editor/src/main/scala/misc/Utils.scala:6: object javafx is not a member of package com.sun[0m
+[0m[[31merror[0m] [0mimport com.sun.javafx.webkit.WebConsoleListener[0m
+[0m[[31merror[0m] [0m               ^[0m
+[0m[[31merror[0m] [0m/home/unruh/svn/proof-editor/src/main/scala/misc/Utils.scala:26: not found: value javafx[0m
+[0m[[31merror[0m] [0m    implicit def lambdaToEventHandler[T<:Event](handler: T => Unit) = new javafx.event.EventHandler[T] {[0m
+[0m[[31merror[0m] [0m                                                                          ^[0m
+[0m[[31merror[0m] [0m/home/unruh/svn/proof-editor/src/main/scala/misc/Utils.scala:26: not found: type Event[0m
+[0m[[31merror[0m] [0m    implicit def lambdaToEventHandler[T<:Event](handler: T => Unit) = new javafx.event.EventHandler[T] {[0m
+[0m[[31merror[0m] [0m                                         ^[0m
+[0m[[31merror[0m] [0m/home/unruh/svn/proof-editor/src/main/scala/misc/Utils.scala:27: Parameter type in structural refinement may not refer to an abstract type defined outside that refinement[0m
+[0m[[31merror[0m] [0m      override def handle(dEvent: T): Unit = handler(dEvent)[0m
+[0m[[31merror[0m] [0m                          ^[0m
+[0m[[31merror[0m] [0m/home/unruh/svn/proof-editor/src/main/scala/misc/Utils.scala:30: not found: type WebConsoleListener[0m
+[0m[[31merror[0m] [0m    implicit def lambdaToWebConsoleListener(handler: (WebView, String, Int, String) => Unit) = new WebConsoleListener() {[0m
+[0m[[31merror[0m] [0m                                                                                                   ^[0m
+[0m[[31merror[0m] [0m/home/unruh/svn/proof-editor/src/main/scala/misc/Utils.scala:31: not found: type WebView[0m
+[0m[[31merror[0m] [0m      override def messageAdded(webView: WebView, message: String, lineNumber: Int, sourceId: String): Unit = handler(webView,message,lineNumber,sourceId)[0m
+[0m[[31merror[0m] [0m                                         ^[0m
+[0m[[31merror[0m] [0m/home/unruh/svn/proof-editor/src/main/scala/misc/Utils.scala:30: not found: type WebView[0m
+[0m[[31merror[0m] [0m    implicit def lambdaToWebConsoleListener(handler: (WebView, String, Int, String) => Unit) = new WebConsoleListener() {[0m
+[0m[[31merror[0m] [0m                                                      ^[0m
+[0m[[31merror[0m] [0m52 errors found[0m
+[0m[[0mdebug[0m] [0mCompilation failed (CompilerInterface)[0m
+[0m[[31merror[0m] [0m(compile:[31mcompileIncremental[0m) Compilation failed[0m

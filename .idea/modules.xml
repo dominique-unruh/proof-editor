@@ -2,7 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/proof-editor.iml" filepath="$PROJECT_DIR$/.idea/proof-editor.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/proof-editor.iml" filepath="$PROJECT_DIR$/.idea/modules/proof-editor.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/proof-editor-build.iml" filepath="$PROJECT_DIR$/.idea/modules/proof-editor-build.iml" />
     </modules>
   </component>
 </project>
