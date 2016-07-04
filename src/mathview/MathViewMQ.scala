@@ -3,7 +3,6 @@ package misc
 import javafx.scene.layout.BorderPane
 import javafx.scene.web.WebView
 
-import misc._
 import netscape.javascript.JSObject
 
 class MathViewMQ(math:String) extends BorderPane {
@@ -29,6 +28,16 @@ class MathViewMQ(math:String) extends BorderPane {
 
 object MathViewMQ {
   val base = getClass.getResource("/").toString
+  checkResources
+
+  def checkResources = {
+    def checkResource(name:String) =
+      if (getClass.getResource(name)==null) throw new RuntimeException("missing resource "+name)
+    checkResource("/mathquill/mathquill.css")
+    checkResource("/jquery.js")
+    checkResource("/mathview.css")
+    checkResource("/mathviewmq.js")
+  }
 
   @Pure
   def mathjaxPage(base:String,math:String): String =

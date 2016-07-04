@@ -2,23 +2,22 @@
   * Created by unruh on 7/3/16.
   */
 
-import java.io.StringBufferInputStream
+package misc
+
 import java.lang.System.out
 import javafx.application.Application
 import javafx.event.ActionEvent
 import javafx.scene.Scene
-import javafx.scene.control.{Button, ScrollPane, ToolBar}
 import javafx.scene.control.ScrollPane.ScrollBarPolicy
-import javafx.scene.layout.{BorderPane, HBox, StackPane, VBox}
+import javafx.scene.control.{Button, ScrollPane, ToolBar}
+import javafx.scene.layout.BorderPane
 import javafx.scene.text.{Text, TextFlow}
 import javafx.scene.web.WebView
 import javafx.stage.Stage
 
 import com.sun.javafx.webkit.WebConsoleListener
-import misc.Utils.JavaFXImplicits._
 import mathview.MQLatex
-import misc.{Apply, CI, CSymbol, MathViewMQ}
-import org.antlr.v4.runtime.{ANTLRInputStream, CharStream, CommonTokenStream}
+import misc.Utils.JavaFXImplicits._
 
 object TestApp {
   def main(args: Array[String]) = Application.launch(classOf[TestApp], args:_*)
@@ -61,7 +60,8 @@ class TestApp extends Application {
     text.getChildren.add(math1)
     text.getChildren.add(new Text("..."))
     primaryStage.setScene(new Scene(root, 800, 250))
-    primaryStage.getScene.getStylesheets.add(getClass().getResource("testapp.css").toExternalForm())
+    println("about to load css",getClass().getResource("/testapp.css"))
+    primaryStage.getScene.getStylesheets.add(getClass().getResource("/testapp.css").toExternalForm())
     primaryStage.show
   }
 }
