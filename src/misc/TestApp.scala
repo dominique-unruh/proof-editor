@@ -16,7 +16,7 @@ import javafx.scene.web.WebView
 import javafx.stage.Stage
 
 import com.sun.javafx.webkit.WebConsoleListener
-import mathview.MQLatex
+import mathview.{MQLatex, MathViewMQ}
 import misc.Utils.JavaFXImplicits._
 
 object TestApp {
@@ -36,7 +36,6 @@ class TestApp extends Application {
     val root = new BorderPane()
     root.setCenter(scroll)
     val btnNew = new Button("New formula")
-    btnNew.setOnAction((event:ActionEvent) => print("button"))
     val toolbar = new ToolBar(btnNew)
     root.setTop(toolbar)
     val text = new TextFlow()
@@ -51,14 +50,20 @@ class TestApp extends Application {
 //    val pmml = MathView.cmathmlToMathjax(cmml)
 //    val math = new MathView(pmml)
     text.getChildren.add(new Text("Hello "))
-    val tex = MQLatex.cmathmlToLatex(cmml)
-    val math = new MathViewMQ(tex)
+//    val tex = MQLatex.cmathmlToLatex(cmml)
+    val math = new MathViewMQ()
+    math.setMath(cmml)
     text.getChildren.add(math)
     text.getChildren.add(new Text(" and "))
-    val tex1 = MQLatex.cmathmlToLatex(cmml1)
-    val math1 = new MathViewMQ(tex1)
+//    val tex1 = MQLatex.cmathmlToLatex(cmml1)
+    val math1 = new MathViewMQ()
+    math1.setMath(cmml1)
     text.getChildren.add(math1)
     text.getChildren.add(new Text("..."))
+
+    btnNew.setOnAction((event:ActionEvent) => { print("button"); math.setMath(CN(1))})
+
+
     primaryStage.setScene(new Scene(root, 800, 250))
     println("about to load css",getClass().getResource("/testapp.css"))
     primaryStage.getScene.getStylesheets.add(getClass().getResource("/testapp.css").toExternalForm())

@@ -1,27 +1,49 @@
-package misc
+package mathview
 
 import javafx.scene.layout.BorderPane
 import javafx.scene.web.WebView
 
+import misc.{CMathML, Pure}
 import netscape.javascript.JSObject
+import misc.Utils.JavaFXImplicits._
 
-class MathViewMQ(math:String) extends BorderPane {
+/** JavaFX widget for showing and editing math formulas.
+  * TODO: editing not yet implemented.
+  * Math is represented as CMathML objects
+  * @see [[setMath]] for setting the displayed math
+  * @see [[misc.CMathML]] for describing math
+  * */
+class MathViewMQ extends BorderPane {
   private val web = new WebView
-  installBridge()
+  private var math = null : CMathML
+  private var loaded = false
+//  installBridge()
 //  println(MathViewMQ.mathjaxPage(MathViewMQ.base,math))
-  web.getEngine.loadContent(MathViewMQ.mathjaxPage(MathViewMQ.base,math))
+  web.getEngine.loadContent(MathViewMQ.mathjaxPage(MathViewMQ.base,"remove-me"))
+  private val window = web.getEngine.executeScript("window").asInstanceOf[JSObject]
+  window.setMember("controller", JSBridge)
+//  private val setMathJS = web.getEngine.executeScript("setMath").asInstanceOf[JSObject]
   setCenter(web)
   getStyleClass.add("mathview")
 
-  def installBridge() = {
-    val window = web.getEngine.executeScript("window").asInstanceOf[JSObject]
-    window.setMember("controller", JSBridge)
+  /** Sets the currently displayed math */
+  def setMath(m:CMathML) = {
+    math = m
+    if (loaded) sendMathToJS // TODO: must only happen in FX thread
   }
 
-  object JSBridge {
+  def getMath = math
+
+  private def sendMathToJS: Unit = {
+    val tex = MQLatex.cmathmlToLatex(math)
+    window.call("setMath",tex)
+  }
+
+  private object JSBridge {
     def onMathDeselected() = println("onMathDeselected")
     def onMathSelection(path:String) = println("onMathSelection",path)
     def onMathRendered(w:Double, h:Double) = { web.setMinSize(w,h); web.setPrefSize(w,h); web.resize(w,h); println("onMathRendered",w,h) }
+    def onLoad() = { println("onLoad"); loaded = true; if (math!=null) sendMathToJS }
   }
 }
 
