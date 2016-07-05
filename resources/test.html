@@ -7,10 +7,24 @@
     <script src="mathquill/mathquill.js"></script>
     <script src="mathviewmq.js"></script>
   </head>
-  <body onload="onLoad()">
+  <body onload="onLoad();">
+    <script>
+      MQ = MathQuill.getInterface(2);
+
+      MQ.registerEmbed("error", function (id) {
+      return {htmlString: '<b>ERROR-'+id+'</b>',
+      text: function(x) { return "ERROR" },
+      latex: function(x) { return "\\ERROR{"+x+"}" }
+      }
+      });
+    </script>
     <span id="tracksize">
-      <span id="formula-span">\sqrt{\MathQuillMathField[name]{x^2}}</span>
+      <span id="formula-span">\sqrt{\MathQuillMathField[name]{x^2+\embed{error}}}</span>
       <object id="tracksize-obj" type="text/html" data="about:blank"></object>
     </span>
+
+    <script>
+      
+    </script>
   </body>
 </html>

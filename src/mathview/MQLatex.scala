@@ -22,12 +22,12 @@ private[mathview] object MQLatex {
 
   @Pure
   private def pp(ast:ParseTree) : CMathML = ast match {
+    case ast : ParserRuleContext if ast.exception!=null => throw ast.exception // CError("unruh","parseerror",ast.exception)
     case Ast(_:PlusContext,x,_,y) => Apply(CSymbol("arith1","plus"),pp(x),pp(y))
     case Ast(_:MinusContext,x,_,y) => Apply(CSymbol("arith1","minus"),pp(x),pp(y))
     case Ast(_:TimesContext,x,_,y) => Apply(CSymbol("arith1","times"),pp(x),pp(y))
     case _:NumberContext => CN(BigDecimal(ast.getText))
     case _:VariableContext => CI(ast.getText)
-    case ast : ParserRuleContext if ast.exception!=null => System.out.println(ast.exception); CError("unruh","parseerror",ast.exception)
     case _ => sys.error("unexpected")
   }
 
@@ -79,9 +79,10 @@ private[mathview] object MQLatex {
           case None => cmathmlToLatexApplyDefault(cmathmlToLatex(hd,path.append(0),options),renderedArgs)
           case Some(r) => r }
         addPath(result2,path,options)
+      case CError(_,_,_*) => addPath("\\embed{error}[]",path,options);
       }
     }
 
-        @Pure
+  @Pure
   def cmathmlToLatex(m:CMathML, options:Options=Options()) : String = cmathmlToLatex(m,Path.emptyRev,options)
 }

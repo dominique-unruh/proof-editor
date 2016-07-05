@@ -39,7 +39,7 @@ class TestApp extends Application {
     val cmml1 = Apply(CSymbol("arith1","plus"),CI("x"),CI("y"))
     val cmml = Apply(CSymbol("arith1","minus"),
       cmml1,
-      Apply(CSymbol("arith1","plus"),CI("x2"),CI("y2")))
+      CError("unruh","parse"))
 //    val pmml = MathView.cmathmlToMathjax(cmml)
 //    val math = new MathView(pmml)
     text.getChildren.add(new Text("Hello "))
@@ -54,9 +54,12 @@ class TestApp extends Application {
     text.getChildren.add(math1)
     text.getChildren.add(new Text("..."))
 
-    btnNew.setOnAction((event:ActionEvent) => math.setMath(cmml1,Some(Path.makeRev())))
-    math.addEditedListener(math => println("edited",math))
 
+    val editAt = Path.make(1)
+    btnNew.setOnAction((event:ActionEvent) => math.setMath(cmml1,Some(editAt.toPathRev)))
+    math.addEditedListener(m => {println("edited",m); math.setMath(cmml1.replace(editAt,m))})
+
+    println("XXX",editAt,cmml1.replace(editAt,CN(33)))
 
     primaryStage.setScene(new Scene(root, 800, 250))
     println("about to load css",getClass().getResource("/testapp.css"))

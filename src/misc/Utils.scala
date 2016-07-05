@@ -29,5 +29,9 @@ object Utils {
     implicit def lambdaToChangeListener[T](handler: (ObservableValue[_ <: T], T, T) => Unit) = new ChangeListener[T]() {
       override def changed(observable : ObservableValue[_ <: T], oldValue : T, newValue : T) = handler(observable, oldValue, newValue)
     }
+
+    implicit def lambdaToRunnable(f: ()=>Unit) = new Runnable {
+      override def run(): Unit = f()
+    }
   }
 }
