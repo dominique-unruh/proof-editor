@@ -7,5 +7,6 @@ import scala.annotation.Annotation
   * Meaning: the function has no side effects, and each time it is called
   * with the same arguments, it will give the same result.
   * (The result may not be referentially equal though.)
+  * Exceptions are allowed.
   */
 case class Pure() extends Annotation

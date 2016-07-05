@@ -3,15 +3,17 @@ package mathview
 import javafx.scene.layout.BorderPane
 import javafx.scene.web.WebView
 
-import misc.{CMathML, Pure}
+import cmathml.CMathML
+import misc.Pure
 import netscape.javascript.JSObject
 import misc.Utils.JavaFXImplicits._
 
 /** JavaFX widget for showing and editing math formulas.
   * TODO: editing not yet implemented.
   * Math is represented as CMathML objects
+ *
   * @see [[setMath]] for setting the displayed math
-  * @see [[misc.CMathML]] for describing math
+  * @see [[CMathML]] for describing math
   * */
 class MathViewMQ extends BorderPane {
   private val web = new WebView
@@ -32,6 +34,7 @@ class MathViewMQ extends BorderPane {
     if (loaded) sendMathToJS // TODO: must only happen in FX thread
   }
 
+  /** Returns the currently shown math */
   def getMath = math
 
   private def sendMathToJS: Unit = {
@@ -48,11 +51,11 @@ class MathViewMQ extends BorderPane {
 }
 
 
-object MathViewMQ {
-  val base = getClass.getResource("/").toString
+private object MathViewMQ {
+  private val base = getClass.getResource("/").toString
   checkResources
 
-  def checkResources = {
+  private def checkResources = {
     def checkResource(name:String) =
       if (getClass.getResource(name)==null) throw new RuntimeException("missing resource "+name)
     checkResource("/mathquill/mathquill.css")
@@ -62,7 +65,7 @@ object MathViewMQ {
   }
 
   @Pure
-  def mathjaxPage(base:String,math:String): String =
+  private def mathjaxPage(base:String,math:String): String =
     s"""
 <html>
   <head>

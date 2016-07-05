@@ -1,7 +1,3 @@
-/**
-  * Created by unruh on 7/3/16.
-  */
-
 package misc
 
 import java.lang.System.out
@@ -18,6 +14,7 @@ import javafx.stage.Stage
 import com.sun.javafx.webkit.WebConsoleListener
 import mathview.{MQLatex, MathViewMQ}
 import misc.Utils.JavaFXImplicits._
+import cmathml._
 
 object TestApp {
   def main(args: Array[String]) = Application.launch(classOf[TestApp], args:_*)
@@ -25,10 +22,6 @@ object TestApp {
 
 class TestApp extends Application {
   def start(primaryStage: Stage) {
-
-    print(MQLatex.parseLatex("3+4"))
-//    System.exit(1)
-
     primaryStage.setTitle("Hello World! (Scala)")
     WebConsoleListener.setDefaultListener((webView: WebView, message: String, lineNumber: Int, sourceId: String) =>
         out.println("Console: [" + sourceId + ":" + lineNumber + "] " + message))

@@ -1,5 +1,6 @@
 package mathview
 
+import cmathml._
 import mathview.MQLatexParser._
 import misc._
 import org.antlr.v4.runtime.tree.{ErrorNode, ParseTree, RuleNode, TerminalNode}
@@ -7,7 +8,7 @@ import org.antlr.v4.runtime.{ANTLRInputStream, CommonTokenStream}
 
 import scala.collection.mutable
 
-object MQLatex {
+private[mathview] object MQLatex {
   private object Ast {
     def unapplySeq(ast: ParseTree): Option[(ParseTree,Seq[ParseTree])] = {
       Some((ast,new mutable.IndexedSeqView[ParseTree,Any] {

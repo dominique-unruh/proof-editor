@@ -3,12 +3,14 @@ package misc
 import javafx.scene.layout.BorderPane
 import javafx.scene.web.WebView
 
+import cmathml.CMathML
 import mathview.MQLatexParser.{MathContext, PlusContext}
 import netscape.javascript.JSObject
 import org.antlr.v4.runtime.tree.ParseTree
 
 import scala.collection.{AbstractSeq, mutable}
 import scala.xml.{Elem, Node, Null, UnprefixedAttribute}
+import cmathml._
 
 class MathView(math:String) extends BorderPane {
   private val web = new WebView
