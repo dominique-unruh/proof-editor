@@ -8,6 +8,7 @@
       <sourceFolder url="file://$MODULE_DIR$/../../src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/../../src-2.11" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/../../src/main/java" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/../../target/scala-2.11/src_managed/main" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/../../target/scala-2.11/src_managed/main/antlr4" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/../../src/test/java" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/../../src/test/scala" isTestSource="true" />
