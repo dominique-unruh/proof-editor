@@ -45,16 +45,17 @@ class TestApp extends Application {
     text.getChildren.add(new Text("Hello "))
 //    val tex = MQLatex.cmathmlToLatex(cmml)
     val math = new MathViewMQ()
-    math.setMath(cmml)
+    math.setMath(cmml,None)
     text.getChildren.add(math)
     text.getChildren.add(new Text(" and "))
 //    val tex1 = MQLatex.cmathmlToLatex(cmml1)
     val math1 = new MathViewMQ()
-    math1.setMath(cmml1)
+    math1.setMath(cmml1,None)
     text.getChildren.add(math1)
     text.getChildren.add(new Text("..."))
 
-    btnNew.setOnAction((event:ActionEvent) => { print("button"); math.setMath(CN(1))})
+    btnNew.setOnAction((event:ActionEvent) => math.setMath(cmml1,Some(Path.makeRev())))
+    math.addEditedListener(math => println("edited",math))
 
 
     primaryStage.setScene(new Scene(root, 800, 250))

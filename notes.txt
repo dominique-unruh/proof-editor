@@ -1,0 +1,4 @@
+Included projects (for license issues):
+- https://raw.githubusercontent.com/marcj/css-element-queries/master/src/ResizeSensor.js
+- jQuery
+- MathQuill

@@ -1,51 +1,16 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <!base href="file:/home/unruh/svn/proof-editor/out/production/proof-editor/"/>
-    <link rel="stylesheet" href="mathquill/mathquill.css"/>
-    <link href="mathview.css" rel="stylesheet" type="text/css"/>
+    <link href="mathquill/mathquill.css" rel="stylesheet" type="text/css">
+    <link href="mathview.css" rel="stylesheet" type="text/css">
     <script src="jquery.js"></script>
-    <script src="mathview.js"></script>
-    <script src="mathjax/MathJax.js"></script>
     <script src="mathquill/mathquill.js"></script>
+    <script src="mathviewmq.js"></script>
   </head>
-  <body onload="">
-    <span style="font-size: 0.75cm" id="formula-span">
-      <math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow path="" class="apply"><mrow path="1" class="apply"><mi class="leaf variable" path="1-1">x</mi><mo class="leaf">+</mo><mi class="leaf variable" path="1-2">y</mi></mrow><mo class="leaf">-</mo><mrow path="2" class="apply"><mi class="leaf variable" path="2-1">x2</mi><mo class="leaf">+</mo><mspace width=1cm height=1cm mathbackground="#00ff00" class="leaf mathquill" path="2-2" id=hole></mspace></mrow></mrow></math>
+  <body onload="onLoad()">
+    <span id="tracksize">
+      <span id="formula-span">\sqrt{\MathQuillMathField[name]{x^2}}</span>
+      <object id="tracksize-obj" type="text/html" data="about:blank"></object>
     </span>
-    <span id="selection-rect"></span>
-    <span id="mathquill" style="position:absolute; "></span>
-
-    <!--
-    <script>
-      MathJax.Hub.Register.StartupHook("End",function () {
-        console.log("rendered");
-
-        var MQ = MathQuill.getInterface(2);
-        mqelem = document.getElementById("mathquill");
-        mq = MQ.MathField(mqelem);
-      mq.latex("x^2");
-      hole = document.getElementById("hole");
-      console.log(mqelem);
-      console.log(hole);
-        mqelem.style.top = hole.getBoundingClientRect().top;
-        mqelem.style.left = hole.getBoundingClientRect().left;
-      });
-    </script>-->
-
-    <span id="mathquill2"></span>
-
-    <script>
-      MQ = MathQuill.getInterface(2);
-      MQ.registerEmbed("editor",function (id) { return {
-  htmlString: '<span id="'+id+'"></span>',
-  text: function() { return 'custom_embed'; },
-  latex: function() { return '\\customEmbed'; }
-}});
-      mq2 = MQ.StaticMath(document.getElementById("mathquill2"),{suboptions:{handlers:{edit:function(){console.log("edit")}}}});
-      mq2.latex("x+\\embed{editor}[subid]+y");
-      emb = document.getElementById("subid");
-      MQ.MathField(emb);
-    </script>
   </body>
 </html>

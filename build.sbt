@@ -30,6 +30,7 @@ def buildMathQuill_ = {
 lazy val buildMathQuill = taskKey[Unit]("Download and build MathQuill")
 buildMathQuill := { buildMathQuill_ }
 
+// ---- JQuery ----
 val jqueryFile = file("resources/jquery.js")
 def downloadJQuery_ = {
   println("Downloading JQuery")
@@ -38,10 +39,20 @@ def downloadJQuery_ = {
 lazy val downloadJQuery = taskKey[Unit]("Download JQuery")
 downloadJQuery := { downloadJQuery_ }
 
+// --
+val resizeSensorFile = file("resources/ResizeSensor.js")
+def downloadResizeSensor_ = {
+  println("Downloading ResizeSensor")
+  IO.download(new URL("https://raw.githubusercontent.com/marcj/css-element-queries/0.3.2/src/ResizeSensor.js"), resizeSensorFile)
+}
+lazy val downloadResizeSensor = taskKey[Unit]("Download ResizeSensor")
+downloadResizeSensor := { downloadResizeSensor_}
+
 lazy val installDependencies = taskKey[Unit]("Download and build dependencies - if needed")
 installDependencies := {
   if (!jqueryFile.exists()) downloadJQuery_
   if (!mathquillTargetDir.isDirectory()) buildMathQuill_
+  if (!resizeSensorFile.exists()) downloadResizeSensor_
 }
 
 
