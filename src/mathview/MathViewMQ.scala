@@ -67,6 +67,7 @@ class MathViewMQ extends BorderPane {
   private def sendMathToJS(): Unit = {
     assert(Platform.isFxApplicationThread,"not in JavaFX application thread")
     val tex = MQLatex.cmathmlToLatex(math, MQLatex.Options(editAt=editPath))
+    println("setMath:",tex)
     window.call("setMath",tex)
   }
 

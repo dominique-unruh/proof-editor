@@ -18,6 +18,8 @@ function onLoad() {
        }
     });
 
+//    test();
+    
     window.controller.onLoad();
 }
 
@@ -35,4 +37,37 @@ function setMath(math) {
     }
     window.controller.onMathRendered();
     onresize();
+}
+
+function getPath(element) {
+    var cl = element.classList;
+    if (!cl.contains("mq-class")) return null;
+    for (var i=0; i<cl.length; i++) {
+	console.log("class:",cl[i]);
+	if (cl[i].startsWith("path-")) return cl[i];
+    }
+    return null;
+}
+
+function getSelection() {
+    var sel = document.getElementsByClassName("mq-selection");
+    if (sel.length==0) { console.log("nothing selected"); return null; };
+    sel = sel[0];
+    if (sel.childElementCount==1) {
+	console.log("one child, checking if it has a path");
+	var child = sel.children[0];
+	var path = getPath(child);
+	console.log("path",path);
+	if (path!==null) return path;
+    }
+    console.log("TODO: should check upwards");
+    return null;
+}
+
+function test() { // for interactive debugging
+    //    mathfield.latex("x+\\frac{y}{\\MathQuillMathField[edit]{a+z}}+z");
+    // mathfield.latex("\\class{path-}{{\\class{path-1}{{\\class{path-1-1}{\\class{variable}{x}}}+{\\class{path-1-2}{\\class{variable}{y}}}}}-{\\class{path-2}{\\embed{error}[]}}}");
+    mathfield.latex("\\class{path-}{{\\class{path-1}{{\\class{path-1-1}{\\class{variable}{x}}}+{\\class{path-1-2}{\\MathQuillMathField[edit]{a+z}}}}}-{\\class{path-2}{\\embed{error}[]}}}");
+
+    setInterval(function () { var sel = getSelection(); console.log("selection:",sel) }, 1000);
 }
