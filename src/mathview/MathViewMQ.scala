@@ -2,9 +2,11 @@ package mathview
 
 import javafx.application.Platform
 import javafx.beans.property.{ObjectProperty, SimpleObjectProperty}
-import javafx.scene.Node
-import javafx.scene.layout.BorderPane
+import javafx.scene.{Group, Node}
+import javafx.scene.control.DialogPane
+import javafx.scene.layout.{BorderPane, Pane}
 import javafx.scene.web.WebView
+import javafx.stage.Stage
 
 import cmathml.{CMathML, Path, PathRev}
 import misc.Pure
@@ -59,6 +61,7 @@ class MathViewMQ extends BorderPane {
     editPath = path
     if (loaded) sendMathToJS()
   }
+
 
   def getSelection : Option[Path] = {
     assert(Platform.isFxApplicationThread,"not in JavaFX application thread")
