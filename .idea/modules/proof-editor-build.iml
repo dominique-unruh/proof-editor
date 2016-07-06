@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<module external.linked.project.id="proof-editor-build" external.linked.project.path="$MODULE_DIR$/../../project" external.root.project.path="$MODULE_DIR$/../.." external.system.id="SBT" sbt.imports="sbt._, Keys._, dsl._, _root_.com.simplytyped.Antlr4Plugin._, _root_.no.vedaadata.sbtjavafx.JavaFXPlugin._, _root_.sbt.plugins.IvyPlugin, _root_.sbt.plugins.JvmPlugin, _root_.sbt.plugins.CorePlugin, _root_.sbt.plugins.JUnitXmlReportPlugin, $1da6abc6e5ce33e64dfe.installDependencies, $1da6abc6e5ce33e64dfe.downloadJQuery, $1da6abc6e5ce33e64dfe.buildMathQuill" sbt.resolvers="https://jcenter.bintray.com/|maven|jcenter, https://repo1.maven.org/maven2/|maven|public, /home/unruh/.ivy2/cache|ivy|Local cache" type="SBT_MODULE" version="4">
+<module external.linked.project.id="proof-editor-build" external.linked.project.path="$MODULE_DIR$/../../project" external.root.project.path="$MODULE_DIR$/../.." external.system.id="SBT" sbt.imports="sbt._, Keys._, dsl._, _root_.com.simplytyped.Antlr4Plugin._, _root_.no.vedaadata.sbtjavafx.JavaFXPlugin._, Downloads.autoImport._, _root_.sbt.plugins.IvyPlugin, _root_.sbt.plugins.JvmPlugin, _root_.sbt.plugins.CorePlugin, _root_.sbt.plugins.JUnitXmlReportPlugin" sbt.resolvers="https://jcenter.bintray.com/|maven|jcenter, https://repo1.maven.org/maven2/|maven|public, /home/unruh/.ivy2/cache|ivy|Local cache" type="SBT_MODULE" version="4">
   <component name="NewModuleRootManager" inherit-compiler-output="false">
     <output url="file://$MODULE_DIR$/../../project/target/idea-classes" />
     <output-test url="file://$MODULE_DIR$/../../project/target/idea-test-classes" />
@@ -7,6 +7,7 @@
     <content url="file://$MODULE_DIR$/../../project">
       <sourceFolder url="file://$MODULE_DIR$/../../project" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/../../project/project/target" />
+      <excludeFolder url="file://$MODULE_DIR$/../../project/target" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
