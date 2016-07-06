@@ -60,6 +60,15 @@ class MathViewMQ extends BorderPane {
     if (loaded) sendMathToJS()
   }
 
+  def getSelection : Option[Path] = {
+    assert(Platform.isFxApplicationThread,"not in JavaFX application thread")
+    val path = window.call("getSelection").asInstanceOf[String]
+    if (path==null) return None
+    println("selection path ",path,path.getClass)
+    assert(path.startsWith("path-"))
+    return Some (Path.fromString(path.substring(5)))
+  }
+
   /** Returns the currently shown math */
   def getMath = math
 

@@ -51,8 +51,10 @@ private[mathview] object MQLatex {
     s"$hd(${args.mkString(",")})"
 
   val applyRenderers : Map[(String,String),Seq[String] => String] = Map(
-    ("arith1","plus") -> {case Seq(x,y) => s"{$x}+{$y}"},
-    ("arith1","minus") -> {case Seq(x,y) => s"{$x}-{$y}"}
+    ("arith1","plus") -> {case Seq(x,y) => s"\\left({$x}+{$y}\\right)"},
+    ("arith1","minus") -> {case Seq(x,y) => s"\\left({$x}-{$y}\\right)"},
+    ("arith1","times") -> {case Seq(x,y) => s"\\left({$x}\\cdot{$y}\\right)"},
+    ("arith1","divide") -> {case Seq(x,y) => s"\\frac{$x}{$y}"}
   )
 
   @Pure

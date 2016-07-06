@@ -20,7 +20,7 @@ def buildMathQuill_ = {
   IO.delete(extrdir)
   IO.delete(mathquillTargetDir)
   IO.createDirectory(extrdir)
-  IO.download(new URL("https://github.com/mathquill/mathquill/archive/v0.10.1.zip"), file("tmp/mathquill.zip"))
+  IO.download(new URL("https://github.com/dominique-unruh/mathquill/archive/for-proof-editor.zip"), file("tmp/mathquill.zip"))
   if (Process("unzip ../mathquill.zip",extrdir).! != 0) sys.error("unzip failed")
   //  IO.unzipURL(new URL("https://github.com/mathquill/mathquill/archive/v0.10.1.zip"), extrdir)
   val dir = extrdir.listFiles()(0)

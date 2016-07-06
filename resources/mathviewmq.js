@@ -43,8 +43,8 @@ function getPath(element) {
     var cl = element.classList;
     if (!cl.contains("mq-class")) return null;
     for (var i=0; i<cl.length; i++) {
-	console.log("class:",cl[i]);
-	if (cl[i].startsWith("path-")) return cl[i];
+	    console.log("class: "+cl[i]);
+	    if (cl[i].substr(0,5)=="path-") return cl[i];
     }
     return null;
 }
@@ -60,8 +60,14 @@ function getSelection() {
 	console.log("path",path);
 	if (path!==null) return path;
     }
-    console.log("TODO: should check upwards");
-    return null;
+    while (sel!=null) {
+	var path = getPath(sel);
+	console.log("looking at",sel,path);
+	if (path!=null) return path;
+	sel = sel.parentElement;
+    }
+    console.error("nothing found, should not happen, assuming that root is selected");
+    return "path-";
 }
 
 function test() { // for interactive debugging

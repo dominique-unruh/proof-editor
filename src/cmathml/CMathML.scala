@@ -6,6 +6,7 @@ case class InvalidPath() extends Exception
 
 /** Represents mathematical formulas in Strict Content MathML encoding */
 abstract class CMathML {
+  def subterm(p: Path) : CMathML
   /** Replaces the subterm x at path p by f(x) */
   @Pure def mapAt(p:Path, f:CMathML=>CMathML) : CMathML
   /** Replaces the subterm x at path p by y */
@@ -14,6 +15,7 @@ abstract class CMathML {
 
 protected trait Leaf extends CMathML {
   def mapAt(p: Path, f: CMathML=>CMathML): CMathML = { if (!p.isEmpty) throw InvalidPath(); f(this) }
+  def subterm(p: Path): CMathML = { if (!p.isEmpty) throw InvalidPath(); this }
 }
 
 
@@ -27,6 +29,15 @@ case class Apply(hd: CMathML, args: CMathML*) extends CMathML {
     if (idx<1) throw InvalidPath()
     if (idx>args.length) throw InvalidPath()
     return Apply(hd,args.toList.updated(idx-1, args(idx-1).mapAt(tl,f)):_*)
+  }
+
+  override def subterm(p: Path): CMathML = {
+    if (p.isEmpty) return this
+    val idx = p.head; val tl = p.tail
+    if (idx==0) return hd.subterm(tl)
+    if (idx<1) throw InvalidPath()
+    if (idx>args.length) throw InvalidPath()
+    return args(idx-1).subterm(tl)
   }
 }
 
@@ -49,6 +60,7 @@ case class CSymbol(cd: String, name: String) extends CMathML with Leaf
 case class CError(cd: String, name: String, args: Any*) extends CMathML with Leaf
 
 object Path {
+  def fromString(str: String): Path = if (str=="") Path.empty else Path(str.split('-') map {_.toInt} toList)
   val empty = Path(List.empty)
   val emptyRev = PathRev(List.empty)
   def make(l:Int*) = Path(l.toList)
