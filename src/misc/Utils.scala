@@ -27,8 +27,8 @@ object Utils {
       override def messageAdded(webView: WebView, message: String, lineNumber: Int, sourceId: String): Unit = handler(webView, message, lineNumber, sourceId)
     }
 
-    implicit def lambdaToChangeListener[T](handler: (ObservableValue[_ <: T], T, T) => Unit) = new ChangeListener[T]() {
-      override def changed(observable: ObservableValue[_ <: T], oldValue: T, newValue: T) = handler(observable, oldValue, newValue)
+    implicit def lambdaToChangeListener[T](handler: T => Unit) = new ChangeListener[T]() {
+      override def changed(observable: ObservableValue[_ <: T], oldValue: T, newValue: T) = handler(newValue)
     }
 
     implicit def lambdaToRunnable(f: () => Unit) = new Runnable {

@@ -19,7 +19,6 @@ import scala.collection.mutable
 import misc.Utils.JavaFXImplicits._
 
 /** JavaFX widget for showing and editing math formulas.
-  * TODO: editing not yet implemented.
   * Math is represented as CMathML objects
   *
   * Must only be created in JavaFX application thread.
@@ -30,18 +29,8 @@ import misc.Utils.JavaFXImplicits._
 class MathViewMQ extends BorderPane {
   assert(Platform.isFxApplicationThread,"not in JavaFX application thread")
   private val web = new WebView
-
-  // TODO remove:
-  web.focusedProperty().addListener(new ChangeListener[Boolean] {
-    override def changed(observable: ObservableValue[_ <: Boolean], oldValue: Boolean, newValue: Boolean): Unit =
-      println("web focus: "+newValue)
-  })
-
-//    (observable: ObservableValue[_ <: Boolean], oldValue: Boolean, newValue: Boolean)
-//  => println("web focus: "+newValue))
-
   private var math = null : CMathML
-  private var editPath = None : Option[PathRev]
+  private var _editPath = None : Option[Path]
   private var loaded = false
 //  web.getEngine.loadContent(MathViewMQ.mathjaxPage)
   web.getEngine.load(getClass.getResource("/mathview.html").toString)
@@ -49,6 +38,8 @@ class MathViewMQ extends BorderPane {
   window.setMember("controller", JSBridge)
   setCenter(web)
   getStyleClass.add("mathview")
+  selectedProperty.addListener({(selected:Boolean) =>
+    if (selected) getStyleClass.add("selected") else getStyleClass.removeAll("selected"); ()})
 
 
   private val editedListeners = mutable.MutableList[CMathML=>Unit]()
@@ -68,13 +59,15 @@ class MathViewMQ extends BorderPane {
     * @param m the formula to display
     * @param path a path to a subformula that should be editable
     * */
-  def setMath(m:CMathML, path:Option[PathRev]=None) = {
+  def setMath(m:CMathML, path:Option[Path]=None) = {
     assert(Platform.isFxApplicationThread,"not in JavaFX application thread")
     math = m
-    editPath = path
+    _editPath = path
     if (loaded) sendMathToJS()
   }
 
+  /** Whether the editor is selected. Currently, this means that it (or a subelement) has the focus. */
+  def selectedProperty = web.focusedProperty
 
   def getSelection : Option[Path] = {
     assert(Platform.isFxApplicationThread,"not in JavaFX application thread")
@@ -88,10 +81,13 @@ class MathViewMQ extends BorderPane {
   /** Returns the currently shown math */
   def getMath = math
 
+  /** Returns the path to the currently edited subformula */
+  def editPath = _editPath
+
   /** Must only be called in JavaFX application thread. */
   private def sendMathToJS(): Unit = {
     assert(Platform.isFxApplicationThread,"not in JavaFX application thread")
-    val tex = MQLatex.cmathmlToLatex(math, MQLatex.Options(editAt=editPath))
+    val tex = MQLatex.cmathmlToLatex(math, MQLatex.Options(editAt=_editPath map (_.toPathRev)))
     println("setMath:",tex)
     window.call("setMath",tex)
   }
@@ -107,9 +103,6 @@ class MathViewMQ extends BorderPane {
     def onMathRendered() = println("onMathRendererd")
     def onLoad() = { println("onLoad"); Platform.runLater{() => loaded = true; if (math!=null) sendMathToJS()} }
     def onEnter(tex:String) = { println("onEnter "+tex); Platform.runLater { () => fireEdited(MQLatex.parseLatex(tex)) } }
-//      Platform.runLater(new Runnable {
-//        override def run(): Unit = print("RUNNABLE")
-//      })
   }
 }
 
@@ -127,27 +120,5 @@ private object MathViewMQ {
     checkResource("/mathview.css")
     checkResource("/mathviewmq.js")
   }
-
-//  @Pure
-//  private val mathjaxPage : String =
-//    s"""
-//<html>
-//  <head>
-//    <meta charset="utf-8" />
-//    <base href="$base" />
-//    <link href="mathquill/mathquill.css" rel="stylesheet" type="text/css">
-//    <link href="mathview.css" rel="stylesheet" type="text/css">
-//    <script src="jquery.js"></script>
-//    <script src="mathquill/mathquill.js"></script>
-//    <script src="mathviewmq.js"></script>
-//  </head>
-//  <body onload="onLoad()">
-//    <span id="tracksize">
-//      <span id="formula-span"></span>
-//      <object id="tracksize-obj" type="text/html" data="about:blank"></object>
-//    </span>
-//    <span id="tracksize">
-//  </body>
-//</html>"""
 
 }

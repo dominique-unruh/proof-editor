@@ -8,27 +8,28 @@
 <?import javafx.scene.control.SplitPane?>
 <?import javafx.scene.control.TextArea?>
 <?import javafx.scene.control.ToolBar?>
+<?import javafx.scene.input.KeyCodeCombination?>
 <?import javafx.scene.layout.VBox?>
 
 <VBox prefHeight="527.0" prefWidth="381.0" xmlns="http://javafx.com/javafx/8.0.65" xmlns:fx="http://javafx.com/fxml/1">
    <children>
       <MenuBar>
         <menus>
-          <Menu mnemonicParsing="false" text="File">
+          <Menu text="_File">
             <items>
-              <MenuItem mnemonicParsing="false" text="Close" />
+              <MenuItem onAction="#quit" text="_Quit">
+                     <accelerator>
+                        <KeyCodeCombination alt="UP" code="Q" control="UP" meta="UP" shift="UP" shortcut="DOWN" />
+                     </accelerator></MenuItem>
             </items>
           </Menu>
-          <Menu mnemonicParsing="false" text="Edit">
-            <items>
-              <MenuItem mnemonicParsing="false" text="Delete" />
-            </items>
-          </Menu>
-          <Menu mnemonicParsing="false" text="Help">
-            <items>
-              <MenuItem mnemonicParsing="false" text="About" />
-            </items>
-          </Menu>
+            <Menu text="_Edit">
+              <items>
+                <MenuItem onAction="#newFormula" text="_New formula" />
+                  <MenuItem onAction="#editSelection" text="_Edit selection" />
+                  <MenuItem onAction="#newFromSelection" text="New from _selection" />
+              </items>
+            </Menu>
         </menus>
       </MenuBar>
       <ToolBar prefHeight="40.0" prefWidth="200.0">
@@ -38,14 +39,14 @@
             <Button mnemonicParsing="false" onAction="#newFromSelection" text="New from selection" />
         </items>
       </ToolBar>
-      <SplitPane dividerPositions="0.3" VBox.vgrow="ALWAYS">
+      <SplitPane dividerPositions="0.5" VBox.vgrow="ALWAYS">
          <items>
             <ScrollPane>
                <content>
                   <VBox fx:id="formulaList" fillWidth="false" spacing="10.0" />
                </content>
             </ScrollPane>
-            <TextArea fx:id="logArea" editable="false" prefHeight="200.0" prefWidth="200.0" wrapText="true" />
+            <TextArea fx:id="logArea" editable="false" prefHeight="200.0" prefWidth="200.0" />
          </items>
       </SplitPane>
    </children>
