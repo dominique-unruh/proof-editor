@@ -1,10 +1,17 @@
 package mathview
 
+import java.util
+
 import cmathml._
+import jdk.internal.org.xml.sax.ErrorHandler
+import jdk.nashorn.internal.runtime.regexp.joni.exception.SyntaxException
 import mathview.MQLatexParser._
 import misc._
+import misc.Pure
+import org.antlr.v4.runtime._
 import org.antlr.v4.runtime.tree.{ErrorNode, ParseTree, RuleNode, TerminalNode}
-import org.antlr.v4.runtime.{ANTLRInputStream, CommonTokenStream, ParserRuleContext}
+import org.antlr.v4.runtime.atn.ATNConfigSet
+import org.antlr.v4.runtime.dfa.DFA
 
 import scala.collection.mutable
 
@@ -20,30 +27,40 @@ private[mathview] object MQLatex {
     }
   }
 
-  @Pure
-  private def pp(ast:ParseTree) : CMathML = ast match {
-    case ast : ParserRuleContext if ast.exception!=null => throw ast.exception // CError("unruh","parseerror",ast.exception)
-    case Ast(_:PlusContext,x,_,y) => Apply(CSymbol("arith1","plus"),pp(x),pp(y))
-    case Ast(_:MinusContext,x,_,y) => Apply(CSymbol("arith1","minus"),pp(x),pp(y))
-    case Ast(_:TimesContext,x,_,y) => Apply(CSymbol("arith1","times"),pp(x),pp(y))
-    case Ast(_:FracContext,_,_,x,_,_,y,_) => Apply(CSymbol("arith1","divide"),pp(x),pp(y))
-    case Ast(_:BracesContext,_,x,_) => pp(x)
-    case Ast(_:ParensContext,_,_,x,_,_) => pp(x)
-    case _:NumberContext => CN(BigDecimal(ast.getText))
-    case _:VariableContext => CI(ast.getText)
-    case _ => sys.error("unexpected")
-  }
+//  @Pure
+//  private def pp(ast:ParseTree) : CMathML = ast match {
+//    case ast : ParserRuleContext if ast.exception!=null => throw ast.exception // CError("unruh","parseerror",ast.exception)
+//    case Ast(_:PlusContext,x,_,y) => Apply(CSymbol("arith1","plus"),pp(x),pp(y))
+//    case Ast(_:MinusContext,x,_,y) => Apply(CSymbol("arith1","minus"),pp(x),pp(y))
+//    case Ast(_:TimesContext,x,_,y) => Apply(CSymbol("arith1","times"),pp(x),pp(y))
+//    case Ast(_:JuxtaposTimesContext,x,y) => Apply(CSymbol("arith1","times"),pp(x),pp(y))
+//    case Ast(_:FracContext,_,_,x,_,_,y,_) => Apply(CSymbol("arith1","divide"),pp(x),pp(y))
+//    case Ast(_:BracesContext,_,x,_) => pp(x)
+//    case Ast(_:ParensContext,_,_,x,_,_) => pp(x)
+//    case _:NumberContext => CN(BigDecimal(ast.getText))
+//    case _:VariableContext => CI(ast.getText)
+//    case _ => sys.error("unexpected")
+//  }
 
-  @misc.Pure
+  @Pure
   def parseLatex(tex:String) : CMathML = {
     val stream = new ANTLRInputStream(tex)
     val lexer = new MQLatexLexer(stream)
     val tokens = new CommonTokenStream(lexer)
     val parser = new MQLatexParser(tokens)
-    val tree = parser.math
-    pp(tree)
+    parser.setErrorHandler(new BailErrorStrategy)
+    val tree = parser.math_eof()
+    tree.cmathml
   }
 
+  /** Used by the generated parser */
+  @Pure @annotation.varargs
+  def op(cd:String,name:String,args:CMathML*): CMathML = {
+import org.antlr.v4.runtime.{Parser, RecognitionException, Recognizer}
+    assert(cd!=null); assert(name!=null)
+    for (a <- args) assert(a!=null,"parser produced null CMathML")
+    Apply(CSymbol(cd,name),args:_*)
+  }
 
   @Pure
   private def renderList(args:Seq[CMathML],path:PathRev,options:Options) : Seq[String] =
@@ -57,7 +74,9 @@ private[mathview] object MQLatex {
     ("arith1","plus") -> {case Seq(x,y) => s"\\left({$x}+{$y}\\right)"},
     ("arith1","minus") -> {case Seq(x,y) => s"\\left({$x}-{$y}\\right)"},
     ("arith1","times") -> {case Seq(x,y) => s"\\left({$x}\\cdot{$y}\\right)"},
-    ("arith1","divide") -> {case Seq(x,y) => s"\\frac{$x}{$y}"}
+    ("arith1","divide") -> {case Seq(x,y) => s"\\frac{$x}{$y}"},
+    ("arith1","power") -> {case Seq(x,y) => s"\\left({$x}^{$y}\\right)"},
+    ("relation1","eq") -> {case Seq(x,y) => s"\\left({$x}={$y}\\right)"}
   )
 
   @Pure

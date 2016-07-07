@@ -32,8 +32,9 @@ class MathViewMQ extends BorderPane {
   private var math = null : CMathML
   private var _editPath = None : Option[Path]
   private var loaded = false
+  MathViewMQ // Causes the singleton object to be initialized
 //  web.getEngine.loadContent(MathViewMQ.mathjaxPage)
-  web.getEngine.load(getClass.getResource("/mathview.html").toString)
+  web.getEngine.load(getClass.getResource("/mathview/mathview.html").toString)
   private val window = web.getEngine.executeScript("window").asInstanceOf[JSObject]
   window.setMember("controller", JSBridge)
   setCenter(web)
@@ -47,6 +48,7 @@ class MathViewMQ extends BorderPane {
   /** The listener is called whenever the user presses ENTER in the editable part of the formula.
     * The editing process is not automatically stopped at that point.
     * To stop editing, call [[setMath]].
+    *
     * @param listener
     */
   def addEditedListener(listener: CMathML => Unit) : Unit = editedListeners += listener
@@ -115,10 +117,11 @@ private object MathViewMQ {
     def checkResource(name:String) =
       if (getClass.getResource(name)==null) throw new RuntimeException("missing resource "+name)
     checkResource("/mathquill/mathquill.css")
-    checkResource("/mathview.html")
+    checkResource("/mathquill/mathquill.js")
+    checkResource("mathview.html")
     checkResource("/jquery.js")
-    checkResource("/mathview.css")
-    checkResource("/mathviewmq.js")
+    checkResource("mathview.css")
+    checkResource("mathview.js")
   }
 
 }

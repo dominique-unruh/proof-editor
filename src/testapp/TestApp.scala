@@ -1,36 +1,28 @@
-package misc
+package testapp
 
 import java.io.{PrintWriter, StringWriter}
 import java.lang.Boolean
 import java.lang.System.out
-import java.lang.Thread.UncaughtExceptionHandler
-import java.lang.reflect.InvocationTargetException
-import java.util.logging.{FileHandler, Level, Logger}
+import java.util.logging.{Level, Logger}
 import javafx.application.{Application, Platform}
-import javafx.beans.value
-import javafx.beans.value.{ChangeListener, ObservableValue}
 import javafx.event.ActionEvent
 import javafx.fxml.{FXML, FXMLLoader}
-import javafx.scene.{Parent, Scene}
-import javafx.scene.control.ScrollPane.ScrollBarPolicy
 import javafx.scene.control._
-import javafx.scene.input.{KeyCode, KeyCodeCombination, KeyCombination}
-import javafx.scene.layout.{BorderPane, VBox}
-import javafx.scene.text.{Text, TextFlow}
+import javafx.scene.layout.VBox
 import javafx.scene.web.WebView
+import javafx.scene.{Parent, Scene}
 import javafx.stage.Stage
 
-import com.sun.javafx.webkit.WebConsoleListener
-import mathview.{MQLatex, MathViewMQ}
-import misc.Utils.JavaFXImplicits._
 import cmathml._
+import com.sun.javafx.webkit.WebConsoleListener
+import mathview.MathViewMQ
+import misc.Utils.JavaFXImplicits._
 
 import scala.collection.mutable
 
 object TestApp {
   def main(args: Array[String]) = Application.launch(classOf[TestApp], args:_*)
 }
-
 
 class TestApp extends Application {
   val cmml1 = Apply(CSymbol("arith1","plus"),CI("x"),CI("y"))
@@ -143,7 +135,7 @@ class TestApp extends Application {
 //      println("date picker focus: "+newValue)
 //  })
 
-    primaryStage.getScene.getStylesheets.add(getClass().getResource("/testapp.css").toExternalForm())
+    primaryStage.getScene.getStylesheets.add(getClass().getResource("testapp.css").toExternalForm())
     primaryStage.show
   }
 }
