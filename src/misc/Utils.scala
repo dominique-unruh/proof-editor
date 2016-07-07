@@ -1,5 +1,6 @@
 package misc
 
+import java.lang.Thread.UncaughtExceptionHandler
 import javafx.beans.value.{ChangeListener, ObservableValue}
 import javafx.event.Event
 import javafx.scene.web.WebView
@@ -18,20 +19,25 @@ object Utils {
   }
 
   object JavaFXImplicits {
-    implicit def lambdaToEventHandler[T<:Event](handler: T => Unit) = new javafx.event.EventHandler[T] {
+    implicit def lambdaToEventHandler[T <: Event](handler: T => Unit) = new javafx.event.EventHandler[T] {
       override def handle(dEvent: T): Unit = handler(dEvent)
     }
 
     implicit def lambdaToWebConsoleListener(handler: (WebView, String, Int, String) => Unit) = new WebConsoleListener() {
-      override def messageAdded(webView: WebView, message: String, lineNumber: Int, sourceId: String): Unit = handler(webView,message,lineNumber,sourceId)
+      override def messageAdded(webView: WebView, message: String, lineNumber: Int, sourceId: String): Unit = handler(webView, message, lineNumber, sourceId)
     }
 
     implicit def lambdaToChangeListener[T](handler: (ObservableValue[_ <: T], T, T) => Unit) = new ChangeListener[T]() {
-      override def changed(observable : ObservableValue[_ <: T], oldValue : T, newValue : T) = handler(observable, oldValue, newValue)
+      override def changed(observable: ObservableValue[_ <: T], oldValue: T, newValue: T) = handler(observable, oldValue, newValue)
     }
 
-    implicit def lambdaToRunnable(f: ()=>Unit) = new Runnable {
+    implicit def lambdaToRunnable(f: () => Unit) = new Runnable {
       override def run(): Unit = f()
     }
+
+    implicit def lambdaToThreadUncaughtExceptionHandler(handler: (Thread, Throwable) => Unit) =
+      new UncaughtExceptionHandler {
+        override def uncaughtException(t: Thread, e: Throwable): Unit = handler(t, e)
+      }
   }
 }

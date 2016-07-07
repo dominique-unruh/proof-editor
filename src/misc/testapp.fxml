@@ -10,7 +10,6 @@
 <?import javafx.scene.control.ToolBar?>
 <?import javafx.scene.layout.VBox?>
 
-
 <VBox prefHeight="527.0" prefWidth="381.0" xmlns="http://javafx.com/javafx/8.0.65" xmlns:fx="http://javafx.com/fxml/1">
    <children>
       <MenuBar>
@@ -39,7 +38,7 @@
             <Button mnemonicParsing="false" onAction="#newFromSelection" text="New from selection" />
         </items>
       </ToolBar>
-      <SplitPane dividerPositions="0.5" VBox.vgrow="ALWAYS">
+      <SplitPane dividerPositions="0.3" VBox.vgrow="ALWAYS">
          <items>
             <ScrollPane>
                <content>

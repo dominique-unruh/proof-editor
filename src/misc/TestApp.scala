@@ -1,12 +1,19 @@
 package misc
 
+import java.io.{PrintWriter, StringWriter}
+import java.lang.Boolean
 import java.lang.System.out
+import java.lang.Thread.UncaughtExceptionHandler
+import java.lang.reflect.InvocationTargetException
+import java.util.logging.{FileHandler, Level, Logger}
 import javafx.application.Application
+import javafx.beans.value
+import javafx.beans.value.{ChangeListener, ObservableValue}
 import javafx.event.ActionEvent
 import javafx.fxml.{FXML, FXMLLoader}
 import javafx.scene.{Parent, Scene}
 import javafx.scene.control.ScrollPane.ScrollBarPolicy
-import javafx.scene.control.{Button, Label, ScrollPane, ToolBar}
+import javafx.scene.control._
 import javafx.scene.input.{KeyCode, KeyCodeCombination, KeyCombination}
 import javafx.scene.layout.{BorderPane, VBox}
 import javafx.scene.text.{Text, TextFlow}
@@ -32,10 +39,10 @@ class TestApp extends Application {
   val math1 = new MathViewMQ()
   val math = new MathViewMQ()
 
-
-
   @FXML
   private var formulaList = null : VBox
+  @FXML
+  private var logArea = null : TextArea
 
   @FXML
   private def newFormula(event : ActionEvent) : Unit = {
@@ -45,6 +52,7 @@ class TestApp extends Application {
   @FXML
   private def editSelection(event : ActionEvent) : Unit = {
     println("edit selection")
+    error("not implemented")
   }
 
   @FXML
@@ -56,12 +64,23 @@ class TestApp extends Application {
       math.setMath(math.getMath.replace(sel.get, CN(123)))
       val newmath = new MathViewMQ()
       newmath.setMath(m)
-//      text.getChildren.add(new Text("\nNew math:\n"))
       formulaList.getChildren.add(newmath)
     } else {
       formulaList.getChildren.add(new Label("No selection"))
     }
   }
+
+  def log(msg:String, numLines:Int) = {
+    var idx = 0
+    for (i <- 1 to numLines)
+      if (idx != -1) idx = msg.indexOf('\n',idx)+1
+    val msg2 = if (idx == -1) msg else msg.substring(0,idx)
+    logArea.appendText(msg2)
+//    if (!msg2.endsWith("\n")) logArea.appendText("\n")
+  }
+
+  def actualException(e:Throwable) : Throwable =
+    if (e.getCause != null) actualException(e.getCause) else e
 
   def start(primaryStage: Stage) {
     val loader = new FXMLLoader(getClass().getResource("testapp.fxml"))
@@ -69,64 +88,31 @@ class TestApp extends Application {
     val fxml : Parent = loader.load()
     println("formulaList",formulaList)
 
-    primaryStage.setScene(new Scene(fxml, 640,480))
+//    val handler = new FileHandler("logfile.txt")
+//    Logger.getLogger("").addHandler(handler)
+    Logger.getLogger("").log(Level.WARNING,"logging test")
+    Thread.currentThread().setUncaughtExceptionHandler({(t: Thread, e: Throwable) =>
+      val e2 = actualException(e)
+      e2.printStackTrace()
+      val sw = new StringWriter()
+      e2.printStackTrace(new PrintWriter(sw))
+      log(sw.getBuffer.toString,5)})
+
+
+
+    primaryStage.setScene(new Scene(fxml, 800, 600))
 
     primaryStage.setTitle("Proof editor")
     WebConsoleListener.setDefaultListener((webView: WebView, message: String, lineNumber: Int, sourceId: String) =>
         out.println("Console: [" + sourceId + ":" + lineNumber + "] " + message))
-//    val scroll = new ScrollPane()
-//    val root = new BorderPane()
-//    root.setCenter(scroll)
-//    val btnNew = new Button("New formula")
-//    val toolbar = new ToolBar(btnNew)
-//    root.setTop(toolbar)
-//    val text = new TextFlow()
-//    scroll.setContent(text)
-//    scroll.setVbarPolicy(ScrollBarPolicy.ALWAYS)
-//    scroll.setHbarPolicy(ScrollBarPolicy.NEVER)
-//    scroll.setFitToWidth(true)
 
-
-    //    val pmml = MathView.cmathmlToMathjax(cmml)
-//    val math = new MathView(pmml)
-//    text.getChildren.add(new Text("Hello "))
-//    val tex = MQLatex.cmathmlToLatex(cmml)
-//    val math = new MathViewMQ()
     math.setMath(cmml,None)
     formulaList.getChildren.add(math)
-//    text.getChildren.add(new Text(" and "))
-//    val tex1 = MQLatex.cmathmlToLatex(cmml1)
     math1.setMath(cmml1,None)
     formulaList.getChildren.add(math1)
-//    text.getChildren.add(new Text("..."))
 
-//    primaryStage.setScene(new Scene(root, 800, 250))
-
-//    btnNew.setOnAction((event:ActionEvent) => math.setMath(cmml1,Some(editAt.toPathRev)))
     math.addEditedListener(m => {println("edited",m); math.setMath(cmml1.replace(editAt,m))})
 
-//    val btnCopy = new Button("Copy selection");
-//    toolbar.getItems.add(btnCopy)
-//    btnCopy.setOnAction((_:ActionEvent) => {
-//      val sel = math.getSelection
-//      if (!sel.isEmpty) {
-//        val m = math.getMath.subterm(sel.get)
-//        math.setMath(math.getMath.replace(sel.get, CN(123)))
-//        val newmath = new MathViewMQ()
-//        newmath.setMath(m)
-//        text.getChildren.add(new Text("\nNew math:\n"))
-//        text.getChildren.add(newmath)
-//      } else
-//        text.getChildren.add(new Text("\nNothing selected.\n"))
-//      ()
-//    })
-//    primaryStage.getScene.getAccelerators.put(
-//      new KeyCodeCombination(KeyCode.C, KeyCombination.SHORTCUT_DOWN), {() => btnCopy.fire()})
-
-
-//    println("XXX",editAt,cmml1.replace(editAt,CN(33)))
-
-//    println("about to load css",getClass().getResource("/testapp.css"))
     primaryStage.getScene.getStylesheets.add(getClass().getResource("/testapp.css").toExternalForm())
     primaryStage.show
   }

@@ -1,7 +1,9 @@
 package mathview
 
+import java.lang.Boolean
 import javafx.application.Platform
 import javafx.beans.property.{ObjectProperty, SimpleObjectProperty}
+import javafx.beans.value.{ChangeListener, ObservableValue}
 import javafx.scene.{Group, Node}
 import javafx.scene.control.DialogPane
 import javafx.scene.layout.{BorderPane, Pane}
@@ -14,6 +16,7 @@ import netscape.javascript.JSObject
 import misc.Utils.JavaFXImplicits._
 
 import scala.collection.mutable
+import misc.Utils.JavaFXImplicits._
 
 /** JavaFX widget for showing and editing math formulas.
   * TODO: editing not yet implemented.
@@ -27,6 +30,16 @@ import scala.collection.mutable
 class MathViewMQ extends BorderPane {
   assert(Platform.isFxApplicationThread,"not in JavaFX application thread")
   private val web = new WebView
+
+  // TODO remove:
+  web.focusedProperty().addListener(new ChangeListener[Boolean] {
+    override def changed(observable: ObservableValue[_ <: Boolean], oldValue: Boolean, newValue: Boolean): Unit =
+      println("web focus: "+newValue)
+  })
+
+//    (observable: ObservableValue[_ <: Boolean], oldValue: Boolean, newValue: Boolean)
+//  => println("web focus: "+newValue))
+
   private var math = null : CMathML
   private var editPath = None : Option[PathRev]
   private var loaded = false
