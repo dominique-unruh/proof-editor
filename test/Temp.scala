@@ -3,6 +3,7 @@ import java.util
 import com.microsoft.z3._
 import java.io.File
 
+import cmathml.{CI, CMathML, CN}
 import misc.Utils
 import org.apache.bcel.classfile.JavaClass
 import org.apache.commons.io.IOUtils
@@ -11,33 +12,33 @@ import test.UnitSpec
 import z3.Z3
 
 class Temp extends UnitSpec {
-  "z3.Z3" should "be tried" in {
+  test("temp z3") {
     val z3 = new Z3(Map("model"->"true"))
-
     Z3.toggleWarningMessages(true)
 
+    val cmathml = CMathML.equal(CMathML.plus(CI("x"),CI("y")),
+      CMathML.plus(CI("y"),CN(-1)))
 
-    val ctx = z3.context
+    val expr = z3.fromCMathML(cmathml)
 
-    val fname = z3.mkSymbol("f")
-    val x = z3.mkSymbol("x")
-    val y = z3.mkSymbol("y")
+    val goal = z3.mkGoal(true,true,false)
+    goal.add(expr.asInstanceOf[BoolExpr])
 
-    val bs = z3.boolSort
+    println("Goal: " + goal)
 
-    val f = z3.mkFuncDeclRD(fname, range=bs, domain=bs, bs)
-    val fapp = z3.mkApp(f, z3.mkConst(x, bs), z3.mkConst(y, bs))
+    val goal2 = goal.simplify
 
-    val fargs2 = Array[Expr]()
-    val domain2 = Array[Sort](bs)
-    val fapp2 = z3.mkApp(z3.mkFreshFuncDeclRD("fp", range=bs, domain=bs), z3.mkFreshConst("cp", bs))
+//    println(goal2.goal.getNumExprs)
 
-    val trivial_eq = z3.mkEq(fapp, fapp)
-    val nontrivial_eq = z3.mkEq(fapp, fapp2)
+    val expr2 = goal2.getFormula
 
-    val g = z3.mkGoal(true, false, false)
-    g.add(trivial_eq, nontrivial_eq)
-    System.out.println("Goal: " + g)
+    println("Simplified: " + expr2)
 
+    println(expr2.getArgs.toList)
+    println(expr2.getFuncDecl)
+
+    val c2 = z3.toCMathML(expr2)
+
+    println("CMathML "+c2)
   }
 }

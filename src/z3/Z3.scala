@@ -1,23 +1,69 @@
 package z3
 
+import java.math.BigInteger
+
+import cmathml.{Apply, CI, CMathML, CN}
 import com.microsoft.z3.{BoolSort, _}
-import misc.Utils
+import misc.{Pure, Utils}
 import org.apache.commons.io.IOUtils
 import org.objectweb.asm.{ClassReader, ClassVisitor, ClassWriter, Opcodes}
 
 import scala.collection.{JavaConversions, JavaConverters}
 
-class Goal(val goal:com.microsoft.z3.Goal) extends AnyVal {
+final case class Goal(val goal:com.microsoft.z3.Goal) extends AnyVal {
+  @Pure
+  def simplify = Goal(goal.simplify())
+
   def add(exprs: BoolExpr*) : Unit = goal.add(exprs:_*)
   override def toString = goal.toString
+  def getFormula : Expr = { val fs = goal.getFormulas; assert(fs.length==1, "getFormulas.length="+fs.length); fs(0) }
 }
 
 class Z3(config:Map[String,String]) {
+  def toCMathML(expr: Expr) : CMathML = expr match {
+    case e : ArithExpr if e.isAdd => Apply(CMathML.plus, e.getArgs map toCMathML : _*)
+    case e : ArithExpr if e.isMul => Apply(CMathML.times, e.getArgs map toCMathML : _*)
+    case e : ArithExpr if e.isSub => Apply(CMathML.minus, e.getArgs map toCMathML : _*)
+    case e : ArithExpr if e.isDiv => Apply(CMathML.divide, e.getArgs map toCMathML : _*)
+    case e : BoolExpr if e.isEq => Apply(CMathML.equal, e.getArgs map toCMathML : _*)
+    case e : ArithExpr if e.isConst => CI(e.getFuncDecl.getName.toString)
+    case e : RatNum =>
+      val num = e.getBigIntNumerator; val denom = e.getBigIntDenominator
+      if (denom==BigInteger.ONE)
+        CN(BigDecimal(num))
+      else
+        CMathML.divide(CN(BigDecimal(num)),CN(BigDecimal(denom)))
+  }
+
+  def fromCMathML(m: CMathML) : Expr = m match {
+    case CN(i) => context.mkNumeral(i.toString, realSort)
+    case CI(n) => context.mkConst(n, realSort)
+    case Apply(CMathML.plus,x,y) => context.mkAdd(fromCMathML(x).asInstanceOf[ArithExpr],
+                                                  fromCMathML(y).asInstanceOf[ArithExpr])
+    case Apply(CMathML.minus,x,y) => context.mkSub(fromCMathML(x).asInstanceOf[ArithExpr],
+                                                   fromCMathML(y).asInstanceOf[ArithExpr])
+    case Apply(CMathML.times,x,y) => context.mkMul(fromCMathML(x).asInstanceOf[ArithExpr],
+                                                   fromCMathML(y).asInstanceOf[ArithExpr])
+    case Apply(CMathML.divide,x,y) => context.mkDiv(fromCMathML(x).asInstanceOf[ArithExpr],
+                                                    fromCMathML(y).asInstanceOf[ArithExpr])
+    case Apply(CMathML.equal,x,y) => context.mkEq(fromCMathML(x),fromCMathML(y))
+  }
+
+//  def arithExpr(m: CMathML) : ArithExpr = m match {
+//    case Apply(CMathML.plus,x,y) => context.mkAdd(arithExpr(x),arithExpr(y))
+//  }
+//  def boolExpr(m: CMathML) : BoolExpr = m match {
+//    case Apply(CMathML.equal,x,y) => context.mkEq(arithExpr(x),arithExpr(y))
+//  }
+
+
   Z3 // Make sure the static initializer of Z3 is invoked
   val context = new Context(JavaConversions.mapAsJavaMap(config))
-  def mkSymbol(name:String) = context.mkSymbol(name)
-  def mkSymbol(i:Int) = context.mkSymbol(i)
+  def mkSymbol(name: String) = context.mkSymbol(name)
+  def mkSymbol(i: Int) = context.mkSymbol(i)
   lazy val boolSort = context.mkBoolSort()
+  lazy val intSort = context.mkIntSort()
+  lazy val realSort = context.mkRealSort()
 
   /** Declares a new function. Note: the range of the function is given <b>first</b>!
     * (Hence the suffix RD)

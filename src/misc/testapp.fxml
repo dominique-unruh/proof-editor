@@ -11,7 +11,7 @@
 <?import javafx.scene.input.KeyCodeCombination?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox prefHeight="527.0" prefWidth="381.0" xmlns="http://javafx.com/javafx/8.0.65" xmlns:fx="http://javafx.com/fxml/1">
+<VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="480.0" prefWidth="640.0" xmlns="http://javafx.com/javafx/8.0.65" xmlns:fx="http://javafx.com/fxml/1">
    <children>
       <MenuBar>
         <menus>
@@ -35,8 +35,10 @@
       <ToolBar prefHeight="40.0" prefWidth="200.0">
         <items>
           <Button mnemonicParsing="false" onAction="#newFormula" text="New formula" />
+            <Button mnemonicParsing="false" onAction="#deleteFormula" text="Delete formula" />
             <Button mnemonicParsing="false" onAction="#editSelection" text="Edit selection" />
             <Button mnemonicParsing="false" onAction="#newFromSelection" text="New from selection" />
+            <Button mnemonicParsing="false" onAction="#simplify" text="Simplify" />
         </items>
       </ToolBar>
       <SplitPane dividerPositions="0.5" VBox.vgrow="ALWAYS">

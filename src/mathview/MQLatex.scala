@@ -26,6 +26,7 @@ private[mathview] object MQLatex {
     case Ast(_:PlusContext,x,_,y) => Apply(CSymbol("arith1","plus"),pp(x),pp(y))
     case Ast(_:MinusContext,x,_,y) => Apply(CSymbol("arith1","minus"),pp(x),pp(y))
     case Ast(_:TimesContext,x,_,y) => Apply(CSymbol("arith1","times"),pp(x),pp(y))
+    case Ast(_:EqualContext,x,_,y) => Apply(CSymbol("relation1","eq"),pp(x),pp(y))
     case Ast(_:FracContext,_,_,x,_,_,y,_) => Apply(CSymbol("arith1","divide"),pp(x),pp(y))
     case Ast(_:BracesContext,_,x,_) => pp(x)
     case Ast(_:ParensContext,_,_,x,_,_) => pp(x)
@@ -57,7 +58,8 @@ private[mathview] object MQLatex {
     ("arith1","plus") -> {case Seq(x,y) => s"\\left({$x}+{$y}\\right)"},
     ("arith1","minus") -> {case Seq(x,y) => s"\\left({$x}-{$y}\\right)"},
     ("arith1","times") -> {case Seq(x,y) => s"\\left({$x}\\cdot{$y}\\right)"},
-    ("arith1","divide") -> {case Seq(x,y) => s"\\frac{$x}{$y}"}
+    ("arith1","divide") -> {case Seq(x,y) => s"\\frac{$x}{$y}"},
+    ("relation1","eq") -> {case Seq(x,y) => s"\\left({$x}={$y}\\right)"}
   )
 
   @Pure

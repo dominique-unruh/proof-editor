@@ -24,6 +24,7 @@ import com.sun.javafx.webkit.WebConsoleListener
 import mathview.{MQLatex, MathViewMQ}
 import misc.Utils.JavaFXImplicits._
 import cmathml._
+import z3.Z3
 
 import scala.collection.mutable
 
@@ -33,13 +34,9 @@ object TestApp {
 
 
 class TestApp extends Application {
-  val cmml1 = Apply(CSymbol("arith1","plus"),CI("x"),CI("y"))
-  val cmml = Apply(CSymbol("arith1","minus"),
-    cmml1,
-    Apply(CSymbol("arith1","divide"),CI("a"),CI("b")))
-//  val editAt = Path.make(1)
-//  val math1 = new MathViewMQ()
-//  val math = new MathViewMQ()
+  val examples = List(
+    CMathML.equal(CMathML.plus(CI("x"),CI("y")), CMathML.plus(CI("y"),CN(-1)))
+  )
 
   @FXML
   private var formulaList = null : VBox
@@ -73,9 +70,30 @@ class TestApp extends Application {
     if (sel.isEmpty) { log("No selection"); return }
     val m = math.getMath.subterm(sel.get)
 //    math.setMath(math.getMath.replace(sel.get, CN(123)))
-    val newmath = new MathViewMQ()
-    newmath.setMath(m)
-    formulaList.getChildren.add(newmath)
+    addMath(m)
+//    val newmath = new MathViewMQ()
+//    newmath.setMath(m)
+//    formulaList.getChildren.add(newmath)
+  }
+
+  /** Only invoke methods in JavaFX thread! */
+  private lazy val z3 = new Z3(Map())
+
+  @FXML
+  private def simplify(event : ActionEvent) : Unit = {
+    val math = currentlySelectedMath
+    if (math==null)  { log("No selected mathview"); return }
+    val expr = z3.fromCMathML(math.getMath)
+    val simp = expr.simplify
+    val simp2 = z3.toCMathML(simp)
+    addMath(simp2)
+  }
+
+  @FXML
+  private def deleteFormula(event : ActionEvent) : Unit = {
+    val math = currentlySelectedMath
+    if (math==null)  { log("No selected mathview"); return }
+    formulaList.getChildren.removeAll(math)
   }
 
   private var currentlySelectedMath : MathViewMQ = null
@@ -128,8 +146,9 @@ class TestApp extends Application {
     WebConsoleListener.setDefaultListener((webView: WebView, message: String, lineNumber: Int, sourceId: String) =>
         out.println("Console: [" + sourceId + ":" + lineNumber + "] " + message))
 
-    val math = addMath(cmml,None)
-    val math1 = addMath(cmml1,None)
+    for (m <- examples) addMath(m,None)
+//    val math = addMath(cmml,None)
+//    val math1 = addMath(cmml1,None)
 
 //    math.setMath(cmml,None)
 //    formulaList.getChildren.add(math)

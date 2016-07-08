@@ -4,6 +4,7 @@ grammar MQLatex;
 math:   math '\\cdot' math # times
     |	math '+' math # plus
     |	math '-' math # minus
+    |	math '=' math # equal
     |   INT # number
     |   VAR # variable
     |   '{' math '}' # braces

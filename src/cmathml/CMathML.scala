@@ -13,6 +13,20 @@ abstract class CMathML {
   @Pure def replace(p:Path, y:CMathML) = mapAt(p,{_ => y})
 }
 
+object CMathML {
+  val equal = CSymbol("relation1","eq")
+  def equal(a: CMathML, b: CMathML) : CMathML = Apply(equal,a,b)
+
+  val plus = CSymbol("arith1","plus")
+  def plus(x:CMathML,y:CMathML) : CMathML = Apply(plus,x,y)
+  val minus = CSymbol("arith1","minus")
+  def minus(x:CMathML,y:CMathML) : CMathML = Apply(minus,x,y)
+  val times = CSymbol("arith1","times")
+  def times(x:CMathML,y:CMathML) : CMathML = Apply(times,x,y)
+  val divide = CSymbol("arith1","divide")
+  def divide(x:CMathML,y:CMathML) : CMathML = Apply(divide,x,y)
+}
+
 protected trait Leaf extends CMathML {
   def mapAt(p: Path, f: CMathML=>CMathML): CMathML = { if (!p.isEmpty) throw InvalidPath(); f(this) }
   def subterm(p: Path): CMathML = { if (!p.isEmpty) throw InvalidPath(); this }
