@@ -1,6 +1,10 @@
 package cmathml
 
+import java.math.MathContext
+
 import misc.Pure
+
+import scala.math.BigDecimal.RoundingMode
 
 case class InvalidPath() extends Exception
 
@@ -60,8 +64,18 @@ case class Apply(hd: CMathML, args: CMathML*) extends CMathML {
 case class CI(v: String) extends CMathML with Leaf
 
 /** <cn>-Content MathML element
+  * The BigDecimal *must* have rounding mode [[java.math.RoundingMode.UNNECESSARY]] and precision 0.
   * @see [[https://www.w3.org/TR/MathML3/chapter4.html#contm.cn]] */
-case class CN(n: BigDecimal) extends CMathML with Leaf
+case class CN(n: BigDecimal) extends CMathML with Leaf {
+  assert(n.mc.getPrecision==0)
+  assert(n.mc.getRoundingMode==java.math.RoundingMode.UNNECESSARY)
+}
+object CN {
+  def apply(i:Int) = new CN(BigDecimal(i,MATHCONTEXT))
+  def apply(i:Double) = new CN(BigDecimal.exact(i)(MATHCONTEXT))
+  /** Use this math context to construct [[BigDecimal]]s for [[CN]] */
+  val MATHCONTEXT = new MathContext(0,java.math.RoundingMode.UNNECESSARY)
+}
 
 /** <csymbol>-Content MathML element
  *
@@ -76,9 +90,12 @@ case class CError(cd: String, name: String, args: Any*) extends CMathML with Lea
 object Path {
   def fromString(str: String): Path = if (str=="") Path.empty else Path(str.split('-') map {_.toInt} toList)
   val empty = Path(List.empty)
-  val emptyRev = PathRev(List.empty)
-  def make(l:Int*) = Path(l.toList)
-  def makeRev(l:Int*) = PathRev(l.toList.reverse)
+  def apply(l:Int*) : Path = Path(l.toList)
+}
+object PathRev {
+  def fromString(str:String) = Path.fromString(str).toPathRev
+  val empty = PathRev(List.empty)
+  def apply(l:Int*) : PathRev = PathRev(l.toList.reverse)
 }
 case class Path(path : List[Int]) extends AnyVal {
   def head = path.head

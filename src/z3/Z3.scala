@@ -29,10 +29,13 @@ class Z3(config:Map[String,String]) {
     case e : ArithExpr if e.isConst => CI(e.getFuncDecl.getName.toString)
     case e : RatNum =>
       val num = e.getBigIntNumerator; val denom = e.getBigIntDenominator
-      if (denom==BigInteger.ONE)
-        CN(BigDecimal(num))
-      else
-        CMathML.divide(CN(BigDecimal(num)),CN(BigDecimal(denom)))
+      val num2 = BigDecimal(num,CN.MATHCONTEXT)
+      if (denom==BigInteger.ONE) CN(num2)
+      else {
+        val denom2 = BigDecimal(denom,CN.MATHCONTEXT)
+        try CN(num2/denom2)
+        catch { case _:ArithmeticException => CMathML.divide(CN(num2), CN(denom2)) }
+      }
   }
 
   def fromCMathML(m: CMathML) : Expr = m match {
