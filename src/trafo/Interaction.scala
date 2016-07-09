@@ -6,7 +6,8 @@ import scala.xml.Elem
 
 //abstract class Answer
 
-abstract class Question[T] {
+abstract class Question[T <: Object] {
+  // T <: Object because we want T to be a reference type (else we run into the problem from http://stackoverflow.com/questions/38285616/in-scala-10-getclass-isinstance10-is-false
   val answerType : Class[T]
   def message : scala.xml.Elem
 }
@@ -17,8 +18,8 @@ class FormulaQ(val message:Elem) extends Question[CMathML] {
 }
 
 //class IntA(val i:Int) extends Answer
-class IntQ(val message:Elem) extends Question[Int] {
-  val answerType = classOf[Int]
+class IntQ(val message:Elem) extends Question[Integer] {
+  val answerType = classOf[Integer]
 }
 
 class StringQ(val message:Elem) extends Question[String] {
@@ -69,7 +70,7 @@ object Interaction {
     def answer(answer: Any) = sys.error("answer called without question")
     val error: Option[ErrorMessage] = None
   }
-  def ask[T](q : Question[T], err:Option[ErrorMessage]=None) = new Interaction[T] {
+  def ask[T <: Object](q : Question[T], err:Option[ErrorMessage]=None) = new Interaction[T] {
     override val error = err
     override val question: Option[Question[T]] = Some(q)
     override def answer(answer: Any): Interaction[T] = {

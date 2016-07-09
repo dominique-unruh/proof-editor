@@ -13,13 +13,8 @@ class InteractionTest extends UnitSpec {
   }
 
   test("ask for int") {
-    // some related mysteries
-    println(10.getClass)
-    println(10.isInstanceOf[Int])
-    println(classOf[Int].isInstance(10))
-    println(10.getClass.isInstance(10))
-    println(classOf[Integer].isInstance(10))
-
+    // make sure we don't run into the problem from
+    // http://stackoverflow.com/questions/38285616/in-scala-10-getclass-isinstance10-is-false
     def int = ask(new IntQ(<span>int?</span>))
     def int2 = int.answer(10)
     assertResult(10) { int2.result.get }
