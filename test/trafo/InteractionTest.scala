@@ -12,18 +12,31 @@ class InteractionTest extends UnitSpec {
     assertResult(Some(123)) { int.result }
   }
 
+  test("ask for int") {
+    // some related mysteries
+    println(10.getClass)
+    println(10.isInstanceOf[Int])
+    println(classOf[Int].isInstance(10))
+    println(10.getClass.isInstance(10))
+    println(classOf[Integer].isInstance(10))
+
+    def int = ask(new IntQ(<span>int?</span>))
+    def int2 = int.answer(10)
+    assertResult(10) { int2.result.get }
+  }
+
   test("for-comprehension") {
-    def q = new IntQ(<span>some int</span>)
+    def q = new StringQ(<span>some string</span>)
     println(q.message)
 
-    def int : Interaction[Int] = for { i <- ask(q) } yield i.i*i.i
+    def int : Interaction[String] = for { i <- ask(q) } yield i+i
     assertResult(None) { int.error }
     assertResult(None) { int.result }
-    assertResult("some int") { int.question.get.message.text }
+    assertResult("some string") { int.question.get.message.text }
 
-    def int2 = int.answer(new IntA(10))
+    def int2 = int.answer("abc")
     assertResult(None) { int2.error }
     assertResult(None) { int2.question }
-    assertResult(100) { int2.result.get }
+    assertResult("abcabc") { int2.result.get }
   }
 }
