@@ -111,16 +111,13 @@ class Interactor[T](val interaction : Interaction[T]) extends VBox {
 
   private def recompute(idx: Int): Unit = {
     assert(idx >= 1)
-    //    val qa = qaList(idx-1)
     val int = interactions(idx - 1)
     val question = int.question
     if (question.isEmpty) {
       interactions.remove(idx, interactions.length - idx)
-      //      for (i <- idx until interactions.length) interactions.pop()
       getChildren.remove(idx, getChildren.size)
-      //      getItems.remove(idx,getItems.size)
     } else {
-      val int2 = int.answer(answers.get(int.id))
+      val int2 = int.answer(answers.getOrElse(int.id,question.get.default))
       println("set int", idx, int.id, int2.id, int2.question)
       setInteraction(idx, int2)
     }

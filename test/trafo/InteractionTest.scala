@@ -24,7 +24,7 @@ class InteractionTest extends UnitSpec {
     def q = new StringQ(<span>some string</span>)
     println(q.message)
 
-    def int : Interaction[String] = for { i <- ask("q1",q) } yield i.get+i.get
+    def int : Interaction[String] = for { i <- ask("q1",q) } yield i+i
     assertResult(None) { int.error }
     assertResult(None) { int.result }
     assertResult("some string") { int.question.get.message.text }

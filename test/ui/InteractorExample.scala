@@ -1,19 +1,12 @@
 package ui
 
-import java.lang.Thread.currentThread
 import javafx.animation.{KeyFrame, Timeline}
-import javafx.application.Application
 import javafx.event.ActionEvent
-import javafx.scene.control.ListView
-import javafx.scene.{Node, Parent, Scene}
-import javafx.scene.layout.{AnchorPane, Pane, Region}
-import javafx.stage.Stage
 import javafx.util
 
-import trafo.{IntQ, Interaction, StringQ}
-
-import Interaction._
 import misc.Utils.JavaFXImplicits._
+import trafo.Interaction._
+import trafo.{IntQ, Interaction, StringQ}
 
 object InteractorExample {
   def main(args: Array[String]) = {
@@ -22,12 +15,11 @@ object InteractorExample {
         case 0 => returnval(List.empty)
         case _ => for {x <- ask("i" + j, new StringQ(<node>String nr. $j</node>))
                        xs <- manyQ(i - 1, j + 1)
-        } yield (x.getOrElse("?") :: xs)
+        } yield (x :: xs)
       }
 
       val int = for {i <- ask("int", new IntQ(<span>Nr 1?</span>))
-                     i2 : Int = if (i.isEmpty) 0 else i.get
-                     strs <- manyQ(i2)
+                     strs <- manyQ(i)
         } yield ""+i+"#"+strs.mkString(",")
 
       val actor = new Interactor(int)
