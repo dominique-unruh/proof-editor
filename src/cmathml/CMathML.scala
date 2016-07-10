@@ -9,7 +9,7 @@ import scala.math.BigDecimal.RoundingMode
 case class InvalidPath() extends Exception
 
 /** Represents mathematical formulas in Strict Content MathML encoding */
-abstract class CMathML {
+sealed trait CMathML {
   def subterm(p: Path) : CMathML
   /** Replaces the subterm x at path p by f(x) */
   @Pure def mapAt(p:Path, f:CMathML=>CMathML) : CMathML
@@ -31,7 +31,7 @@ object CMathML {
   def divide(x:CMathML,y:CMathML) : CMathML = Apply(divide,x,y)
 }
 
-protected trait Leaf extends CMathML {
+sealed protected trait Leaf extends CMathML {
   def mapAt(p: Path, f: CMathML=>CMathML): CMathML = { if (!p.isEmpty) throw InvalidPath(); f(this) }
   def subterm(p: Path): CMathML = { if (!p.isEmpty) throw InvalidPath(); this }
 }
@@ -39,7 +39,7 @@ protected trait Leaf extends CMathML {
 
 /** <apply>-Content MathML element
   * @see [[https://www.w3.org/TR/MathML3/chapter4.html#contm.apply]] */
-case class Apply(hd: CMathML, args: CMathML*) extends CMathML {
+final case class Apply(hd: CMathML, args: CMathML*) extends CMathML {
   override def mapAt(p: Path, f: (CMathML) => CMathML): CMathML = {
     if (p.isEmpty) return f(this)
     val idx = p.head; val tl = p.tail
@@ -61,12 +61,12 @@ case class Apply(hd: CMathML, args: CMathML*) extends CMathML {
 
 /** <ci>-Content MathML element
   * @see [[https://www.w3.org/TR/MathML3/chapter4.html#contm.ci]] */
-case class CI(v: String) extends CMathML with Leaf
+final case class CI(v: String) extends CMathML with Leaf
 
 /** <cn>-Content MathML element
   * The BigDecimal *must* have rounding mode [[java.math.RoundingMode.UNNECESSARY]] and precision 0.
   * @see [[https://www.w3.org/TR/MathML3/chapter4.html#contm.cn]] */
-case class CN(n: BigDecimal) extends CMathML with Leaf {
+final case class CN(n: BigDecimal) extends CMathML with Leaf {
   assert(n.mc.getPrecision==0)
   assert(n.mc.getRoundingMode==java.math.RoundingMode.UNNECESSARY)
 }
@@ -80,12 +80,12 @@ object CN {
 /** <csymbol>-Content MathML element
  *
   * @see [[https://www.w3.org/TR/MathML3/chapter4.html#contm.csymbol]] */
-case class CSymbol(cd: String, name: String) extends CMathML with Leaf
+final case class CSymbol(cd: String, name: String) extends CMathML with Leaf
 
 /** <cerror>-Content MathML element
   * We are more flexible than the standard here, we allow arbitrary elements as error arguments (not just MathML)
   * @see [[https://www.w3.org/TR/MathML3/chapter4.html#contm.cerror]] */
-case class CError(cd: String, name: String, args: Any*) extends CMathML with Leaf
+final case class CError(cd: String, name: String, args: Any*) extends CMathML with Leaf
 
 object Path {
   def fromString(str: String): Path = if (str=="") Path.empty else Path(str.split('-') map {_.toInt} toList)
@@ -97,7 +97,7 @@ object PathRev {
   val empty = PathRev(List.empty)
   def apply(l:Int*) : PathRev = PathRev(l.toList.reverse)
 }
-case class Path(path : List[Int]) extends AnyVal {
+final case class Path(path : List[Int]) extends AnyVal {
   def head = path.head
   def tail = Path(path.tail)
   def prepend(i:Int) = new Path(i::path)
@@ -106,7 +106,7 @@ case class Path(path : List[Int]) extends AnyVal {
   def toPathRev = new PathRev(path.reverse)
   def isEmpty = path.isEmpty
 }
-case class PathRev(path : List[Int]) extends AnyVal {
+final case class PathRev(path : List[Int]) extends AnyVal {
   def append(i: Int) = new PathRev(i :: path)
   def toPath = new Path(path.reverse)
   def toPathRev = this

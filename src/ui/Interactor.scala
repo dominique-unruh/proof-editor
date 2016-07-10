@@ -6,26 +6,26 @@ import javafx.scene.control._
 import javafx.scene.layout.VBox
 
 import misc.Utils.JavaFXImplicits._
-import trafo.{IntQ, Interaction, Question, StringQ}
+import trafo._
 
 import scala.collection.mutable
 
-protected class QA[T](val interaction : Interaction[T], val answer : Option[_]) {
-  assert(answer.isEmpty || interaction.question.get.answerType.isInstance(answer.get))
-//  var dirty = true
-
-  override def toString : String = {
-    val str = new StringBuilder("QA(")
-    if (interaction.question.isEmpty) str ++= "done"
-    else str ++= interaction.question.get.message.text
-    if (!answer.isEmpty) { str += ','; str ++= answer.get.toString }
-    if (!interaction.error.isEmpty) { str += ','; str ++= "error: "; str ++= interaction.error.get.message.text }
-    if (!interaction.result.isEmpty) { str += ','; str ++= "result: "; str ++= interaction.result.get.toString }
-    str += ')'
-    str.toString
-  }
-  def setAnswer(newAnswer : Any) = new QA(interaction, Some(newAnswer))
-}
+//protected class QA[T](val interaction : Interaction[T], val answer : Option[_]) {
+//  assert(answer.isEmpty || interaction.question.get.answerType.isInstance(answer.get))
+////  var dirty = true
+//
+//  override def toString : String = {
+//    val str = new StringBuilder("QA(")
+//    if (interaction.question.isEmpty) str ++= "done"
+//    else str ++= interaction.question.get.message.text
+//    if (!answer.isEmpty) { str += ','; str ++= answer.get.toString }
+//    if (!interaction.error.isEmpty) { str += ','; str ++= "error: "; str ++= interaction.error.get.message.text }
+//    if (!interaction.result.isEmpty) { str += ','; str ++= "result: "; str ++= interaction.result.get.toString }
+//    str += ')'
+//    str.toString
+//  }
+//  def setAnswer(newAnswer : Any) = new QA(interaction, Some(newAnswer))
+//}
 
 
 class Interactor[T](val interaction : Interaction[T]) extends VBox {
@@ -112,30 +112,32 @@ class Interactor[T](val interaction : Interaction[T]) extends VBox {
   private def recompute(idx: Int): Unit = {
     assert(idx >= 1)
     val int = interactions(idx - 1)
-    val question = int.question
-    if (question.isEmpty) {
-      interactions.remove(idx, interactions.length - idx)
-      getChildren.remove(idx, getChildren.size)
-    } else {
-      val int2 = int.answer(answers.getOrElse(int.id,question.get.default))
-      println("set int", idx, int.id, int2.id, int2.question)
-      setInteraction(idx, int2)
+    int match {
+      case InteractionFinished(_) | InteractionFailed() =>
+        interactions.remove(idx, interactions.length - idx)
+        getChildren.remove(idx, getChildren.size)
+      case InteractionRunning(id,question,answer) =>
+        val int2 = answer(answers.getOrElse(id,question.default))
+//        println("set int", idx, id, int2, int2.question)
+        setInteraction(idx, int2)
     }
   }
 
-  def setAnswer(idx: Int, answer: Option[Object]) : Unit = {
-    val int = interactions(idx)
-    if (answer.isEmpty)
-      answers.remove(int.id)
-    else {
-      assert(!int.question.isEmpty)
-      assert(int.question.get.answerType.isInstance(answer.get),
-        "q-type " + int.question.get.answerType + ", a-type " + answer.get.getClass)
-      answers.update(int.id, answer.get)
-      updateGUI(idx)
-      recompute(idx + 1)
-    }
+  def setAnswer(idx: Int, answer: Option[Object]) : Unit = interactions(idx) match {
+    case InteractionRunning(id, question, _) =>
+      if (answer.isEmpty)
+        answers.remove(id)
+      else {
+        assert(question.answerType.isInstance(answer.get),
+          "q-type " + question.answerType + ", a-type " + answer.get.getClass)
+        answers.update(id, answer.get)
+        updateGUI(idx)
+        recompute(idx + 1)
+      }
+    case InteractionFinished(_) | InteractionFailed() =>
+      throw new IndexOutOfBoundsException("setAnswer(" + idx + ",...)")
   }
+
 
   //  setItems(FXCollections.observableArrayList())
   //  private def setGUIStr(idx:Int, str:String) = {
@@ -145,14 +147,18 @@ class Interactor[T](val interaction : Interaction[T]) extends VBox {
     if (idx == getChildren.size) getChildren.add(new Cell(idx))
     val int = interactions(idx)
     val cell = getChildren().get(idx).asInstanceOf[Cell]
-    if (int.question.isEmpty) {
-      cell.noQuestion()
-      cell.label.setText(int.id + " " + "Result: " + int.result)
-    } else {
-      cell.setQuestionType(int.question.get)
-      cell.label.setText(int.id + " " + int.question.get.message.text)
-      val answer = answers.get(int.id)
-      cell.edit.asInstanceOf[Editor[Object]].setValue(answer)
+    int match {
+      case InteractionFinished(result) =>
+        cell.noQuestion()
+        cell.label.setText("Result: " + result)
+      case InteractionFailed() =>
+        cell.noQuestion()
+        cell.label.setText("Failed")
+      case InteractionRunning(id,question,answer) =>
+        cell.setQuestionType(question)
+        cell.label.setText(id + " " + question.message.text)
+        val answer = answers.get(id)
+        cell.edit.asInstanceOf[Editor[Object]].setValue(answer)
     }
   }
 }

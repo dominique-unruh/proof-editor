@@ -7,9 +7,7 @@ import Interaction._
 class InteractionTest extends UnitSpec {
   test("returnval") {
     def int = returnval(123)
-    assertResult(None) { int.error }
-    assertResult(None) { int.question }
-    assertResult(Some(123)) { int.result }
+    assertResult(123) { int.asInstanceOf[InteractionFinished[_]].result }
   }
 
   test("ask for int") {
@@ -17,7 +15,7 @@ class InteractionTest extends UnitSpec {
     // http://stackoverflow.com/questions/38285616/in-scala-10-getclass-isinstance10-is-false
     def int = ask("q1",new IntQ(<span>int?</span>))
     def int2 = int.answer(10.asInstanceOf[Integer])
-    assertResult(10) { int2.result.get }
+    assertResult(10) { int2.asInstanceOf[InteractionFinished[_]].result }
   }
 
   test("for-comprehension") {
@@ -25,13 +23,9 @@ class InteractionTest extends UnitSpec {
     println(q.message)
 
     def int : Interaction[String] = for { i <- ask("q1",q) } yield i+i
-    assertResult(None) { int.error }
-    assertResult(None) { int.result }
-    assertResult("some string") { int.question.get.message.text }
+    assertResult("some string") { int.asInstanceOf[InteractionRunning[_]].question.message.text }
 
-    def int2 = int.answer("abc")
-    assertResult(None) { int2.error }
-    assertResult(None) { int2.question }
-    assertResult("abcabc") { int2.result.get }
+    def int2 = int.asInstanceOf[InteractionRunning[_]].answer("abc")
+    assertResult("abcabc") { int2.asInstanceOf[InteractionFinished[_]].result }
   }
 }
