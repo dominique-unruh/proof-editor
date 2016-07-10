@@ -10,20 +10,23 @@ abstract class Question[T <: Object] {
   // T <: Object because we want T to be a reference type (else we run into the problem from http://stackoverflow.com/questions/38285616/in-scala-10-getclass-isinstance10-is-false
   val answerType : Class[T]
   def message : scala.xml.Elem
+  val default : Option[T]
 }
 
 //class FormulaA(val formula:CMathML) extends Answer
 class FormulaQ(val message:Elem) extends Question[CMathML] {
   val answerType = classOf[CMathML]
+  val default = None
 }
 
-//class IntA(val i:Int) extends Answer
 class IntQ(val message:Elem) extends Question[Integer] {
   val answerType = classOf[Integer]
+  val default = Some(0.asInstanceOf[Integer])
 }
 
 class StringQ(val message:Elem) extends Question[String] {
   val answerType = classOf[String]
+  val default:Option[String]=Some("")
 }
 
 
