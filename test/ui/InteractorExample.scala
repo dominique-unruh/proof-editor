@@ -12,48 +12,34 @@ import javafx.util
 
 import trafo.{IntQ, Interaction, StringQ}
 
-class TestFxApp extends Application {
-  override def start(stage: Stage): Unit = {
-    TestFxApp.pane = new AnchorPane()
-    stage.setScene(new Scene(TestFxApp.pane))
-//    if (TestFxApp.showThisNode!=null) TestFxApp.pane.getChildren.add(TestFxApp.showThisNode)
-    stage.setTitle(TestFxApp.name)
-    if (TestFxApp.callMe!=null) TestFxApp.callMe()
-    stage.show()
-  }
-}
-object TestFxApp {
-//  var showThisNode : Node = null
-  var pane : Pane = null
-  var callMe : () => Unit = null
-  var name : String = "TestFxApp"
-
-  def run(init: =>Node) = {
-    callMe = { () => val node = init; pane.getChildren.add(node) }
-    name = currentThread.getStackTrace()(2).getClassName
-    Application.launch(classOf[TestFxApp])
-  }
-}
-
 import Interaction._
 import misc.Utils.JavaFXImplicits._
 
 object InteractorExample {
   def main(args: Array[String]) = {
     TestFxApp.run {
-      val int = for {i <- ask(new StringQ(<span>Nr 1?</span>))
-                     j <- if (i.length<10) ask(new StringQ(<span>Nr 2 (first was "{i}")</span>)) else returnval("toolong")
-      } yield i + "," + j
+      def manyQ(i:Int, j:Int=1) : Interaction[List[String]] = i match {
+        case 0 => returnval(List.empty)
+        case _ => for {x <- ask("i" + j, new StringQ(<node>String nr. $j</node>))
+                       xs <- manyQ(i - 1, j + 1)
+        } yield (x.getOrElse("?") :: xs)
+      }
+
+      val int = for {i <- ask("int", new IntQ(<span>Nr 1?</span>))
+                     i2 : Int = if (i.isEmpty) 0 else i.get
+                     strs <- manyQ(i2)
+        } yield ""+i+"#"+strs.mkString(",")
+
       val actor = new Interactor(int)
-//      actor.answer(0,"hello")
+//      actor.setAnswer(0,"hello")
 
       val timeline = new Timeline(
-        new KeyFrame(util.Duration.millis(1000), {(_:ActionEvent) => actor.answer(0,"hello")}),
-        new KeyFrame(util.Duration.millis(2000), {(_:ActionEvent) => actor.answer(1,"there")})
-//        new KeyFrame(util.Duration.millis(4000), {(_:ActionEvent) => actor.answer(0,"this")}),
-//        new KeyFrame(util.Duration.millis(5000), {(_:ActionEvent) => actor.answer(1,"is")}),
-//        new KeyFrame(util.Duration.millis(6000), {(_:ActionEvent) => actor.answer(0,"a")}),
-//        new KeyFrame(util.Duration.millis(7000), {(_:ActionEvent) => actor.answer(1,"test")})
+        new KeyFrame(util.Duration.millis(1000), {(_:ActionEvent) => actor.setAnswer(0,Some(1.asInstanceOf[Integer]))}),
+        new KeyFrame(util.Duration.millis(2000), {(_:ActionEvent) => actor.setAnswer(1,Some("there"))}),
+        new KeyFrame(util.Duration.millis(4000), {(_:ActionEvent) => actor.setAnswer(0,Some(2.asInstanceOf[Integer]))}),
+        new KeyFrame(util.Duration.millis(5000), {(_:ActionEvent) => actor.setAnswer(1,Some("is"))}),
+        new KeyFrame(util.Duration.millis(6000), {(_:ActionEvent) => actor.setAnswer(0,Some(3.asInstanceOf[Integer]))}),
+        new KeyFrame(util.Duration.millis(7000), {(_:ActionEvent) => actor.setAnswer(1,Some("test"))})
       )
       timeline.play()
 

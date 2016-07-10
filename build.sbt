@@ -6,6 +6,7 @@ libraryDependencies += "org.scalatest" % "scalatest_2.11" % "2.2.6" % Test
 libraryDependencies += "org.apache.bcel" % "bcel" % "5.2"
 libraryDependencies += "org.ow2.asm" % "asm" % "5.1"
 libraryDependencies += "commons-io" % "commons-io" % "2.5"
+//libraryDependencies += "com.storm-enroute" % "coroutines_2.11" % "0.6"
 
 scalaSource in Compile := baseDirectory.value / "src"
 scalaSource in Test := baseDirectory.value / "test"

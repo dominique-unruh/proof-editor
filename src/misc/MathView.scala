@@ -90,5 +90,5 @@ object MathView {
         case Some(r) => r }
       result2 % new UnprefixedAttribute("path",path.toString(),Null)
   }
-  def cmathmlToMathjax(m:CMathML) : String = scala.xml.Utility.trim(cmathmlToMathjaxXML(m,Path.emptyRev)).toString()
+  def cmathmlToMathjax(m:CMathML) : String = scala.xml.Utility.trim(cmathmlToMathjaxXML(m,PathRev.empty)).toString()
 }

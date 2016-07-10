@@ -91,5 +91,5 @@ private[mathview] object MQLatex {
     }
 
   @Pure
-  def cmathmlToLatex(m:CMathML, options:Options=Options()) : String = cmathmlToLatex(m,Path.emptyRev,options)
+  def cmathmlToLatex(m:CMathML, options:Options=Options()) : String = cmathmlToLatex(m,PathRev.empty,options)
 }
