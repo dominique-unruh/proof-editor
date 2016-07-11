@@ -108,5 +108,5 @@ import org.antlr.v4.runtime.{Parser, RecognitionException, Recognizer}
     }
 
   @Pure
-  def cmathmlToLatex(m:CMathML, options:Options=Options()) : String = cmathmlToLatex(m,Path.emptyRev,options)
+  def cmathmlToLatex(m:CMathML, options:Options=Options()) : String = cmathmlToLatex(m,PathRev.empty,options)
 }

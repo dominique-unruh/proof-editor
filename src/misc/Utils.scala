@@ -1,5 +1,6 @@
 package misc
 
+import java.io.FileNotFoundException
 import java.lang.Thread.UncaughtExceptionHandler
 import javafx.beans.value.{ChangeListener, ObservableValue}
 import javafx.event.Event
@@ -18,7 +19,17 @@ object Utils {
     return result
   }
 
+  @Pure
+  def resourceFile(name:String*): String = {
+    for (n <- name) {
+      val res = getClass.getResource(n)
+      if (res != null && res.getProtocol == "file") return res.getFile
+    }
+    throw new FileNotFoundException("Resource "+name.mkString(" or ")+" as file")
+  }
+
   object JavaFXImplicits {
+    import scala.language.implicitConversions
     implicit def lambdaToEventHandler[T <: Event](handler: T => Unit) = new javafx.event.EventHandler[T] {
       override def handle(dEvent: T): Unit = handler(dEvent)
     }
