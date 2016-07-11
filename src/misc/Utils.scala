@@ -26,6 +26,7 @@ object Utils {
   }
 
   object JavaFXImplicits {
+    import scala.language.implicitConversions
     implicit def lambdaToEventHandler[T <: Event](handler: T => Unit) = new javafx.event.EventHandler[T] {
       override def handle(dEvent: T): Unit = handler(dEvent)
     }

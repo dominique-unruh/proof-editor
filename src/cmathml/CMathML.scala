@@ -88,7 +88,7 @@ final case class CSymbol(cd: String, name: String) extends CMathML with Leaf
 final case class CError(cd: String, name: String, args: Any*) extends CMathML with Leaf
 
 object Path {
-  def fromString(str: String): Path = if (str=="") Path.empty else Path(str.split('-') map {_.toInt} toList)
+  def fromString(str: String): Path = if (str=="") Path.empty else Path(str.split('-').map{_.toInt}.toList)
   val empty = Path(List.empty)
   def apply(l:Int*) : Path = Path(l.toList)
 }

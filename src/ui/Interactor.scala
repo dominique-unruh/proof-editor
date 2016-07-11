@@ -8,6 +8,7 @@ import javafx.scene.layout.VBox
 import misc.Utils.JavaFXImplicits._
 import trafo._
 
+import scala.annotation.tailrec
 import scala.collection.mutable
 
 //protected class QA[T](val interaction : Interaction[T], val answer : Option[_]) {
@@ -103,13 +104,13 @@ class Interactor[T](val interaction : Interaction[T]) extends VBox {
     getChildren.addAll(label)
   }
 
-  private def setInteraction(idx: Int, int: Interaction[T]): Unit = {
+  private final def setInteraction(idx: Int, int: Interaction[T]): Unit = {
     if (idx == interactions.length) interactions += int else interactions.update(idx, int)
     updateGUI(idx)
     recompute(idx + 1)
   }
 
-  private def recompute(idx: Int): Unit = {
+  private final def recompute(idx: Int): Unit = {
     assert(idx >= 1)
     val int = interactions(idx - 1)
     int match {

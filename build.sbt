@@ -14,6 +14,7 @@ resourceDirectory in Compile := baseDirectory.value / "resources"
 unmanagedResourceDirectories in Compile += baseDirectory.value / "src" // TODO: remove (only non-source files)
 //unmanagedResourceDirectories in Compile += baseDirectory.value / "resources"
 sourcesInBase := false
+scalacOptions ++= Seq("-unchecked", "-deprecation","-feature")
 
 enableDownloads
 
