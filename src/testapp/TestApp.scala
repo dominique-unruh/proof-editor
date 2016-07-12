@@ -1,29 +1,28 @@
-package misc
+package testapp
 
 import java.io.{PrintWriter, StringWriter}
 import java.lang.Boolean
 import java.lang.System.out
-import java.lang.Thread.UncaughtExceptionHandler
-import java.lang.reflect.InvocationTargetException
-import java.util.logging.{FileHandler, Level, Logger}
+import java.util.logging.{Level, Logger}
 import javafx.application.{Application, Platform}
-import javafx.beans.value
-import javafx.beans.value.{ChangeListener, ObservableValue}
+import javafx.beans.property.Property
 import javafx.event.ActionEvent
 import javafx.fxml.{FXML, FXMLLoader}
-import javafx.scene.{Parent, Scene}
-import javafx.scene.control.ScrollPane.ScrollBarPolicy
 import javafx.scene.control._
-import javafx.scene.input.{KeyCode, KeyCodeCombination, KeyCombination}
-import javafx.scene.layout.{BorderPane, VBox}
-import javafx.scene.text.{Text, TextFlow}
+import javafx.scene.layout.{HBox, VBox}
 import javafx.scene.web.WebView
+import javafx.scene.{Parent, Scene}
 import javafx.stage.Stage
 
-import com.sun.javafx.webkit.WebConsoleListener
-import mathview.{MQLatex, MathViewMQ}
-import misc.Utils.JavaFXImplicits._
 import cmathml._
+import com.sun.javafx.webkit.WebConsoleListener
+import mathview.MathViewMQ
+import misc.GetterSetterProperty
+import misc.Utils.JavaFXImplicits._
+import theory.Formula
+import trafo.{FormulaQ, IdentityTransformation, Question, TrafoInstance}
+import ui.Interactor
+import ui.Interactor.Editor
 import z3.Z3
 
 import scala.collection.mutable
@@ -35,54 +34,74 @@ object TestApp {
 
 class TestApp extends Application {
   val examples = List(
-    CMathML.equal(CMathML.plus(CI("x"),CI("y")), CMathML.plus(CI("y"),CN(-1)))
+    CMathML.equal(CMathML.plus(CI("x"), CI("y")), CMathML.plus(CI("y"), CN(-1)))
   )
 
   @FXML
-  private var formulaList = null : VBox
+  private var formulaList = null: VBox
   @FXML
-  private var logArea = null : TextArea
+  private var logArea = null: TextArea
+  @FXML
+  private var interactor = null: Interactor[TrafoInstance]
 
-  @FXML
-  private def newFormula(event : ActionEvent) : Unit = {
-    addMath(CI("x"),Some(Path.empty))
+  private def errorPopup(msg: String): Unit =
+    new Alert(Alert.AlertType.ERROR, msg).showAndWait()
+
+  @FXML private def idTrafo(event: ActionEvent): Unit = {
+    interactor.setInteraction(new IdentityTransformation().createInteractive)
+//    errorPopup("Not implemented")
   }
 
   @FXML
-  private def quit(event: ActionEvent) : Unit = {
+  private def newFormula(event: ActionEvent): Unit = {
+    addMath(CI("x"), Some(Path.empty))
+  }
+
+  @FXML
+  private def quit(event: ActionEvent): Unit = {
     Platform.exit()
   }
 
   @FXML
-  private def editSelection(event : ActionEvent) : Unit = {
+  private def editSelection(event: ActionEvent): Unit = {
     val math = currentlySelectedMath
-    if (math==null)  { log("No selected mathview"); return }
+    if (math == null) {
+      log("No selected mathview"); return
+    }
     val sel = math.getSelection
-    if (sel.isEmpty) { log("No selection"); return }
-    math.setMath(math.getMath,Some(sel.get))
+    if (sel.isEmpty) {
+      log("No selection"); return
+    }
+    math.setMath(math.getMath, Some(sel.get))
   }
 
   @FXML
-  private def newFromSelection(event : ActionEvent) : Unit = {
+  private def newFromSelection(event: ActionEvent): Unit = {
     val math = currentlySelectedMath
-    if (math==null)  { log("No selected mathview"); return }
+    if (math == null) {
+      log("No selected mathview"); return
+    }
     val sel = math.getSelection
-    if (sel.isEmpty) { log("No selection"); return }
+    if (sel.isEmpty) {
+      log("No selection"); return
+    }
     val m = math.getMath.subterm(sel.get)
-//    math.setMath(math.getMath.replace(sel.get, CN(123)))
+    //    math.setMath(math.getMath.replace(sel.get, CN(123)))
     addMath(m)
-//    val newmath = new MathViewMQ()
-//    newmath.setMath(m)
-//    formulaList.getChildren.add(newmath)
+    //    val newmath = new MathViewMQ()
+    //    newmath.setMath(m)
+    //    formulaList.getChildren.add(newmath)
   }
 
   /** Only invoke methods in JavaFX thread! */
   private lazy val z3 = new Z3(Map())
 
   @FXML
-  private def simplify(event : ActionEvent) : Unit = {
+  private def simplify(event: ActionEvent): Unit = {
     val math = currentlySelectedMath
-    if (math==null)  { log("No selected mathview"); return }
+    if (math == null) {
+      log("No selected mathview"); return
+    }
     val expr = z3.fromCMathML(math.getMath)
     val simp = expr.simplify
     val simp2 = z3.toCMathML(simp)
@@ -90,31 +109,36 @@ class TestApp extends Application {
   }
 
   @FXML
-  private def deleteFormula(event : ActionEvent) : Unit = {
+  private def deleteFormula(event: ActionEvent): Unit = {
     val math = currentlySelectedMath
-    if (math==null)  { log("No selected mathview"); return }
+    if (math == null) {
+      log("No selected mathview"); return
+    }
     formulaList.getChildren.removeAll(math)
   }
 
-  private var currentlySelectedMath : MathViewMQ = null
+  private var currentlySelectedMath: MathViewMQ = null
 
   private val mathviews = new mutable.MutableList[MathViewMQ]
-  def addMath(math: CMathML, editPath: Option[Path]=None) = {
+
+  def addMath(math: CMathML, editPath: Option[Path] = None) = {
     if (!editPath.isEmpty) math.subterm(editPath.get) // Make sure the editPath is valid
     val mw = new MathViewMQ()
-    mw.setMath(math,editPath)
+    mw.setMath(math, editPath)
     mathviews += mw
-    mw.selectedProperty.addListener((selected:Boolean) => currentlySelectedMath = mw)
-    mw.addEditedListener(m => {println("edited",m,mw);
-      mw.setMath(mw.getMath.replace(mw.editPath.get,m))})
+    mw.selectedProperty.addListener((selected: Boolean) => currentlySelectedMath = mw)
+    mw.addEditedListener(m => {
+      println("edited", m, mw);
+      mw.setMath(mw.getMath.replace(mw.editPath.get, m))
+    })
     formulaList.getChildren.add(mw)
     mw
   }
 
 
-  def log(msg:String, numLines:Int = -1) = {
-    var msg2 : String = msg
-    if (numLines>=0) {
+  def log(msg: String, numLines: Int = -1) = {
+    var msg2: String = msg
+    if (numLines >= 0) {
       var idx = 0
       for (i <- 1 to numLines)
         if (idx != -1) idx = msg2.indexOf('\n', idx) + 1
@@ -124,7 +148,7 @@ class TestApp extends Application {
     logArea.appendText("\n")
   }
 
-  def actualException(e:Throwable) : Throwable =
+  def actualException(e: Throwable): Throwable =
     if (e.getCause != null) actualException(e.getCause) else e
 
   def start(primaryStage: Stage) {
@@ -132,39 +156,56 @@ class TestApp extends Application {
     assert(fxmlSrc != null)
     val loader = new FXMLLoader(fxmlSrc)
     loader.setController(this)
-    val fxml : Parent = loader.load()
-    println("formulaList",formulaList)
+    val fxml: Parent = loader.load()
+    println("formulaList", formulaList)
 
-    Logger.getLogger("").log(Level.WARNING,"logging test")
-    Thread.currentThread().setUncaughtExceptionHandler({(t: Thread, e: Throwable) =>
+    Logger.getLogger("").log(Level.WARNING, "logging test")
+    Thread.currentThread().setUncaughtExceptionHandler({ (t: Thread, e: Throwable) =>
       val e2 = actualException(e)
       e2.printStackTrace()
       val sw = new StringWriter()
       e2.printStackTrace(new PrintWriter(sw))
-      log(sw.getBuffer.toString,5)})
+      log(sw.getBuffer.toString, 5)
+    })
 
     primaryStage.setScene(new Scene(fxml, 800, 600))
     primaryStage.setTitle("Proof editor")
     WebConsoleListener.setDefaultListener((webView: WebView, message: String, lineNumber: Int, sourceId: String) =>
-        out.println("Console: [" + sourceId + ":" + lineNumber + "] " + message))
+      out.println("Console: [" + sourceId + ":" + lineNumber + "] " + message))
 
-    for (m <- examples) addMath(m,None)
-//    val math = addMath(cmml,None)
-//    val math1 = addMath(cmml1,None)
+    interactor.setEditorFactory(editorFactory)
 
-//    math.setMath(cmml,None)
-//    formulaList.getChildren.add(math)
-//    math1.setMath(cmml1,None)
-//    formulaList.getChildren.add(math1)
-
-//    val date = new DatePicker()
-//    formulaList.getChildren.add(date)
-//    date.focusedProperty().addListener(new ChangeListener[Boolean] {
-//    override def changed(observable: ObservableValue[_ <: Boolean], oldValue: Boolean, newValue: Boolean): Unit =
-//      println("date picker focus: "+newValue)
-//  })
+    for (m <- examples) addMath(m, None)
 
     primaryStage.getScene.getStylesheets.add(getClass().getResource("/testapp/testapp.css").toExternalForm())
     primaryStage.show
   }
+
+  class FormulaEditor extends HBox with Editor[Option[Formula]] {
+    override val valueProperty: Property[Option[Formula]] = new GetterSetterProperty[Option[Formula]] {
+      override protected def getter: Option[Formula] = formula
+      override protected def setter(value: Option[Formula]): Unit = {
+        formula = value
+        if (formula.isEmpty) mathview.setVisible(false)
+        else { mathview.setVisible(true); mathview.setMath(formula.get.math) }
+      }
+    }
+    override val editedType: Class[Option[Formula]] = classOf[Option[Formula]]
+    val button = new Button("Pick!")
+    val mathview = new MathViewMQ()
+    mathview.setMath(CN(0)) // Otherwise the mathview will not be resized to something small
+    mathview.setVisible(false)
+    var formula : Option[Formula] = None
+    getChildren.addAll(button,mathview)
+    button.addEventHandler(ActionEvent.ACTION, (_:ActionEvent) =>
+      errorPopup("Not implemented"))
+  }
+
+
+
+  def editorFactory(qt: Class[_ <: Question[_ <: AnyRef]]): Editor[_ <: AnyRef] =
+    if (qt==classOf[FormulaQ])
+      new FormulaEditor()
+    else
+      Interactor.defaultEditorFactory(qt)
 }

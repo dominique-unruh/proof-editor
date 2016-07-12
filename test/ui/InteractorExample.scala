@@ -13,7 +13,7 @@ object InteractorExample {
     TestFxApp.run {
       def manyQ(i:Int, j:Int=1) : Interaction[List[String]] = i match {
         case 0 => returnval(List.empty)
-        case _ => for {x <- ask("i" + j, new StringQ(<node>String nr. $j</node>))
+        case _ => for {x <- ask("i" + j, new StringQ(<span>String nr. <b>{j}</b></span>))
                        xs <- manyQ(i - 1, j + 1)
         } yield (x :: xs)
       }
@@ -26,12 +26,12 @@ object InteractorExample {
 //      actor.setAnswer(0,"hello")
 
       val timeline = new Timeline(
-        new KeyFrame(util.Duration.millis(1000), {(_:ActionEvent) => actor.setAnswer(0,Some(1.asInstanceOf[Integer]))}),
-        new KeyFrame(util.Duration.millis(2000), {(_:ActionEvent) => actor.setAnswer(1,Some("there"))}),
-        new KeyFrame(util.Duration.millis(4000), {(_:ActionEvent) => actor.setAnswer(0,Some(2.asInstanceOf[Integer]))}),
-        new KeyFrame(util.Duration.millis(5000), {(_:ActionEvent) => actor.setAnswer(1,Some("is"))}),
-        new KeyFrame(util.Duration.millis(6000), {(_:ActionEvent) => actor.setAnswer(0,Some(3.asInstanceOf[Integer]))}),
-        new KeyFrame(util.Duration.millis(7000), {(_:ActionEvent) => actor.setAnswer(1,Some("test"))})
+        new KeyFrame(util.Duration.millis(1000), {(_:ActionEvent) => actor.setAnswer(0,(1.asInstanceOf[Integer]))}),
+        new KeyFrame(util.Duration.millis(2000), {(_:ActionEvent) => actor.setAnswer(1,("there"))}),
+        new KeyFrame(util.Duration.millis(4000), {(_:ActionEvent) => actor.setAnswer(0,(2.asInstanceOf[Integer]))}),
+        new KeyFrame(util.Duration.millis(5000), {(_:ActionEvent) => actor.setAnswer(1,("is"))}),
+        new KeyFrame(util.Duration.millis(6000), {(_:ActionEvent) => actor.setAnswer(0,(3.asInstanceOf[Integer]))}),
+        new KeyFrame(util.Duration.millis(7000), {(_:ActionEvent) => actor.setAnswer(1,("test"))})
       )
       timeline.play()
 

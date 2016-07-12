@@ -87,8 +87,10 @@ class Z3(config:Map[String,String]) {
 object Z3 {
 
   monkeyPatchZ3Native()
-  loadLib("/libz3.so","/libz3.so.0")
-  loadLib("/libz3java.so")
+//  loadLib("/libz3.so","/libz3.so.0")
+//  loadLib("/libz3java.so")
+  System.loadLibrary("z3")
+  System.loadLibrary("z3java")
 
   private def loadLib(name:String*) = {
 //    try {

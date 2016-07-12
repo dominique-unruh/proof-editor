@@ -10,6 +10,7 @@
 <?import javafx.scene.control.ToolBar?>
 <?import javafx.scene.input.KeyCodeCombination?>
 <?import javafx.scene.layout.VBox?>
+<?import ui.Interactor?>
 
 <VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="480.0" prefWidth="640.0" xmlns="http://javafx.com/javafx/8.0.65" xmlns:fx="http://javafx.com/fxml/1">
    <children>
@@ -39,10 +40,16 @@
             <Button mnemonicParsing="false" onAction="#editSelection" text="Edit selection" />
             <Button mnemonicParsing="false" onAction="#newFromSelection" text="New from selection" />
             <Button mnemonicParsing="false" onAction="#simplify" text="Simplify" />
+            <Button mnemonicParsing="false" onAction="#idTrafo" text="Id-Trafo" />
         </items>
       </ToolBar>
-      <SplitPane dividerPositions="0.5" VBox.vgrow="ALWAYS">
+      <SplitPane dividerPositions="0.33, 0.66" VBox.vgrow="ALWAYS">
          <items>
+            <ScrollPane prefHeight="200.0" prefWidth="200.0">
+               <content>
+                  <Interactor fx:id="interactor" />
+               </content>
+            </ScrollPane>
             <ScrollPane>
                <content>
                   <VBox fx:id="formulaList" fillWidth="false" spacing="10.0" />

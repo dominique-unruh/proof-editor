@@ -4,12 +4,14 @@ import javafx.beans.property.{ObjectProperty, Property, SimpleObjectProperty}
 import javafx.scene.Node
 import javafx.scene.control._
 import javafx.scene.layout.VBox
+import javafx.scene.web.HTMLEditor
 
 import misc.Utils.JavaFXImplicits._
 import trafo._
+import ui.Interactor.Editor
 
-import scala.annotation.tailrec
 import scala.collection.mutable
+import scala.xml.Elem
 
 //protected class QA[T](val interaction : Interaction[T], val answer : Option[_]) {
 //  assert(answer.isEmpty || interaction.question.get.answerType.isInstance(answer.get))
@@ -28,53 +30,40 @@ import scala.collection.mutable
 //  def setAnswer(newAnswer : Any) = new QA(interaction, Some(newAnswer))
 //}
 
-
-class Interactor[T](val interaction : Interaction[T]) extends VBox {
+class Interactor[T]() extends VBox {
+  def this(interaction : Interaction[T]) = { this(); setInteraction(interaction) }
   private val interactions = new mutable.ArrayBuffer[Interaction[T]]
   private val answers = new mutable.HashMap[String, Object]()
-  setInteraction(0, interaction)
+  private var interaction : Interaction[T] = null
+//  updateInteraction(0, interaction)
 
-  //  set(0,new QA(interaction,None))
-  //  fillFrom(1)
+  private var editorFactory = Interactor.defaultEditorFactory(_)
 
-  trait Editor[T <: Object] extends Node {
-    val valueProperty : Property[Option[T]]
-    val editedType : Class[T]
-    def setValue(v:Option[T]) : Unit = {
-      assert(v.isEmpty || editedType.isInstance(v.get),
-             "v: "+v+", editedType: "+editedType)
-      valueProperty.setValue(v)
-    }
+  def setEditorFactory(factory : Class[_ <: Question[_<:AnyRef]] => Editor[_<:AnyRef]) : Unit =
+    editorFactory = factory
+
+  def clearInteraction() : Unit = {
+    getChildren.clear()
+    interactions.clear()
+    answers.clear()
+    interaction = null
   }
 
-  class StringEditor extends TextField with Editor[String] {
-    override val valueProperty: Property[Option[String]] = new SimpleObjectProperty
-    override val editedType: Class[String] = classOf[String]
-    textProperty.addListener((newVal:String) => valueProperty.setValue(Some(newVal)))
-    valueProperty.addListener({ (newVal:Option[String]) =>
-      println("change: ",newVal)
-      textProperty.setValue(newVal.getOrElse(""))})
-  }
-
-  class IntEditor extends TextField with Editor[Integer] {
-    override val valueProperty: Property[Option[Integer]] = new SimpleObjectProperty
-    override val editedType: Class[Integer] = classOf[Integer]
-    textProperty.addListener((newVal:String) =>
-      try {
-        val i = newVal.toInt
-        valueProperty.setValue(Some(i))
-      } catch {
-        case _:NumberFormatException => valueProperty.setValue(None)
-      })
-    valueProperty.addListener({ (newVal:Option[Integer]) =>
-      println("change: ",newVal)
-      textProperty.setValue(newVal.getOrElse(0).toString)})
+  def setInteraction(interaction : Interaction[T]) : Unit = {
+    if (this.interaction!=null) clearInteraction()
+    this.interaction = interaction
+    updateInteraction(0, interaction)
   }
 
   private class Cell(idx:Int) extends VBox {
-    val label = new Label("<initialize me!>")
-    var edit : Editor[_ <: Object] = null
+    private val label = new Label("<initialize me>")
+    var edit : Interactor.Editor[_ <: AnyRef] = null
     var questionType : Class[_] = null
+
+    def setHtml(html: Elem) : Unit = {
+//      label.setHtmlText(<html contentEditable="false"><head></head><body contentEditable="false">{html}</body></html>.toString)
+      label.setText(html.text)
+    }
 
     def noQuestion() : Unit = {
       if (edit!=null) getChildren.remove(edit)
@@ -82,29 +71,26 @@ class Interactor[T](val interaction : Interaction[T]) extends VBox {
       questionType = null
     }
 
-    def setQuestionType(q : Question[_]): Unit = {
+    def setQuestionType(q : Question[_<:AnyRef]): Unit = {
       val qt = q.getClass
       if (qt==questionType) return
       if (edit!=null) getChildren.remove(edit)
       edit = null
       questionType = null
-      val edit0 : Editor[_<:Object] = {
-        if (qt==classOf[StringQ]) new StringEditor
-        else if (qt==classOf[IntQ]) new IntEditor
-        else sys.error("unsupported question type "+qt)
-      }
-      assert(q.answerType.isAssignableFrom(edit0.editedType))
+      val edit0 : Editor[_ <: AnyRef] = editorFactory(qt)
+      assert(q.answerType.isAssignableFrom(edit0.editedType),
+             "question was for type "+q.answerType+" but editor factory returned editor for type "+edit0.editedType)
       edit = edit0
       questionType = qt
       edit.valueProperty.addListener {
-        (answer:Option[_ <: Object]) => setAnswer(idx,answer) }
+        (answer:AnyRef) => setAnswer(idx,answer) }
       getChildren.add(edit)
     }
 //    edit.valueProperty.addListener((answer:Int) => setAnswer(idx,answer))
     getChildren.addAll(label)
   }
 
-  private final def setInteraction(idx: Int, int: Interaction[T]): Unit = {
+  private final def updateInteraction(idx: Int, int: Interaction[T]): Unit = {
     if (idx == interactions.length) interactions += int else interactions.update(idx, int)
     updateGUI(idx)
     recompute(idx + 1)
@@ -120,25 +106,24 @@ class Interactor[T](val interaction : Interaction[T]) extends VBox {
       case InteractionRunning(id,question,answer) =>
         val int2 = answer(answers.getOrElse(id,question.default))
 //        println("set int", idx, id, int2, int2.question)
-        setInteraction(idx, int2)
+        updateInteraction(idx, int2)
     }
   }
 
-  def setAnswer(idx: Int, answer: Option[Object]) : Unit = interactions(idx) match {
+  def setAnswer(idx: Int, answer: AnyRef) : Unit = interactions(idx) match {
     case InteractionRunning(id, question, _) =>
-      if (answer.isEmpty)
-        answers.remove(id)
-      else {
-        assert(question.answerType.isInstance(answer.get),
-          "q-type " + question.answerType + ", a-type " + answer.get.getClass)
-        answers.update(id, answer.get)
+//      if (answer.isEmpty)
+//        answers.remove(id)
+//      else {
+        assert(question.answerType.isInstance(answer),
+          "q-type " + question.answerType + ", a-type " + answer.getClass)
+        answers.update(id, answer)
         updateGUI(idx)
         recompute(idx + 1)
-      }
+//      }
     case InteractionFinished(_) | InteractionFailed() =>
       throw new IndexOutOfBoundsException("setAnswer(" + idx + ",...)")
   }
-
 
   //  setItems(FXCollections.observableArrayList())
   //  private def setGUIStr(idx:Int, str:String) = {
@@ -151,15 +136,58 @@ class Interactor[T](val interaction : Interaction[T]) extends VBox {
     int match {
       case InteractionFinished(result) =>
         cell.noQuestion()
-        cell.label.setText("Result: " + result)
+        cell.setHtml(<span><b>Result: </b>{result}</span>)
       case InteractionFailed() =>
         cell.noQuestion()
-        cell.label.setText("Failed")
+        cell.setHtml(<b>Failed</b>)
       case InteractionRunning(id,question,answer) =>
         cell.setQuestionType(question)
-        cell.label.setText(id + " " + question.message.text)
-        val answer = answers.get(id)
+        cell.setHtml(<span>{question.message.text} <i>{id}</i></span>)
+        val answer = answers.getOrElse(id,question.default)
         cell.edit.asInstanceOf[Editor[Object]].setValue(answer)
     }
+  }
+}
+
+object Interactor {
+  trait Editor[T <: AnyRef] extends Node {
+    val valueProperty : Property[T]
+    val editedType : Class[T]
+    def setValue(v:T) : Unit = {
+      assert(editedType.isInstance(v),
+        "v: "+v+", editedType: "+editedType)
+      valueProperty.setValue(v)
+    }
+  }
+
+  class StringEditor extends TextField with Editor[String] {
+    override val valueProperty: Property[String] = textProperty()
+    override val editedType: Class[String] = classOf[String]
+//    textProperty.addListener((newVal:String) => valueProperty.setValue(Some(newVal)))
+//    valueProperty.addListener({ (newVal:Option[String]) =>
+//      println("change: ",newVal)
+//      textProperty.setValue(newVal.getOrElse(""))})
+  }
+
+  // TODO there should be existing classes for this
+  class IntEditor extends TextField with Editor[Integer] {
+    override val valueProperty: Property[Integer] = new SimpleObjectProperty
+    override val editedType: Class[Integer] = classOf[Integer]
+    textProperty.addListener((newVal:String) =>
+      try {
+        val i = newVal.toInt
+        valueProperty.setValue(i)
+      } catch {
+        case _:NumberFormatException => /*valueProperty.setValue(None)*/ ()
+      })
+    valueProperty.addListener({ (newVal:Integer) =>
+      println("change: ",newVal)
+      textProperty.setValue(newVal.toString)})
+  }
+
+  def defaultEditorFactory(qt : Class[_<:Question[_<:AnyRef]]) : Editor[_<:AnyRef] = {
+      if (qt==classOf[StringQ]) new StringEditor
+      else if (qt==classOf[IntQ]) new IntEditor
+      else sys.error("unsupported question type "+qt)
   }
 }

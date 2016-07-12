@@ -1,0 +1,1 @@
+LD_LIBRARY_PATH=/usr/lib64:/usr/lib64/z3 idea "$@" &

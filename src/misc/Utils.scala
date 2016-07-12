@@ -2,9 +2,13 @@ package misc
 
 import java.io.FileNotFoundException
 import java.lang.Thread.UncaughtExceptionHandler
+import java.security.{AccessController, PrivilegedAction}
+import javafx.beans.property.{ObjectProperty, ObjectPropertyBase, Property, SimpleObjectProperty}
+import javafx.beans.property.adapter.JavaBeanObjectProperty
 import javafx.beans.value.{ChangeListener, ObservableValue}
 import javafx.event.Event
-import javafx.scene.web.WebView
+import javafx.scene.shape.Rectangle
+import javafx.scene.web.{HTMLEditor, WebView}
 
 import com.sun.javafx.webkit.WebConsoleListener
 
@@ -51,4 +55,22 @@ object Utils {
         override def uncaughtException(t: Thread, e: Throwable): Unit = handler(t, e)
       }
   }
+}
+
+/** A simple way of implementing properties. To implement a property, subclass [[GetterSetterProperty]]
+  * and override [[get]] (must return the current value of the property), [[setter]] (must set the value).
+  * When the value of the property changes (i.e., if [[getter]] would return a different value from now on),
+  * invoke [[fireValueChangedEvent]]. (Do not invoke [[fireValueChangedEvent]] if the value was changed via [[setter]].)
+  * @tparam T
+  */
+abstract class GetterSetterProperty[T] extends SimpleObjectProperty[T] {
+  override def set(value: T) : Unit = {
+    if (isBound)
+      throw new RuntimeException("A bound value cannot be set.")
+    setter(value)
+    fireValueChangedEvent()
+  }
+  override def get() : T = getter
+  protected def getter : T
+  protected def setter(value:T): Unit
 }

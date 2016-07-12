@@ -33,7 +33,9 @@ class Z3Test extends UnitSpec {
       CI("x"),
       equal(CI("x"),CN(2)),
       CN(1.23),
-      divide(CN(2),CN(2))
+      divide(CN(2),CN(2)),
+      minus(CN(3),CN(2)),
+      times(minus(CN(4),CN(2)),CN(1.2))
     )
     for (e <- expressions) {
       val e2 = z3.fromCMathML(e)
