@@ -16,7 +16,7 @@ scalaSource in Test := baseDirectory.value / "test"
 resourceDirectory in Compile := baseDirectory.value / "src"
 managedResourceDirectories in Compile += baseDirectory.value / "resources"
 
-excludeFilter in unmanagedResources <<= (excludeFilter in unmanagedResources) { _ || "*.java" || "*.scala" || "*~" }
+excludeFilter in unmanagedResources <<= (excludeFilter in unmanagedResources) { _ || "*.java" || "*.scala" || "*~" || "*~" || "*.orig" }
 
 sourcesInBase := false
 scalacOptions ++= Seq("-unchecked", "-deprecation","-feature")
