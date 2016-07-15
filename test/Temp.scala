@@ -1,44 +1,101 @@
-import java.util
+import javafx.animation.{KeyFrame, Timeline}
+import javafx.beans.value.{ChangeListener, ObservableValue}
+import javafx.event.{ActionEvent, EventHandler}
+import javafx.scene.layout.HBox
+import javafx.scene.web.WebView
 
-import com.microsoft.z3._
-import java.io.File
+import netscape.javascript.JSObject
+import org.w3c.dom.Document
+import ui.TestFxApp
 
-import cmathml.{CI, CMathML, CN}
-import misc.Utils
-import org.apache.bcel.classfile.JavaClass
-import org.apache.commons.io.IOUtils
-import org.objectweb.asm.{ClassReader, ClassVisitor, ClassWriter, Opcodes}
-import test.UnitSpec
-import z3.Z3
+import scala.collection.JavaConverters
+import scala.xml.Elem
 
-class Temp extends UnitSpec {
-  test("temp z3") {
-    val z3 = new Z3(Map("model"->"true"))
-    Z3.toggleWarningMessages(true)
+class WebLabel extends HBox {
+  val web = new WebView
+  getChildren.add(web)
 
-    val cmathml = CMathML.equal(CMathML.plus(CI("x"),CI("y")),
-      CMathML.plus(CI("y"),CN(-1)))
+  web.getEngine.documentProperty.addListener(new ChangeListener[Document] {
+    override def changed(observable: ObservableValue[_ <: Document], oldValue: Document, newValue: Document): Unit =
+      refreshSize()
+  })
 
-    val expr = z3.fromCMathML(cmathml)
+  private final def toDouble(x:AnyRef) : Double = x match {
+    case y : Integer => y.toDouble
+    case y : java.lang.Double => y
+  }
 
-    val goal = z3.mkGoal(true,true,false)
-    goal.add(expr.asInstanceOf[BoolExpr])
+  final def getBodySize() = {
+    val result : JSObject = web.getEngine.executeScript("document.getElementById('rootspan').getBoundingClientRect()").asInstanceOf[JSObject]
+    val right = toDouble(result.getMember("right"))
+    val bottom = toDouble(result.getMember("bottom"))
+    (right,bottom)
+  }
 
-    println("Goal: " + goal)
+  final def refreshSize(): Unit = {
+    val (width,height) = getBodySize()
+    setPrefSize(width,height)
+  }
 
-    val goal2 = goal.simplify
-
-//    println(goal2.goal.getNumExprs)
-
-    val expr2 = goal2.getFormula
-
-    println("Simplified: " + expr2)
-
-    println(expr2.getArgs.toList)
-    println(expr2.getFuncDecl)
-
-    val c2 = z3.toCMathML(expr2)
-
-    println("CMathML "+c2)
+  def setHTML(html: Elem) = {
+    val doc = <html><body style="border: solid 1px blue; margin: 0 0 0 0; overflow-x: hidden; overflow-y: hidden;"><span id="rootspan">{html}</span></body></html>
+    web.getEngine.loadContent(doc.toString)
   }
 }
+
+object Temp {
+
+  def main(args: Array[String]): Unit = {
+    TestFxApp.run {
+      val snippet = <span id="h">hello</span>
+      val label = new WebLabel
+      label.setHTML(snippet)
+
+      val tl = new Timeline(new KeyFrame(javafx.util.Duration.millis(1000), new EventHandler[javafx.event.ActionEvent] {
+        override def handle(event: ActionEvent): Unit = {
+          println("timer", label.getBodySize)
+          val img = label.web.getEngine.getDocument.createElement("b")
+          img.setTextContent(" hehe ")
+          label.web.getEngine.getDocument.getElementById("h").appendChild(img)
+          label.refreshSize()
+        }
+      }))
+      tl.setCycleCount(1000)
+      tl.play()
+
+      label
+    }
+  }
+}
+
+/*      val web = new WebView()
+      val snippet = <span id="h">hello</span>
+      val html = <html><body style="border: solid 1px blue;"><span id="rootspan">{snippet}</span></body></html>
+      println(html)
+      web.getEngine.loadContent(html.toString())
+
+      println(web.getPrefWidth,web.getPrefHeight)
+
+      web.getEngine.documentProperty.addListener(new ChangeListener[Document] {
+        override def changed(observable: ObservableValue[_ <: Document], oldValue: Document, newValue: Document): Unit =
+          println("document changed")
+      })
+
+      val engine = web.getEngine
+
+
+
+      val tl = new Timeline(new KeyFrame(javafx.util.Duration.millis(1000), new EventHandler[javafx.event.ActionEvent] {
+        override def handle(event: ActionEvent): Unit = {
+          println("timer",getSizes)
+          val img = engine.getDocument.createElement("b")
+          img.setTextContent(" hehe ")
+          engine.getDocument.getElementById("h").appendChild(img)
+        }}))
+      tl.setCycleCount(1000)
+      tl.play()
+
+      web
+    }
+  }
+}*/

@@ -12,6 +12,9 @@ import javafx.scene.web.{HTMLEditor, WebView}
 
 import com.sun.javafx.webkit.WebConsoleListener
 
+import scala.reflect.api.TypeTags
+import scala.reflect.internal.Types
+
 object Utils {
   /** Makes a copy of xs with sep interspersed. E.g., intersperse(ArrayBuffer(x,y),sep) = List(x,sep,y). */
   @Pure
@@ -22,6 +25,13 @@ object Utils {
     for (x <- it) { result = x :: sep :: result }
     return result
   }
+
+  @Pure
+  def cast[A,B](x : A)(implicit a: TypeTags#TypeTag[A], b: TypeTags#TypeTag[B]) : B =
+    cast(a,b,x)
+  @Pure
+  def cast[A,B](a: TypeTags#TypeTag[A], b: TypeTags#TypeTag[B], x:A) : B =
+    if (a!=null && b!=null && a==b) x.asInstanceOf[B] else throw new ClassCastException(s"$a != $b in type cast")
 
   @Pure
   def resourceFile(name:String*): String = {
@@ -65,12 +75,12 @@ object Utils {
   */
 abstract class GetterSetterProperty[T] extends SimpleObjectProperty[T] {
   override def set(value: T) : Unit = {
-    if (isBound)
-      throw new RuntimeException("A bound value cannot be set.")
     setter(value)
     fireValueChangedEvent()
   }
+  override def bind(obs : ObservableValue[_ <: T]) = sys.error("Binding not supported")
   override def get() : T = getter
   protected def getter : T
   protected def setter(value:T): Unit
+  override def fireValueChangedEvent() = super.fireValueChangedEvent()
 }

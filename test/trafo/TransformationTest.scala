@@ -8,8 +8,9 @@ class TransformationTest extends UnitSpec {
   test("IdentityTransformation") {
     val inter = new IdentityTransformation().createInteractive
     var thy0 = Theory()
-    var (thy1,f1)= thy0.addFormula(new Formula(CN(1)))
-    var (thy2,f2)= thy0.addFormula(new Formula(CN(1)))
+    var (thy1,f1)= thy0.addFormula(Formula(CN(1)))
+    var (thy2,f2)= thy1.addFormula(Formula(CN(1)))
+    println(f1.id, f2.id)
     val (trafoInst,msgs) = inter.quickInteract(Some(f1),Some(f2))
     assert(msgs.isEmpty)
     assert(trafoInst.isInstanceOf[IdentityTrafoInstance])

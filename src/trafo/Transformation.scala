@@ -1,7 +1,7 @@
 package trafo
 
 import cmathml.CMathML
-import theory.{Formula, FormulaRef}
+import theory.{Formula}
 
 import scala.collection.immutable.Vector
 
@@ -15,10 +15,10 @@ abstract class Transformation {
 
 /** Immutable class that represents the relationship between various formulas.
   * The precise relationship depends on the subclass of [[TrafoInstance]], but
-  * it must only refer to the formulas listed in [[formulas]].
+  * it must only refer to the formulas listed in [[TrafoInstance.formulas]].
   */
 abstract class TrafoInstance {
-  val formulas : IndexedSeq[FormulaRef]
+  val formulas : IndexedSeq[Formula]
   val isValid  : Boolean
 }
 
@@ -29,8 +29,10 @@ class IdentityTransformation() extends Transformation {
     for { a <- ask("a", new FormulaQ(<span>A formula</span>))
           b <- ask("b", new FormulaQ(<span>An identical formula</span>))
           res <- if (!a.isEmpty && !b.isEmpty) {
-                    if (a.get != b.get)
+                    if (a.get.math != b.get.math)
                       failWith("noteq", <span>Both formulas must be identical</span>)
+                    else if (a.get.id == b.get.id)
+                      failWith("identical", <span>Please select two separate (but identical) formulas</span>)
                     else
                       returnval(new IdentityTrafoInstance(a.get, b.get))
                  } else fail
@@ -38,7 +40,7 @@ class IdentityTransformation() extends Transformation {
 }
 
 
-class IdentityTrafoInstance(a : FormulaRef, b : FormulaRef) extends TrafoInstance {
+class IdentityTrafoInstance(a : Formula, b : Formula) extends TrafoInstance {
   override val formulas = Vector(a,b)
   override lazy val isValid = a.math == b.math
 }

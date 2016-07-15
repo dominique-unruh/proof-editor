@@ -11,21 +11,21 @@ object InteractionTest {
     case _ => null : String
   }
 
-  def answerQuestion[T](int : Interaction[T], ans: AnyRef) : Interaction[T] = int match {
+  def answerQuestion[T](int : Interaction[T], ans: Any) : Interaction[T] = int match {
     case InteractionRunning(_,q,a) =>
-      assert(q.answerType.isInstance(ans))
+//      assert(q.answerType.isInstance(ans))
       val resp = a(ans)
       assert(resp!=null)
       resp
     case _ => null : Interaction[T]
   }
 
-  def interactionResult[T <: AnyRef](int : Interaction[T]) : T = int match {
+  def interactionResult[T](int : Interaction[T]) : T = int match {
     case InteractionFinished(result) => assert(result!=null); result
     case _ => null.asInstanceOf[T]
   }
 
-  def isFailed[T <: AnyRef](int : Interaction[T]) : Boolean = int match {
+  def isFailed[T](int : Interaction[T]) : Boolean = int match {
     case InteractionFailed() => true
     case _ => false
   }

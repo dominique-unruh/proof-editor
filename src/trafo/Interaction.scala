@@ -2,47 +2,64 @@ package trafo
 import scala.language.existentials
 import cmathml.CMathML
 import misc.Pure
-import theory.{Formula, FormulaRef}
+import theory.Formula
 
 import scala.annotation.tailrec
+import scala.reflect.api.TypeTags
 import scala.util.control.Breaks
-//import theory.Formula
-
 import scala.runtime.BoxedUnit
 import scala.xml.Elem
 
+import scala.reflect.runtime.universe._
 
-abstract class Question[T <: AnyRef] {
+
+abstract class Question[T] {
   // T <: Object because we want T to be a reference type (else we run into the problem from http://stackoverflow.com/questions/38285616/in-scala-10-getclass-isinstance10-is-false
-  val answerType : Class[T]
+  val answerType : TypeTag[T]
+  val questionType : TypeTag[_ <: Question[T]]
   def message : scala.xml.Elem
   val default : T
 }
 
-class FormulaQ(val message:Elem) extends Question[Option[FormulaRef]] {
-  val answerType = classOf[Option[FormulaRef]]
+class FormulaQ(val message:Elem) extends Question[Option[Formula]] {
+  val answerType = typeTag[Option[Formula]]
+  val questionType = typeTag[FormulaQ]
   val default = None
 }
 
 class IntQ(val message:Elem) extends Question[Integer] {
-  val answerType = classOf[Integer]
+  val answerType = typeTag[Integer]
+  val questionType = typeTag[IntQ]
   val default = 0.asInstanceOf[Integer]
 }
 
 class StringQ(val message:Elem) extends Question[String] {
-  val answerType = classOf[String]
+  val answerType = typeTag[String]
+  val questionType = typeTag[StringQ]
   val default = ""
 }
 
 
+object MessageQ {
+  object Type extends Enumeration {
+    val ERROR = Value
+  }
+  type Type = Type.Value
+  def Error(msg : Elem) = new MessageQ(Type.ERROR, msg)
+}
 
-class MessageQ(val message:Elem) extends Question[BoxedUnit] { // TODO: add message kind (error, warn, info)
-  val answerType = classOf[BoxedUnit]
+class MessageQ(val typ:MessageQ.Type, val message:Elem) extends Question[BoxedUnit] {
+  import scala.reflect.runtime.universe._
+//  super(typeTag[BoxedUnit])
+  val answerType = typeTag[BoxedUnit]
+  val questionType = typeTag[MessageQ]
   val default = BoxedUnit.UNIT
   override def toString = "[MSG: "+message.text+"]"
 }
 
-final case class InteractionRunning[T](val id: String, val question : Question[A] forSome {type A <: AnyRef}, val answer : AnyRef => Interaction[T]) extends Interaction[T] {
+final case class InteractionRunning[T](val id: String,
+                                       val question : Question[_<:AnyRef],
+                                       val answer : AnyRef => Interaction[T]) extends Interaction[T] {
   override def resultMaybe: Option[T] = None
   override def isDone: Boolean = false
   override def isRunning: Boolean = true
@@ -110,14 +127,14 @@ sealed trait Interaction[T] {
 object Interaction {
   def fail[T] = new InteractionFailed[T]()
   def returnval[T](res : T) = new InteractionFinished[T](res)
-  def ask[T <: AnyRef](id : String, question : Question[T]) =
+  def ask[T<:AnyRef](id : String, question : Question[T]) =
     new InteractionRunning[T](id,question, { a =>
       assert(a!=null)
-      assert(question.answerType.isInstance(a), "answer "+a+" should be of type "+question.answerType+" not "+a.getClass) // equivalent to "answer.isInstanceOf[T]"
+//      assert(question.answerType.isInstance(a), "answer "+a+" should be of type "+question.answerType+" not "+a.getClass) // equivalent to "answer.isInstanceOf[T]"
       Interaction.returnval(a.asInstanceOf[T])
     })
   def error(id:String,err:Elem) : Interaction[Unit] =
-    new InteractionRunning[Unit](id,new MessageQ(err),{a=>returnval(())})
+    new InteractionRunning[Unit](id,MessageQ.Error(err),{a=>returnval(())})
   def failWith[T](id:String, err:Elem) : Interaction[T] =
     for { _ <- error(id, err); res <- fail[T] } yield res
   val skip : Interaction[Unit] = returnval(())

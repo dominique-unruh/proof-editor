@@ -1,4 +1,5 @@
 package testapp
+import scala.reflect.runtime.universe._
 
 import java.io.{PrintWriter, StringWriter}
 import java.lang.Boolean
@@ -16,16 +17,18 @@ import javafx.stage.Stage
 
 import cmathml._
 import com.sun.javafx.webkit.WebConsoleListener
+import com.sun.xml.internal.ws.policy.privateutil.LocalizationMessages
 import mathview.MathViewMQ
 import misc.GetterSetterProperty
 import misc.Utils.JavaFXImplicits._
 import theory.Formula
 import trafo.{FormulaQ, IdentityTransformation, Question, TrafoInstance}
 import ui.Interactor
-import ui.Interactor.Editor
+import ui.Interactor.{Editor, EditorFactory}
 import z3.Z3
 
 import scala.collection.mutable
+import scala.reflect.api.TypeTags
 
 object TestApp {
   def main(args: Array[String]) = Application.launch(classOf[TestApp], args:_*)
@@ -182,7 +185,13 @@ class TestApp extends Application {
   }
 
   class FormulaEditor extends HBox with Editor[Option[Formula]] {
-    override val valueProperty: Property[Option[Formula]] = new GetterSetterProperty[Option[Formula]] {
+    override val editedType: TypeTag[Option[Formula]] = typeTag[Option[Formula]]
+    override val questionType = typeTag[FormulaQ]
+    val button = new Button("Pick!")
+    val mathview = new MathViewMQ()
+    var formula : Option[Formula] = None
+
+    override val valueProperty: GetterSetterProperty[Option[Formula]] = new GetterSetterProperty[Option[Formula]] {
       override protected def getter: Option[Formula] = formula
       override protected def setter(value: Option[Formula]): Unit = {
         formula = value
@@ -190,22 +199,33 @@ class TestApp extends Application {
         else { mathview.setVisible(true); mathview.setMath(formula.get.math) }
       }
     }
-    override val editedType: Class[Option[Formula]] = classOf[Option[Formula]]
-    val button = new Button("Pick!")
-    val mathview = new MathViewMQ()
+
+    def updateGUI() = {
+      if (formula.isEmpty) mathview.setVisible(false)
+      else { mathview.setVisible(true); mathview.setMath(formula.get.math) }
+    }
+
     mathview.setMath(CN(0)) // Otherwise the mathview will not be resized to something small
     mathview.setVisible(false)
-    var formula : Option[Formula] = None
     getChildren.addAll(button,mathview)
-    button.addEventHandler(ActionEvent.ACTION, (_:ActionEvent) =>
-      errorPopup("Not implemented"))
+    button.addEventHandler(ActionEvent.ACTION, {(_:ActionEvent) =>
+      if (currentlySelectedMath==null)
+        formula = None
+      else
+        formula = Some(Formula(id=System.identityHashCode(currentlySelectedMath), math=currentlySelectedMath.getMath)) // TODO: should come from current theory!
+      updateGUI()
+      valueProperty.fireValueChangedEvent()
+    })
   }
 
 
+  val editorFactory = new EditorFactory {
+    override def create[T<:AnyRef](q: Question[T]): Editor[T] = {
+      if (q.questionType==typeTag[FormulaQ])
+        cast(q.answerType, new FormulaEditor())
+      else
+        Interactor.defaultEditorFactory.create(q)
+    }
+  }
 
-  def editorFactory(qt: Class[_ <: Question[_ <: AnyRef]]): Editor[_ <: AnyRef] =
-    if (qt==classOf[FormulaQ])
-      new FormulaEditor()
-    else
-      Interactor.defaultEditorFactory(qt)
 }
