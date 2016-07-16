@@ -1,11 +1,11 @@
-package mathview
+package ui.mathview
 
 import java.util
 
 import cmathml._
 import jdk.internal.org.xml.sax.ErrorHandler
 import jdk.nashorn.internal.runtime.regexp.joni.exception.SyntaxException
-import mathview.MQLatexParser._
+import ui.mathview.MQLatexParser._
 import misc._
 import misc.Pure
 import org.antlr.v4.runtime._

@@ -15,6 +15,15 @@ sealed trait CMathML {
   @Pure def mapAt(p:Path, f:CMathML=>CMathML) : CMathML
   /** Replaces the subterm x at path p by y */
   @Pure def replace(p:Path, y:CMathML) = mapAt(p,{_ => y})
+  @Pure final def +(b:CMathML) = CMathML.plus(this,b)
+  @Pure final def -(b:CMathML) = CMathML.minus(this,b)
+  @Pure final def *(b:CMathML) = CMathML.times(this,b)
+  @Pure final def /(b:CMathML) = CMathML.divide(this,b)
+
+  /** Negates this expression. If it is a CN, then the number itself is negated.
+    * Otherwise arith1.unary_minus is applied.
+    */
+  @Pure def negate() : CMathML = Apply(CMathML.uminus,this)
 }
 
 object CMathML {
@@ -29,6 +38,8 @@ object CMathML {
   def times(x:CMathML,y:CMathML) : CMathML = Apply(times,x,y)
   val divide = CSymbol("arith1","divide")
   def divide(x:CMathML,y:CMathML) : CMathML = Apply(divide,x,y)
+
+  val uminus = CSymbol("arith1","unary_minus")
 }
 
 sealed protected trait Leaf extends CMathML {
@@ -57,6 +68,10 @@ final case class Apply(hd: CMathML, args: CMathML*) extends CMathML {
     if (idx>args.length) throw InvalidPath()
     return args(idx-1).subterm(tl)
   }
+
+  override def toString : String = {
+    "Apply("+hd+","+args.mkString(",")+")"
+  }
 }
 
 /** <ci>-Content MathML element
@@ -69,6 +84,8 @@ final case class CI(v: String) extends CMathML with Leaf
 final case class CN(n: BigDecimal) extends CMathML with Leaf {
   assert(n.mc.getPrecision==0)
   assert(n.mc.getRoundingMode==java.math.RoundingMode.UNNECESSARY)
+  @Pure final def isNegative = (n < 0)
+  override def negate() = CN(-n)
 }
 object CN {
   def apply(i:Int) = new CN(BigDecimal(i,MATHCONTEXT))

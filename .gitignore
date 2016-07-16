@@ -1,6 +1,6 @@
-/resources/mathjax/
-/resources/mathquill/
-/resources/jquery.js
+/resources/ui/mathview/mathjax/
+/resources/ui/mathview/mathquill/
+/resources/ui/mathview/jquery.js
 *~
 .~*#
 /tmp

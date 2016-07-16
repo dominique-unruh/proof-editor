@@ -22,7 +22,7 @@ object Downloads extends AutoPlugin {
 //  val base = Keys.baseDirectory.value
 
   // ---- MathQuill ----
-  val mathquillTargetDir = "resources/mathquill"
+  val mathquillTargetDir = "resources/ui/mathview/mathquill"
   private def downloadMathQuill(base:File) = {
     println("Downloading MathQuill")
     val extrdir = base / "tmp/mathquill-extract"
@@ -38,7 +38,7 @@ object Downloads extends AutoPlugin {
 
 
   // ---- JQuery ----
-  val jqueryFile = "resources/jquery.js"
+  val jqueryFile = "resources/ui/mathview/jquery.js"
   def downloadJQuery(base:File) = {
     println("Downloading JQuery")
     IO.download(new URL("https://code.jquery.com/jquery-2.2.4.js"), base/jqueryFile)

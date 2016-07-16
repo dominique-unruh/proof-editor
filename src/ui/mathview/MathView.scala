@@ -1,4 +1,4 @@
-package mathview
+package ui.mathview
 
 import java.lang.Boolean
 import javafx.application.Platform
@@ -26,15 +26,14 @@ import misc.Utils.JavaFXImplicits._
   * @see [[setMath]] for setting the displayed math
   * @see [[CMathML]] for describing math
   * */
-class MathViewMQ extends BorderPane {
+class MathView extends BorderPane {
   assert(Platform.isFxApplicationThread,"not in JavaFX application thread")
   private val web = new WebView
   private var math = null : CMathML
   private var _editPath = None : Option[Path]
   private var loaded = false
-  MathViewMQ // Causes the singleton object to be initialized
-//  web.getEngine.loadContent(MathViewMQ.mathjaxPage)
-  web.getEngine.load(getClass.getResource("/mathview/mathview.html").toString)
+  MathView // Causes the singleton object to be initialized
+  web.getEngine.load(getClass.getResource("mathview.html").toString)
   private val window = web.getEngine.executeScript("window").asInstanceOf[JSObject]
   window.setMember("controller", JSBridge)
   setCenter(web)
@@ -109,17 +108,17 @@ class MathViewMQ extends BorderPane {
 }
 
 
-private object MathViewMQ {
+private object MathView {
 //  private val base = getClass.getResource("/").toString
   checkResources
 
   private def checkResources() = {
     def checkResource(name:String) =
       if (getClass.getResource(name)==null) throw new RuntimeException("missing resource "+name)
-    checkResource("/mathquill/mathquill.css")
-    checkResource("/mathquill/mathquill.js")
+    checkResource("mathquill/mathquill.css")
+    checkResource("mathquill/mathquill.js")
     checkResource("mathview.html")
-    checkResource("/jquery.js")
+    checkResource("jquery.js")
     checkResource("mathview.css")
     checkResource("mathview.js")
   }

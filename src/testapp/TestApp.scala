@@ -17,7 +17,7 @@ import javafx.stage.Stage
 
 import cmathml._
 import com.sun.javafx.webkit.WebConsoleListener
-import mathview.MathViewMQ
+import ui.mathview.MathView
 import misc.GetterSetterProperty
 import misc.Utils.JavaFXImplicits._
 import theory.Formula
@@ -36,7 +36,8 @@ object TestApp {
 
 class TestApp extends Application {
   val examples = List(
-    CMathML.equal(CMathML.plus(CI("x"), CI("y")), CMathML.plus(CI("y"), CN(-1)))
+    CMathML.equal(CMathML.plus(CI("x"), CI("y")), CMathML.plus(CI("y"), CN(-1))),
+    CI("x").negate()
   )
 
   @FXML private var formulaList = null: VBox
@@ -67,7 +68,7 @@ class TestApp extends Application {
   private def editSelection(event: ActionEvent): Unit = {
     val math = currentlySelectedMath
     if (math == null) {
-      log("No selected mathview"); return
+      log("No selected ui.mathview"); return
     }
     val sel = math.getSelection
     if (sel.isEmpty) {
@@ -80,7 +81,7 @@ class TestApp extends Application {
   private def newFromSelection(event: ActionEvent): Unit = {
     val math = currentlySelectedMath
     if (math == null) {
-      log("No selected mathview"); return
+      log("No selected ui.mathview"); return
     }
     val sel = math.getSelection
     if (sel.isEmpty) {
@@ -97,7 +98,7 @@ class TestApp extends Application {
   private def simplify(event: ActionEvent): Unit = {
     val math = currentlySelectedMath
     if (math == null) {
-      log("No selected mathview"); return
+      log("No selected ui.mathview"); return
     }
     val expr = z3.fromCMathML(math.getMath)
     val simp = expr.simplify
@@ -109,18 +110,18 @@ class TestApp extends Application {
   private def deleteFormula(event: ActionEvent): Unit = {
     val math = currentlySelectedMath
     if (math == null) {
-      log("No selected mathview"); return
+      log("No selected ui.mathview"); return
     }
     formulaList.getChildren.removeAll(math)
   }
 
-  private var currentlySelectedMath: MathViewMQ = null
+  private var currentlySelectedMath: MathView = null
 
-  private val mathviews = new mutable.MutableList[MathViewMQ]
+  private val mathviews = new mutable.MutableList[MathView]
 
   def addMath(math: CMathML, editPath: Option[Path] = None) = {
     if (!editPath.isEmpty) math.subterm(editPath.get) // Make sure the editPath is valid
-    val mw = new MathViewMQ()
+    val mw = new MathView()
     mw.setMath(math, editPath)
     mathviews += mw
     mw.selectedProperty.addListener((selected: Boolean) => currentlySelectedMath = mw)
@@ -201,7 +202,7 @@ class TestApp extends Application {
     pickButton.setPadding(Insets.EMPTY)
     val clearButton = new Button("Clear")
     clearButton.setPadding(Insets.EMPTY)
-    val mathview = new MathViewMQ()
+    val mathview = new MathView()
     var formula : Option[Formula] = None
     val line = new ConnectingLine(this, overlay)
     line.setLeft(mathview)
@@ -215,7 +216,7 @@ class TestApp extends Application {
       }
     }
 
-    mathview.setMath(CN(0)) // Otherwise the mathview will not be resized to something small
+    mathview.setMath(CN(0)) // Otherwise the ui.mathview will not be resized to something small
     mathview.setVisible(false)
     getChildren.addAll(new VBox(1,pickButton,clearButton),mathview)
     clearButton.addEventHandler(ActionEvent.ACTION, {

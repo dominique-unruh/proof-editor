@@ -25,7 +25,7 @@ scalacOptions ++= Seq("-unchecked", "-deprecation","-feature")
 enableDownloads
 
 antlr4Settings
-antlr4PackageName in Antlr4 := Some("mathview")
+antlr4PackageName in Antlr4 := Some("ui.mathview")
 sourceDirectory in Antlr4 := baseDirectory.value / "src"
 compileOrder in Compile := CompileOrder.Mixed
 javaSource in Antlr4 := (sourceManaged in Compile).value

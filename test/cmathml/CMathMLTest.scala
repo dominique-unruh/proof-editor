@@ -25,4 +25,10 @@ class CMathMLTest extends UnitSpec {
   test("missing-coverage") {
     assertResult(Some(BigDecimal(1,CN.MATHCONTEXT))) { CN.unapply(CN(1)) }
   }
+
+  test("CN.isNegative") {
+    assert(CN(1).isNegative == false)
+    assert(CN(0).isNegative == false)
+    assert(CN(-1).isNegative == true)
+  }
 }
