@@ -1,42 +1,33 @@
 package testapp
-import scala.reflect.runtime.universe._
 import java.io.{PrintWriter, StringWriter}
 import java.lang.Boolean
 import java.lang.System.out
 import java.util.logging.{Level, Logger}
-import javafx.animation.{KeyFrame, Timeline}
 import javafx.application.{Application, Platform}
-import javafx.beans.{InvalidationListener, Observable}
-import javafx.beans.binding.{BooleanBinding, ObjectBinding}
-import javafx.beans.property.{Property, SimpleBooleanProperty, SimpleObjectProperty}
 import javafx.beans.value.{ChangeListener, ObservableValue}
+import javafx.beans.{InvalidationListener, Observable}
 import javafx.event.ActionEvent
 import javafx.fxml.{FXML, FXMLLoader}
-import javafx.geometry.{Bounds, Insets, Point2D}
+import javafx.geometry.Insets
 import javafx.scene.control._
-import javafx.scene.layout.{HBox, Pane, Region, VBox}
-import javafx.scene.paint.Color
-import javafx.scene.shape.Line
-import javafx.scene.transform.Transform
+import javafx.scene.layout.{HBox, Pane, VBox}
 import javafx.scene.web.WebView
-import javafx.scene.{Node, Parent, Scene}
+import javafx.scene.{Parent, Scene}
 import javafx.stage.Stage
-import javafx.util
 
 import cmathml._
 import com.sun.javafx.webkit.WebConsoleListener
-import com.sun.xml.internal.ws.policy.privateutil.LocalizationMessages
 import mathview.MathViewMQ
 import misc.GetterSetterProperty
 import misc.Utils.JavaFXImplicits._
 import theory.Formula
 import trafo.{FormulaQ, IdentityTransformation, Question, TrafoInstance}
-import ui.{ConnectingLine, Interactor}
 import ui.Interactor.{Editor, EditorFactory}
+import ui.{ConnectingLine, Interactor}
 import z3.Z3
 
 import scala.collection.mutable
-import scala.reflect.api.TypeTags
+import scala.reflect.runtime.universe._
 
 object TestApp {
   def main(args: Array[String]) = Application.launch(classOf[TestApp], args:_*)
@@ -96,11 +87,7 @@ class TestApp extends Application {
       log("No selection"); return
     }
     val m = math.getMath.subterm(sel.get)
-    //    math.setMath(math.getMath.replace(sel.get, CN(123)))
     addMath(m)
-    //    val newmath = new MathViewMQ()
-    //    newmath.setMath(m)
-    //    formulaList.getChildren.add(newmath)
   }
 
   /** Only invoke methods in JavaFX thread! */
@@ -217,46 +204,7 @@ class TestApp extends Application {
     val mathview = new MathViewMQ()
     var formula : Option[Formula] = None
     val line = new ConnectingLine(this, overlay)
-    line.leftProperty.set(mathview)
-//    var formulaMathview = null : MathViewMQ // TODO needed?
-//    overlay.getChildren.add(line)
-
-//    mathview.localToSceneTransformProperty().addListener(new ChangeListener[Transform] {
-//      override def changed(observable: ObservableValue[_ <: Transform], oldValue: Transform, newValue: Transform): Unit = updateStart()
-//    })
-//    mathview.boundsInLocalProperty.addListener(new ChangeListener[Bounds] {
-//      override def changed(observable: ObservableValue[_ <: Bounds], oldValue: Bounds, newValue: Bounds): Unit = updateStart()
-//    })
-//    line.visibleProperty.bind(visibleProperty)
-//    line.disableProperty.bind(disabledProperty)
-//    visibleProperty().addListener(new ChangeListener[Boolean] {
-//      override def changed(observable: ObservableValue[_ <: Boolean], oldValue: Boolean, visible: Boolean): Unit =
-//        line.setVisible(visible)
-//    })
-//    disabledProperty().addListener(new ChangeListener[Boolean] {
-//      override def changed(observable: ObservableValue[_ <: Boolean], oldValue: Boolean, disabled: Boolean): Unit =
-//        line.setDisabled(disabled)
-//    })
-//    sceneProperty().addListener(new ChangeListener[Scene] {
-//      override def changed(observable: ObservableValue[_ <: Scene], oldValue: Scene, scene: Scene): Unit =
-//        if (scene==null && lineAdded) { overlay.getChildren.remove(line); lineAdded = false }
-//        else if (scene!=null && !lineAdded) { overlay.getChildren.add(line); lineAdded = true }
-//    })
-//    updateStart()
-
-//    def updateStart() = {
-//      val bounds = mathview.getBoundsInLocal
-//      val start = mathview.localToScene(bounds.getMaxX,bounds.getMinY+bounds.getHeight/2)
-//      line.setStartX(start.getX)
-//      line.setStartY(start.getY)
-//    }
-
-//    def updateEnd() = {
-//      val bounds = formulaMathview.getBoundsInLocal
-//      val end = formulaMathview.localToScene(bounds.getMinX,bounds.getMinY+bounds.getHeight/2)
-//      line.setEndX(end.getX)
-//      line.setEndY(end.getY)
-//    }
+    line.setLeft(mathview)
 
     override val valueProperty: GetterSetterProperty[Option[Formula]] = new GetterSetterProperty[Option[Formula]] {
       override protected def getter: Option[Formula] = formula
@@ -267,42 +215,25 @@ class TestApp extends Application {
       }
     }
 
-//    val changeListener = new ChangeListener[Transform] {
-//      override def changed(observable: ObservableValue[_ <: Transform], oldValue: Transform, newValue: Transform): Unit = updateEnd()
-//    }
-
     mathview.setMath(CN(0)) // Otherwise the mathview will not be resized to something small
     mathview.setVisible(false)
     getChildren.addAll(new VBox(1,pickButton,clearButton),mathview)
     clearButton.addEventHandler(ActionEvent.ACTION, {
       (_:ActionEvent) =>
-//        if (formulaMathview!=null) {
-//          formulaMathview.localToSceneTransformProperty.removeListener(changeListener)
-//          formulaMathview = null }
-
         formula = None
         mathview.setVisible(false)
         line.rightProperty.set(null)
     })
     pickButton.addEventHandler(ActionEvent.ACTION, { (_:ActionEvent) =>
-//      if (formulaMathview!=null) {
-//        formulaMathview.localToSceneTransformProperty.removeListener(changeListener)
-//        formulaMathview = null }
-//
       if (currentlySelectedMath==null) {
         formula = None
         mathview.setVisible(false)
-//        line.setVisible(false)
       } else {
         formula = Some(Formula(id = System.identityHashCode(currentlySelectedMath), math = currentlySelectedMath.getMath)) // TODO: should come from current theory!
-//        formulaMathview = currentlySelectedMath
-//        formulaMathview.localToSceneTransformProperty.addListener(changeListener)
         mathview.setVisible(true)
-//        line.setVisible(true)
         mathview.setMath(formula.get.math)
-//        updateEnd()
       }
-      line.rightProperty.set(currentlySelectedMath)
+      line.setRight(currentlySelectedMath)
       valueProperty.fireValueChangedEvent()
     })
   }

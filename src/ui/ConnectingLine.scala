@@ -1,16 +1,15 @@
 package ui
 
-import java.lang.Boolean
-import javafx.beans.binding.{BooleanBinding, ObjectBinding}
-import javafx.beans.property.{SimpleBooleanProperty, SimpleObjectProperty}
-import javafx.beans.value.{ChangeListener, ObservableValue}
 import javafx.geometry.{Bounds, Point2D}
-import javafx.scene.Node
-import javafx.scene.layout.Pane
 import javafx.scene.paint.Color
-import javafx.scene.shape.Line
 import javafx.scene.transform.Transform
 
+import scalafx.Includes._
+import scalafx.beans.binding.Bindings
+import scalafx.beans.property.{BooleanProperty, ObjectProperty}
+import scalafx.scene.{Node, paint}
+import scalafx.scene.layout.Pane
+import scalafx.scene.shape.Line
 
 /** Displays a connecting line between two components.
   * [[ConnectingLine.setLeft]] and [[ConnectingLine.setRight]] set those two components.
@@ -22,85 +21,80 @@ import javafx.scene.transform.Transform
   *                (Or at least that its local coordinates coincide with the scene coordinates)
   */
 class ConnectingLine(val owner : Node, val overlay : Pane) {
+  def this(owner : javafx.scene.Node, overlay : javafx.scene.layout.Pane) =
+    this(jfxNode2sfx(owner), jfxPane2sfx(overlay))
+
   val line = new Line()
   //    private var lineAdded = true
-  val leftProperty = new SimpleObjectProperty[Node]
-  val rightProperty = new SimpleObjectProperty[Node]
+  val leftProperty = ObjectProperty[Node](initialValue=null)
+  val rightProperty = ObjectProperty[Node](initialValue=null)
+
   /** Property is true when the line should be added to the overlay */
-  private val addedProperty = new BooleanBinding {
-    bind(owner.sceneProperty, leftProperty, rightProperty)
-    override protected def computeValue() =
-      owner.sceneProperty.get!=null && rightProperty.get!=null && leftProperty.get!=null
-  }
-  val visibleProperty = new SimpleBooleanProperty(true)
-  private val leftBoundsProperty = new SimpleObjectProperty[Bounds]()
-  private val leftTrafoProperty = new SimpleObjectProperty[Transform]()
-  private val rightBoundsProperty = new SimpleObjectProperty[Bounds]()
-  private val rightTrafoProperty = new SimpleObjectProperty[Transform]()
-  private val leftPointProperty = new ObjectBinding[Point2D] {
-    bind(leftBoundsProperty, leftTrafoProperty)
-    override def computeValue(): Point2D = {
+  private val addedProperty = Bindings.createBooleanBinding(
+    () => owner.sceneProperty.get!=null && rightProperty.get!=null && leftProperty.get!=null,
+    owner.sceneProperty, leftProperty, rightProperty)
+
+  val visibleProperty = BooleanProperty(true)
+  private val leftBoundsProperty = ObjectProperty[Bounds](initialValue=null)
+  private val leftTrafoProperty = ObjectProperty[Transform](null)
+  private val rightBoundsProperty = ObjectProperty[Bounds](initialValue=null)
+  private val rightTrafoProperty = ObjectProperty[Transform](null)
+  private val leftPointProperty = Bindings.createObjectBinding[Point2D](
+    {() =>
       val bounds = leftBoundsProperty.get
       val trafo = leftTrafoProperty.get
-      if (bounds==null || trafo==null) return Point2D.ZERO
-      trafo.transform(bounds.getMaxX,bounds.getMinY+bounds.getHeight/2)
-    }
-  }
-  private val rightPointProperty = new ObjectBinding[Point2D] {
-    bind(rightBoundsProperty, rightTrafoProperty)
-    override def computeValue(): Point2D = {
+      if (bounds==null || trafo==null) Point2D.ZERO
+      else trafo.transform(bounds.getMaxX,bounds.getMinY+bounds.getHeight/2) },
+    leftBoundsProperty, leftTrafoProperty)
+
+  private val rightPointProperty = Bindings.createObjectBinding[Point2D](
+    {() =>
       val bounds = rightBoundsProperty.get
       val trafo = rightTrafoProperty.get
-      if (bounds==null || trafo==null) return Point2D.ZERO
-      trafo.transform(bounds.getMinX,bounds.getMinY+bounds.getHeight/2)
-    }
-  }
+      if (bounds==null || trafo==null) Point2D.ZERO
+      else trafo.transform(bounds.getMinX,bounds.getMinY+bounds.getHeight/2) },
+    rightBoundsProperty, rightTrafoProperty)
 
-  leftPointProperty.addListener(new ChangeListener[Point2D] {
-    override def changed(observable: ObservableValue[_ <: Point2D], oldValue: Point2D, p: Point2D): Unit = {
-      line.setStartX(p.getX); line.setStartY(p.getY) }
-  })
-  rightPointProperty.addListener(new ChangeListener[Point2D] {
-    override def changed(observable: ObservableValue[_ <: Point2D], oldValue: Point2D, p: Point2D): Unit = {
-      line.setEndX(p.getX); line.setEndY(p.getY) }
-  })
+  leftPointProperty.onChange
+    { (observable, oldValue, p) => line.setStartX(p.getX); line.setStartY(p.getY) }
+
+  rightPointProperty.onChange
+    { (observable, oldValue, p) => line.setEndX(p.getX); line.setEndY(p.getY) }
 
   line.setStrokeWidth(4)
-  line.setStroke(Color.BLUE.deriveColor(0,1,1,.3))
+  line.setStroke(Color.BLUE.opacity(.3))
 
-  line.disableProperty.bind(owner.disabledProperty)
-  line.visibleProperty.bind(owner.visibleProperty and visibleProperty)
+  line.disableProperty <== owner.disabledProperty
+  line.visibleProperty <== owner.visibleProperty && visibleProperty
 
-  addedProperty.addListener(new ChangeListener[Boolean] {
-    override def changed(observable: ObservableValue[_ <: Boolean], oldValue: Boolean, newValue: Boolean): Unit =
+  addedProperty.onChange { (_, oldValue, newValue) =>
       if (oldValue && !newValue) overlay.getChildren.remove(line)
-      else if (!oldValue && newValue) overlay.getChildren.add(line)
-  })
+      else if (!oldValue && newValue) overlay.getChildren.add(line) }
+
   assert(addedProperty.get==false) // If it would be true, we would have missed that we need to add the line
 
-  leftProperty.addListener(new ChangeListener[Node] {
-    override def changed(observable: ObservableValue[_ <: Node], oldValue: Node, newValue: Node): Unit = {
-      if (oldValue eq newValue) return
-      if (newValue==null) {
+  leftProperty.onChange { (_, oldValue, newValue) =>
+      if (oldValue eq newValue) ()
+      else if (newValue==null) {
         leftBoundsProperty.unbind()
         leftTrafoProperty.unbind()
       } else {
-        leftBoundsProperty.bind(newValue.boundsInLocalProperty)
-        leftTrafoProperty.bind(newValue.localToSceneTransformProperty)
-      }
-    }
-  })
+        leftBoundsProperty <== newValue.boundsInLocal
+        leftTrafoProperty <== newValue.localToSceneTransformProperty
+      }}
 
-  rightProperty.addListener(new ChangeListener[Node] {
-    override def changed(observable: ObservableValue[_ <: Node], oldValue: Node, newValue: Node): Unit = {
-      if (oldValue eq newValue) return
-      if (newValue==null) {
+  rightProperty.onChange { (_, oldValue, newValue) =>
+      if (oldValue eq newValue) ()
+      else if (newValue==null) {
         rightBoundsProperty.unbind()
         rightTrafoProperty.unbind()
       } else {
         rightBoundsProperty.bind(newValue.boundsInLocalProperty)
         rightTrafoProperty.bind(newValue.localToSceneTransformProperty)
-      }
-    }
-  })
+      }}
+
+  def setLeft(node : Node) = leftProperty.set(node)
+  def setLeft(node : javafx.scene.Node) = leftProperty.set(jfxNode2sfx(node))
+  def setRight(node : Node) = rightProperty.set(node)
+  def setRight(node : javafx.scene.Node) = rightProperty.set(jfxNode2sfx(node))
 }

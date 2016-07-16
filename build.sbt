@@ -4,12 +4,12 @@ name := "proof-editor"
 
 scalaVersion := "2.11.8"
 libraryDependencies += "org.scala-lang.modules" % "scala-xml_2.11" % "1.0.5"
-libraryDependencies += "org.scalatest" % "scalatest_2.11" % "2.2.6" % Test
+libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.6" % Test
 libraryDependencies += "org.apache.bcel" % "bcel" % "5.2"
 libraryDependencies += "org.ow2.asm" % "asm" % "5.1"
 libraryDependencies += "commons-io" % "commons-io" % "2.5"
 libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaVersion.value
-//libraryDependencies += "com.storm-enroute" % "coroutines_2.11" % "0.4" // TODO: "0.6" instead
+libraryDependencies += "org.scalafx" %% "scalafx" % "8.0.92-R10" // https://mvnrepository.com/artifact/org.scalafx/scalafx_2.11
 
 scalaSource in Compile := baseDirectory.value / "src"
 scalaSource in Test := baseDirectory.value / "test"
