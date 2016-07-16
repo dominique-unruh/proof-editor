@@ -9,54 +9,62 @@
 <?import javafx.scene.control.TextArea?>
 <?import javafx.scene.control.ToolBar?>
 <?import javafx.scene.input.KeyCodeCombination?>
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 <?import ui.Interactor?>
 
-<VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="480.0" prefWidth="640.0" xmlns="http://javafx.com/javafx/8.0.65" xmlns:fx="http://javafx.com/fxml/1">
+<StackPane xmlns="http://javafx.com/javafx/8.0.65" xmlns:fx="http://javafx.com/fxml/1">
    <children>
-      <MenuBar>
-        <menus>
-          <Menu text="_File">
-            <items>
-              <MenuItem onAction="#quit" text="_Quit">
-                     <accelerator>
-                        <KeyCodeCombination alt="UP" code="Q" control="UP" meta="UP" shift="UP" shortcut="DOWN" />
-                     </accelerator></MenuItem>
-            </items>
-          </Menu>
-            <Menu text="_Edit">
+      <VBox>
+         <children>
+            <MenuBar>
+              <menus>
+                <Menu text="_File">
+                  <items>
+                    <MenuItem onAction="#quit" text="_Quit">
+                           <accelerator>
+                              <KeyCodeCombination alt="UP" code="Q" control="UP" meta="UP" shift="UP" shortcut="DOWN" />
+                           </accelerator>
+                        </MenuItem>
+                  </items>
+                </Menu>
+                  <Menu text="_Edit">
+                    <items>
+                      <MenuItem onAction="#newFormula" text="_New formula" />
+                        <MenuItem onAction="#editSelection" text="_Edit selection" />
+                        <MenuItem onAction="#newFromSelection" text="New from _selection" />
+                    </items>
+                  </Menu>
+              </menus>
+            </MenuBar>
+            <ToolBar prefHeight="40.0" prefWidth="200.0">
               <items>
-                <MenuItem onAction="#newFormula" text="_New formula" />
-                  <MenuItem onAction="#editSelection" text="_Edit selection" />
-                  <MenuItem onAction="#newFromSelection" text="New from _selection" />
+                <Button mnemonicParsing="false" onAction="#newFormula" text="New formula" />
+                  <Button mnemonicParsing="false" onAction="#deleteFormula" text="Delete formula" />
+                  <Button mnemonicParsing="false" onAction="#editSelection" text="Edit selection" />
+                  <Button mnemonicParsing="false" onAction="#newFromSelection" text="New from selection" />
+                  <Button mnemonicParsing="false" onAction="#simplify" text="Simplify" />
+                  <Button mnemonicParsing="false" onAction="#idTrafo" text="Id-Trafo" />
               </items>
-            </Menu>
-        </menus>
-      </MenuBar>
-      <ToolBar prefHeight="40.0" prefWidth="200.0">
-        <items>
-          <Button mnemonicParsing="false" onAction="#newFormula" text="New formula" />
-            <Button mnemonicParsing="false" onAction="#deleteFormula" text="Delete formula" />
-            <Button mnemonicParsing="false" onAction="#editSelection" text="Edit selection" />
-            <Button mnemonicParsing="false" onAction="#newFromSelection" text="New from selection" />
-            <Button mnemonicParsing="false" onAction="#simplify" text="Simplify" />
-            <Button mnemonicParsing="false" onAction="#idTrafo" text="Id-Trafo" />
-        </items>
-      </ToolBar>
-      <SplitPane dividerPositions="0.33, 0.66" VBox.vgrow="ALWAYS">
-         <items>
-            <ScrollPane prefHeight="200.0" prefWidth="200.0">
-               <content>
-                  <Interactor fx:id="interactor" />
-               </content>
-            </ScrollPane>
-            <ScrollPane>
-               <content>
-                  <VBox fx:id="formulaList" fillWidth="false" spacing="10.0" />
-               </content>
-            </ScrollPane>
-            <TextArea fx:id="logArea" editable="false" prefHeight="200.0" prefWidth="200.0" />
-         </items>
-      </SplitPane>
+            </ToolBar>
+            <SplitPane dividerPositions="0.33, 0.66" VBox.vgrow="ALWAYS">
+               <items>
+                  <ScrollPane prefHeight="200.0" prefWidth="200.0">
+                     <content>
+                        <Interactor fx:id="interactor" />
+                     </content>
+                  </ScrollPane>
+                  <ScrollPane>
+                     <content>
+                        <VBox fx:id="formulaList" fillWidth="false" spacing="10.0" />
+                     </content>
+                  </ScrollPane>
+                  <TextArea fx:id="logArea" editable="false" prefHeight="200.0" prefWidth="200.0" />
+               </items>
+            </SplitPane>
+         </children>
+      </VBox>
+      <Pane fx:id="overlay" mouseTransparent="true" prefHeight="200.0" prefWidth="200.0" />
    </children>
-</VBox>
+</StackPane>

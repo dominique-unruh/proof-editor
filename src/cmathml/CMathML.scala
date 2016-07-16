@@ -73,6 +73,9 @@ final case class CN(n: BigDecimal) extends CMathML with Leaf {
 object CN {
   def apply(i:Int) = new CN(BigDecimal(i,MATHCONTEXT))
   def apply(i:Double) = new CN(BigDecimal.exact(i)(MATHCONTEXT))
+//  def apply(i:BigDecimal) = { if (i.mc!=MATHCONTEXT) new CN(new BigDecimal(i.bigDecimal,MATHCONTEXT)) else i }
+  def apply(i:String) = new CN(BigDecimal(i,MATHCONTEXT))
+
   /** Use this math context to construct [[BigDecimal]]s for [[CN]] */
   val MATHCONTEXT = new MathContext(0,java.math.RoundingMode.UNNECESSARY)
 }

@@ -11,7 +11,7 @@ object InteractionTest {
     case _ => null : String
   }
 
-  def answerQuestion[T](int : Interaction[T], ans: Any) : Interaction[T] = int match {
+  def answerQuestion[T](int : Interaction[T], ans: AnyRef) : Interaction[T] = int match {
     case InteractionRunning(_,q,a) =>
 //      assert(q.answerType.isInstance(ans))
       val resp = a(ans)

@@ -1,19 +1,27 @@
 package testapp
 import scala.reflect.runtime.universe._
-
 import java.io.{PrintWriter, StringWriter}
 import java.lang.Boolean
 import java.lang.System.out
 import java.util.logging.{Level, Logger}
+import javafx.animation.{KeyFrame, Timeline}
 import javafx.application.{Application, Platform}
-import javafx.beans.property.Property
+import javafx.beans.{InvalidationListener, Observable}
+import javafx.beans.binding.{BooleanBinding, ObjectBinding}
+import javafx.beans.property.{Property, SimpleBooleanProperty, SimpleObjectProperty}
+import javafx.beans.value.{ChangeListener, ObservableValue}
 import javafx.event.ActionEvent
 import javafx.fxml.{FXML, FXMLLoader}
+import javafx.geometry.{Bounds, Insets, Point2D}
 import javafx.scene.control._
-import javafx.scene.layout.{HBox, VBox}
+import javafx.scene.layout.{HBox, Pane, Region, VBox}
+import javafx.scene.paint.Color
+import javafx.scene.shape.Line
+import javafx.scene.transform.Transform
 import javafx.scene.web.WebView
-import javafx.scene.{Parent, Scene}
+import javafx.scene.{Node, Parent, Scene}
 import javafx.stage.Stage
+import javafx.util
 
 import cmathml._
 import com.sun.javafx.webkit.WebConsoleListener
@@ -23,7 +31,7 @@ import misc.GetterSetterProperty
 import misc.Utils.JavaFXImplicits._
 import theory.Formula
 import trafo.{FormulaQ, IdentityTransformation, Question, TrafoInstance}
-import ui.Interactor
+import ui.{ConnectingLine, Interactor}
 import ui.Interactor.{Editor, EditorFactory}
 import z3.Z3
 
@@ -40,12 +48,11 @@ class TestApp extends Application {
     CMathML.equal(CMathML.plus(CI("x"), CI("y")), CMathML.plus(CI("y"), CN(-1)))
   )
 
-  @FXML
-  private var formulaList = null: VBox
-  @FXML
-  private var logArea = null: TextArea
-  @FXML
-  private var interactor = null: Interactor[TrafoInstance]
+  @FXML private var formulaList = null: VBox
+  @FXML private var logArea = null: TextArea
+  @FXML private var interactor = null: Interactor[TrafoInstance]
+  @FXML protected[this] var overlay = null : Pane
+//  private def getOverlay() = overlay
 
   private def errorPopup(msg: String): Unit =
     new Alert(Alert.AlertType.ERROR, msg).showAndWait()
@@ -182,14 +189,74 @@ class TestApp extends Application {
 
     primaryStage.getScene.getStylesheets.add(getClass().getResource("/testapp/testapp.css").toExternalForm())
     primaryStage.show
+
+    idTrafo(null)
   }
+
+  // TODO: move to Utils
+  def logProperty[T](name : String, prop : ObservableValue[T], force:Boolean=false) = {
+    if (force) prop.addListener(new ChangeListener[T] {
+      override def changed(observable: ObservableValue[_ <: T], oldValue: T, newValue: T): Unit =
+        println(name+": "+prop)
+    })
+    prop.addListener(new InvalidationListener {
+      override def invalidated(observable: Observable): Unit = {
+        println(name+" invalidated")
+    }})
+    println(name+" initial: "+prop)
+  }
+
 
   class FormulaEditor extends HBox with Editor[Option[Formula]] {
     override val editedType: TypeTag[Option[Formula]] = typeTag[Option[Formula]]
     override val questionType = typeTag[FormulaQ]
-    val button = new Button("Pick!")
+    val pickButton = new Button("Pick")
+    pickButton.setPadding(Insets.EMPTY)
+    val clearButton = new Button("Clear")
+    clearButton.setPadding(Insets.EMPTY)
     val mathview = new MathViewMQ()
     var formula : Option[Formula] = None
+    val line = new ConnectingLine(this, overlay)
+    line.leftProperty.set(mathview)
+//    var formulaMathview = null : MathViewMQ // TODO needed?
+//    overlay.getChildren.add(line)
+
+//    mathview.localToSceneTransformProperty().addListener(new ChangeListener[Transform] {
+//      override def changed(observable: ObservableValue[_ <: Transform], oldValue: Transform, newValue: Transform): Unit = updateStart()
+//    })
+//    mathview.boundsInLocalProperty.addListener(new ChangeListener[Bounds] {
+//      override def changed(observable: ObservableValue[_ <: Bounds], oldValue: Bounds, newValue: Bounds): Unit = updateStart()
+//    })
+//    line.visibleProperty.bind(visibleProperty)
+//    line.disableProperty.bind(disabledProperty)
+//    visibleProperty().addListener(new ChangeListener[Boolean] {
+//      override def changed(observable: ObservableValue[_ <: Boolean], oldValue: Boolean, visible: Boolean): Unit =
+//        line.setVisible(visible)
+//    })
+//    disabledProperty().addListener(new ChangeListener[Boolean] {
+//      override def changed(observable: ObservableValue[_ <: Boolean], oldValue: Boolean, disabled: Boolean): Unit =
+//        line.setDisabled(disabled)
+//    })
+//    sceneProperty().addListener(new ChangeListener[Scene] {
+//      override def changed(observable: ObservableValue[_ <: Scene], oldValue: Scene, scene: Scene): Unit =
+//        if (scene==null && lineAdded) { overlay.getChildren.remove(line); lineAdded = false }
+//        else if (scene!=null && !lineAdded) { overlay.getChildren.add(line); lineAdded = true }
+//    })
+//    updateStart()
+
+//    def updateStart() = {
+//      val bounds = mathview.getBoundsInLocal
+//      val start = mathview.localToScene(bounds.getMaxX,bounds.getMinY+bounds.getHeight/2)
+//      line.setStartX(start.getX)
+//      line.setStartY(start.getY)
+//    }
+
+//    def updateEnd() = {
+//      val bounds = formulaMathview.getBoundsInLocal
+//      val end = formulaMathview.localToScene(bounds.getMinX,bounds.getMinY+bounds.getHeight/2)
+//      line.setEndX(end.getX)
+//      line.setEndY(end.getY)
+//    }
 
     override val valueProperty: GetterSetterProperty[Option[Formula]] = new GetterSetterProperty[Option[Formula]] {
       override protected def getter: Option[Formula] = formula
@@ -200,20 +267,42 @@ class TestApp extends Application {
       }
     }
 
-    def updateGUI() = {
-      if (formula.isEmpty) mathview.setVisible(false)
-      else { mathview.setVisible(true); mathview.setMath(formula.get.math) }
-    }
+//    val changeListener = new ChangeListener[Transform] {
+//      override def changed(observable: ObservableValue[_ <: Transform], oldValue: Transform, newValue: Transform): Unit = updateEnd()
+//    }
 
     mathview.setMath(CN(0)) // Otherwise the mathview will not be resized to something small
     mathview.setVisible(false)
-    getChildren.addAll(button,mathview)
-    button.addEventHandler(ActionEvent.ACTION, {(_:ActionEvent) =>
-      if (currentlySelectedMath==null)
+    getChildren.addAll(new VBox(1,pickButton,clearButton),mathview)
+    clearButton.addEventHandler(ActionEvent.ACTION, {
+      (_:ActionEvent) =>
+//        if (formulaMathview!=null) {
+//          formulaMathview.localToSceneTransformProperty.removeListener(changeListener)
+//          formulaMathview = null }
+
         formula = None
-      else
-        formula = Some(Formula(id=System.identityHashCode(currentlySelectedMath), math=currentlySelectedMath.getMath)) // TODO: should come from current theory!
-      updateGUI()
+        mathview.setVisible(false)
+        line.rightProperty.set(null)
+    })
+    pickButton.addEventHandler(ActionEvent.ACTION, { (_:ActionEvent) =>
+//      if (formulaMathview!=null) {
+//        formulaMathview.localToSceneTransformProperty.removeListener(changeListener)
+//        formulaMathview = null }
+//
+      if (currentlySelectedMath==null) {
+        formula = None
+        mathview.setVisible(false)
+//        line.setVisible(false)
+      } else {
+        formula = Some(Formula(id = System.identityHashCode(currentlySelectedMath), math = currentlySelectedMath.getMath)) // TODO: should come from current theory!
+//        formulaMathview = currentlySelectedMath
+//        formulaMathview.localToSceneTransformProperty.addListener(changeListener)
+        mathview.setVisible(true)
+//        line.setVisible(true)
+        mathview.setMath(formula.get.math)
+//        updateEnd()
+      }
+      line.rightProperty.set(currentlySelectedMath)
       valueProperty.fireValueChangedEvent()
     })
   }
@@ -227,5 +316,4 @@ class TestApp extends Application {
         Interactor.defaultEditorFactory.create(q)
     }
   }
-
 }

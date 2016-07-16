@@ -19,7 +19,7 @@ math returns [CMathML m]:
     |   x=math '=' y=math { $m = op("relation1","eq",$x.m,$y.m); }
 
 
-    |   INT { $m = new CN(BigDecimal.exact($INT.text)); }
+    |   NUM { $m = CN.apply($NUM.text); }
     |   VAR { $m = new CI($VAR.text); }
     |   '{' x=math '}' { $m = $x.m; }
     |   '\\left' '(' x=math '\\right' ')' { $m = $x.m; }
@@ -27,6 +27,6 @@ math returns [CMathML m]:
     ;
 
 
-INT     : [0-9]+ ;
+NUM     : '-'? [0-9]+ ('.' [0-9]+)? ;
 VAR     : [a-zA-Z];
 ErrorCharacter : . ;
