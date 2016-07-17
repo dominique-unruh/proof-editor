@@ -13,6 +13,7 @@
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 <?import ui.Interactor?>
+<?import ui.TheoryView?>
 
 <StackPane xmlns="http://javafx.com/javafx/8.0.65" xmlns:fx="http://javafx.com/fxml/1">
    <children>
@@ -57,7 +58,7 @@
                   </ScrollPane>
                   <ScrollPane>
                      <content>
-                        <VBox fx:id="formulaList" fillWidth="false" spacing="10.0" />
+                        <TheoryView fx:id="theoryView" />
                      </content>
                   </ScrollPane>
                   <TextArea fx:id="logArea" editable="false" prefHeight="200.0" prefWidth="200.0" />

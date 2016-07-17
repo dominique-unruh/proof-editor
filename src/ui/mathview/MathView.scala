@@ -1,12 +1,12 @@
 package ui.mathview
 
-import java.lang.Boolean
 import javafx.application.Platform
 import javafx.beans.property.{ObjectProperty, SimpleObjectProperty}
 import javafx.beans.value.{ChangeListener, ObservableValue}
 import javafx.scene.{Group, Node}
 import javafx.scene.control.DialogPane
-import javafx.scene.layout.{BorderPane, Pane}
+
+import scalafx.scene.layout.{BorderPane, Pane}
 import javafx.scene.web.WebView
 import javafx.stage.Stage
 
@@ -16,7 +16,10 @@ import netscape.javascript.JSObject
 import misc.Utils.JavaFXImplicits._
 
 import scala.collection.mutable
-import misc.Utils.JavaFXImplicits._
+import scalafx.Includes._
+import scalafx.beans.property.{BooleanProperty, ReadOnlyBooleanProperty}
+
+
 
 /** JavaFX widget for showing and editing math formulas.
   * Math is represented as CMathML objects
@@ -27,19 +30,27 @@ import misc.Utils.JavaFXImplicits._
   * @see [[CMathML]] for describing math
   * */
 class MathView extends BorderPane {
+  // TODO port to ScalaFX
+
   assert(Platform.isFxApplicationThread,"not in JavaFX application thread")
   private val web = new WebView
   private var math = null : CMathML
   private var _editPath = None : Option[Path]
   private var loaded = false
+  /** Whether the editor is selected. Currently, this means that it (or a subelement) has the focus. */
+  val selectedProperty : ReadOnlyBooleanProperty = web.focusedProperty
   MathView // Causes the singleton object to be initialized
   web.getEngine.load(getClass.getResource("mathview.html").toString)
   private val window = web.getEngine.executeScript("window").asInstanceOf[JSObject]
   window.setMember("controller", JSBridge)
-  setCenter(web)
-  getStyleClass.add("mathview")
-  selectedProperty.addListener({(selected:Boolean) =>
-    if (selected) getStyleClass.add("selected") else getStyleClass.removeAll("selected"); ()})
+  center = web
+  styleClass += "mathview"
+
+  selectedProperty.onChange {(_,_,selected) =>
+    if (selected) styleClass += "selected" else styleClass.delegate.remove("selected"); ()}
+
+//  selectedProperty.addListener({(selected:Boolean) =>
+//    if (selected) getStyleClass.add("selected") else getStyleClass.removeAll("selected"); ()})
 
 
   private val editedListeners = mutable.MutableList[CMathML=>Unit]()
@@ -67,9 +78,6 @@ class MathView extends BorderPane {
     if (loaded) sendMathToJS()
   }
 
-  /** Whether the editor is selected. Currently, this means that it (or a subelement) has the focus. */
-  def selectedProperty = web.focusedProperty
-
   def getSelection : Option[Path] = {
     assert(Platform.isFxApplicationThread,"not in JavaFX application thread")
     val path = window.call("getSelection").asInstanceOf[String]
@@ -94,7 +102,14 @@ class MathView extends BorderPane {
   }
 
   private def setSize(w:Double,h:Double) {
-    setMinSize(w,h); setPrefSize(w,h); setMaxSize(w,h); resize(w,h)
+    minWidth = w
+    minHeight = h
+    prefWidth = w
+    prefHeight = h
+    maxWidth = w
+    maxHeight = h
+//    setMinSize(w,h); setPrefSize(w,h); setMaxSize(w,h);
+    resize(w,h)
   }
 
   private object JSBridge {

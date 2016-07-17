@@ -40,6 +40,7 @@ object CMathML {
   def divide(x:CMathML,y:CMathML) : CMathML = Apply(divide,x,y)
 
   val uminus = CSymbol("arith1","unary_minus")
+  def uminus(x:CMathML) : CMathML = Apply(uminus,x)
 }
 
 sealed protected trait Leaf extends CMathML {

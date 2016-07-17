@@ -9,6 +9,19 @@ case class Theory(val counter : Int, val formulas : Map[Int,Formula]) {
     val thy = copy(counter = counter+1, formulas = formulas.updated(counter, formula2))
     (thy, formula2)
   }
+
+  /**
+    *
+    * @param formula
+    * @return (thy,newFormula,oldFormula): thy is the new theory, oldFormula is the formula that was replaced,
+    *         newFormula is the just added formula (newFormula may or may not be equal to the parameter formula,
+    *         but the logical content is guaranteed to be the same)
+    */
+  def updateFormula(formula:Formula) : (Theory,Formula,Formula) = {
+    val oldFormula = formulas.getOrElse(formula.id, throw new IllegalArgumentException("trying to update non-existing formula"))
+    val thy2 = copy(formulas = formulas.updated(formula.id, formula))
+    (thy2,formula,oldFormula)
+  }
 }
 object Theory {
   def apply() : Theory = Theory(0,Map.empty)

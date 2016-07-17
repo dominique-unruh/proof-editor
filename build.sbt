@@ -10,6 +10,9 @@ libraryDependencies += "org.ow2.asm" % "asm" % "5.1"
 libraryDependencies += "commons-io" % "commons-io" % "2.5"
 libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaVersion.value
 libraryDependencies += "org.scalafx" %% "scalafx" % "8.0.92-R10" // https://mvnrepository.com/artifact/org.scalafx/scalafx_2.11
+//libraryDependencies += "com.lihaoyi" % "ammonite-repl" % "0.6.2" cross CrossVersion.full
+//libraryDependencies += "com.lihaoyi" % "ammonite-sshd" % "0.6.2" cross CrossVersion.full
+//libraryDependencies += "org.testfx" % "testfx-core" % "4.0.4-alpha" % Test
 
 scalaSource in Compile := baseDirectory.value / "src"
 scalaSource in Test := baseDirectory.value / "test"
@@ -43,7 +46,7 @@ javaOptions += s"-Djava.library.path=${libPath.mkString(java.io.File.pathSeparat
 
 //javaOptions in Test += s"""-Djava.library.path=${(classDirectory in Compile).value}"""
 
-
+//connectInput in run := true
 
 fork in Test := true // Needed because otherwise we try to load the same shared lib in different classloaders during consecutive test runs
 

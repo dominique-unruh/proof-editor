@@ -167,7 +167,7 @@ class Interactor[T]() extends VBox {
         cell.setHtml(<b>Failed</b>)
       case InteractionRunning(id,question,answer) =>
         cell.setQuestion(question)
-        cell.setHtml(<span>{question.message.text} <i>{id}</i></span>)
+        cell.setHtml(<span>{question.message.text} <i>#{id}</i></span>)
         val answer : AnyRef = answers.getOrElse(id,question.default)
         // TODO: add typetag check
 //        println("XXX",cell.edit,answer)

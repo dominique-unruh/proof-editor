@@ -23,7 +23,7 @@ import misc.Utils.JavaFXImplicits._
 import theory.Formula
 import trafo.{FormulaQ, IdentityTransformation, Question, TrafoInstance}
 import ui.Interactor.{Editor, EditorFactory}
-import ui.{ConnectingLine, Interactor}
+import ui.{ConnectingLine, Interactor, TheoryView}
 import z3.Z3
 
 import scala.collection.mutable
@@ -40,9 +40,11 @@ class TestApp extends Application {
     CI("x").negate()
   )
 
-  @FXML private var formulaList = null: VBox
-  @FXML private var logArea = null: TextArea
-  @FXML private var interactor = null: Interactor[TrafoInstance]
+//  @deprecated("transitioning to TheoryView","today")
+//  private def formulaList = theoryView : VBox
+  @FXML protected[this] var theoryView = null : TheoryView
+  @FXML protected[this] var logArea = null: TextArea
+  @FXML protected[this] var interactor = null: Interactor[TrafoInstance]
   @FXML protected[this] var overlay = null : Pane
 //  private def getOverlay() = overlay
 
@@ -56,7 +58,8 @@ class TestApp extends Application {
 
   @FXML
   private def newFormula(event: ActionEvent): Unit = {
-    addMath(CI("x"), Some(Path.empty))
+//    addMath(CI("x"), Some(Path.empty))
+    errorPopup("not implemented")
   }
 
   @FXML
@@ -66,7 +69,7 @@ class TestApp extends Application {
 
   @FXML
   private def editSelection(event: ActionEvent): Unit = {
-    val math = currentlySelectedMath
+    val math = theoryView.selectedMathView
     if (math == null) {
       log("No selected ui.mathview"); return
     }
@@ -79,7 +82,7 @@ class TestApp extends Application {
 
   @FXML
   private def newFromSelection(event: ActionEvent): Unit = {
-    val math = currentlySelectedMath
+    val math = theoryView.selectedMathView
     if (math == null) {
       log("No selected ui.mathview"); return
     }
@@ -88,7 +91,7 @@ class TestApp extends Application {
       log("No selection"); return
     }
     val m = math.getMath.subterm(sel.get)
-    addMath(m)
+    theoryView.addFormula(Formula(m))
   }
 
   /** Only invoke methods in JavaFX thread! */
@@ -96,43 +99,52 @@ class TestApp extends Application {
 
   @FXML
   private def simplify(event: ActionEvent): Unit = {
-    val math = currentlySelectedMath
+    val math = theoryView.selectedMathView
     if (math == null) {
       log("No selected ui.mathview"); return
     }
     val expr = z3.fromCMathML(math.getMath)
     val simp = expr.simplify
     val simp2 = z3.toCMathML(simp)
-    addMath(simp2)
+    theoryView.addFormula(Formula(simp2))
   }
 
   @FXML
   private def deleteFormula(event: ActionEvent): Unit = {
-    val math = currentlySelectedMath
+    val math = theoryView.selectedFormula
     if (math == null) {
-      log("No selected ui.mathview"); return
+      errorPopup("No formula selected")
     }
-    formulaList.getChildren.removeAll(math)
+    theoryView.deleteFormula(math)
   }
 
-  private var currentlySelectedMath: MathView = null
+//  @deprecated("transitioning to TheoryView","today")
+//  private def currentlySelectedMath: MathView = theoryView.currentlySelectedMath
 
-  private val mathviews = new mutable.MutableList[MathView]
+//  @deprecated("transitioning to TheoryView","today")
+//  private val mathviews = new mutable.MutableList[MathView]
 
-  def addMath(math: CMathML, editPath: Option[Path] = None) = {
-    if (!editPath.isEmpty) math.subterm(editPath.get) // Make sure the editPath is valid
-    val mw = new MathView()
-    mw.setMath(math, editPath)
-    mathviews += mw
-    mw.selectedProperty.addListener((selected: Boolean) => currentlySelectedMath = mw)
-    mw.addEditedListener(m => {
-      println("edited", m, mw);
-      mw.setMath(mw.getMath.replace(mw.editPath.get, m))
-    })
-    formulaList.getChildren.add(mw)
-    mw
-  }
+//  @deprecated("transitioning to TheoryView","today")
+//  def addMath(math: CMathML, editPath: Option[Path] = None) = {
+//    if (!editPath.isEmpty) math.subterm(editPath.get) // Make sure the editPath is valid
+//    addFormula(Formula(math))
+//    if (!editPath.isEmpty) errorPopup("Editing NYI")
+//  }
 
+//  @deprecated("use theoryView.addFormula(formula)","today")
+//  def addFormula(formula: Formula) = {
+//    theoryView.addFormula(formula)
+////    val mw = new MathView()
+////    mw.setMath(math, editPath)
+//    //    mathviews += mw
+////    mw.selectedProperty.addListener((selected: Boolean) => currentlySelectedMath = mw)
+////    mw.addEditedListener(m => {
+////      println("edited", m, mw);
+////      mw.setMath(mw.getMath.replace(mw.editPath.get, m))
+////    })
+////    formulaList.getChildren.add(mw)
+////    mw
+//  }
 
   def log(msg: String, numLines: Int = -1) = {
     var msg2: String = msg
@@ -155,7 +167,7 @@ class TestApp extends Application {
     val loader = new FXMLLoader(fxmlSrc)
     loader.setController(this)
     val fxml: Parent = loader.load()
-    println("formulaList", formulaList)
+//    println("formulaList", formulaList)
 
     Logger.getLogger("").log(Level.WARNING, "logging test")
     Thread.currentThread().setUncaughtExceptionHandler({ (t: Thread, e: Throwable) =>
@@ -173,26 +185,26 @@ class TestApp extends Application {
 
     interactor.setEditorFactory(editorFactory)
 
-    for (m <- examples) addMath(m, None)
+    println(theoryView)
+    for (m <- examples) theoryView.addFormula(Formula(m))
 
-    primaryStage.getScene.getStylesheets.add(getClass().getResource("/testapp/testapp.css").toExternalForm())
+    primaryStage.getScene.getStylesheets.add(getClass().getResource("testapp.css").toExternalForm())
     primaryStage.show
 
-    idTrafo(null)
+//    idTrafo(null)
   }
 
-  // TODO: move to Utils
-  def logProperty[T](name : String, prop : ObservableValue[T], force:Boolean=false) = {
-    if (force) prop.addListener(new ChangeListener[T] {
-      override def changed(observable: ObservableValue[_ <: T], oldValue: T, newValue: T): Unit =
-        println(name+": "+prop)
-    })
-    prop.addListener(new InvalidationListener {
-      override def invalidated(observable: Observable): Unit = {
-        println(name+" invalidated")
-    }})
-    println(name+" initial: "+prop)
-  }
+//  def logProperty[T](name : String, prop : ObservableValue[T], force:Boolean=false) = {
+//    if (force) prop.addListener(new ChangeListener[T] {
+//      override def changed(observable: ObservableValue[_ <: T], oldValue: T, newValue: T): Unit =
+//        println(name+": "+prop)
+//    })
+//    prop.addListener(new InvalidationListener {
+//      override def invalidated(observable: Observable): Unit = {
+//        println(name+" invalidated")
+//    }})
+//    println(name+" initial: "+prop)
+//  }
 
 
   class FormulaEditor extends HBox with Editor[Option[Formula]] {
@@ -226,15 +238,15 @@ class TestApp extends Application {
         line.rightProperty.set(null)
     })
     pickButton.addEventHandler(ActionEvent.ACTION, { (_:ActionEvent) =>
-      if (currentlySelectedMath==null) {
+      if (theoryView.selectedFormula==null) {
         formula = None
         mathview.setVisible(false)
       } else {
-        formula = Some(Formula(id = System.identityHashCode(currentlySelectedMath), math = currentlySelectedMath.getMath)) // TODO: should come from current theory!
+        formula = Some(theoryView.selectedFormula)
         mathview.setVisible(true)
         mathview.setMath(formula.get.math)
       }
-      line.setRight(currentlySelectedMath)
+      line.setRight(theoryView.selectedMathView)
       valueProperty.fireValueChangedEvent()
     })
   }
