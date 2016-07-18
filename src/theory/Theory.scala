@@ -1,13 +1,39 @@
 package theory
 
 import cmathml.CMathML
+import trafo.TrafoInstance
+
+import scala.collection.mutable.ListBuffer
 
 case class Theory(val counter : Int, val formulas : Map[Int,Formula]) {
+
   def addFormula(formula:Formula) : (Theory,Formula) = {
+    assert(formula.id==Formula.NO_ID)
     val formula2 = formula.copy(id=counter)
 //    val ref = FormulaRef(counter, formula)
     val thy = copy(counter = counter+1, formulas = formulas.updated(counter, formula2))
     (thy, formula2)
+  }
+
+  def addTrafoInstance(trafo: TrafoInstance) : (Theory,Seq[Formula]) = {
+    val formulas = trafo.formulas
+    var theory = this
+    var newFormulas = ListBuffer() : ListBuffer[Formula]
+    for (f <- formulas) {
+      if (f.id==Formula.NO_ID) {
+        val (thy, newFormula) = theory.addFormula(f)
+        newFormulas += newFormula
+        theory = thy
+      } else {
+        assert(isMember(f))
+      }
+    }
+    (theory,newFormulas.toSeq)
+  }
+
+  def isMember(formula:Formula) : Boolean = {
+    val own = formulas.get(formula.id)
+    own.isDefined && own.get == formula
   }
 
   /**

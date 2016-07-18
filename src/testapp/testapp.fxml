@@ -42,8 +42,6 @@
               <items>
                   <Button mnemonicParsing="false" onAction="#newFromSelection" text="New from selection" />
                   <Button mnemonicParsing="false" onAction="#simplify" text="Simplify" />
-                  <Button mnemonicParsing="false" onAction="#idTrafo" text="Id-Trafo" />
-                  <Button mnemonicParsing="false" onAction="#copyTrafo" text="Copy-Trafo" />
               </items>
             </ToolBar>
             <SplitPane dividerPositions="0.33, 0.66" VBox.vgrow="ALWAYS">
@@ -54,7 +52,7 @@
                            <children>
                               <ChoiceBox fx:id="trafoChoice" />
                               <Interactor fx:id="interactor" />
-                              <Button fx:id="useButton" mnemonicParsing="false" text="Use" />
+                              <Button fx:id="useButton" mnemonicParsing="false" onAction="#useButtonClicked" text="Use" />
                            </children>
                         </VBox>
                      </content>

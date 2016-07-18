@@ -1,40 +1,40 @@
 package testapp
 import java.io.{PrintWriter, StringWriter}
-import java.lang.Boolean
 import java.lang.System.out
-import java.util.logging.{Level, Logger}
 import javafx.application.{Application, Platform}
-import javafx.beans.property.{Property, SimpleObjectProperty}
+import javafx.beans.property.SimpleObjectProperty
 import javafx.beans.value.{ChangeListener, ObservableValue}
-import javafx.beans.{InvalidationListener, Observable}
 import javafx.collections.FXCollections
 import javafx.event.ActionEvent
 import javafx.fxml.{FXML, FXMLLoader}
 import javafx.geometry.Insets
 import javafx.scene.control._
-import javafx.scene.layout.{HBox, Pane, VBox}
+import javafx.scene.layout.{HBox, VBox}
 import javafx.scene.web.WebView
 import javafx.scene.{Parent, Scene}
 import javafx.stage.Stage
 
 import cmathml._
 import com.sun.javafx.webkit.WebConsoleListener
-import ui.mathview.MathView
-import misc.{GetterSetterProperty, Utils}
+import misc.GetterSetterProperty
 import misc.Utils.JavaFXImplicits._
+import testapp.TestApp.TrafoChoice
 import theory.Formula
 import trafo._
 import ui.Interactor.{Editor, EditorFactory}
+import ui.mathview.MathView
 import ui.{ConnectingLine, Interactor, TheoryView}
 import z3.Z3
 
-import scala.collection.mutable
 import scala.reflect.runtime.universe._
 import scala.runtime.BoxedUnit
-import scalafx.scene.layout
 
 object TestApp {
   def main(args: Array[String]) = Application.launch(classOf[TestApp], args:_*)
+  final case class TrafoChoice(label:String, trafo:Transformation) {
+    override def toString = label
+  }
+
 }
 
 
@@ -43,10 +43,6 @@ class TestApp extends Application {
     CMathML.equal(CMathML.plus(CI("x"), CI("y")), CMathML.plus(CI("y"), CN(-1))),
     CI("x").negate()
   )
-
-  final case class TrafoChoice(label:String, trafo:Transformation) {
-    override def toString = label
-  }
 
   val transformations = FXCollections.observableArrayList(
     TrafoChoice("Copy formula", new CopyTrafo),
@@ -65,14 +61,17 @@ class TestApp extends Application {
   private def errorPopup(msg: String): Unit =
     new Alert(Alert.AlertType.ERROR, msg).showAndWait()
 
-  @FXML private def idTrafo(event: ActionEvent): Unit = {
-    interactor.setInteraction(new CheckEqualTrafo().createInteractive)
-  }
+//  @FXML private def idTrafo(event: ActionEvent): Unit = {
+//    interactor.setInteraction(new CheckEqualTrafo().createInteractive)
+//  }
+//
+//  @FXML private def copyTrafo(event: ActionEvent): Unit = {
+//    interactor.setInteraction(new CopyTrafo().createInteractive)
+//  }
 
-  @FXML private def copyTrafo(event: ActionEvent): Unit = {
-    interactor.setInteraction(new CopyTrafo().createInteractive)
+  @FXML private def useButtonClicked(event: ActionEvent) = {
+    theoryView.addTrafoInstance(interactor.result.get.get)
   }
-
 
   @FXML
   private def quit(event: ActionEvent): Unit = {
