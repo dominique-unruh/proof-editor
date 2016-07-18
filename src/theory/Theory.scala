@@ -28,6 +28,8 @@ object Theory {
 }
 
 case class Formula(val id : Int = Formula.NO_ID, val math : CMathML) {
+  import Formula._
+  def detach: Formula = copy(id=NO_ID)
 
 }
 object Formula {

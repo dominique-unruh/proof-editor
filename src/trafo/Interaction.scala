@@ -21,7 +21,9 @@ abstract class Question[T] {
   val default : T
 }
 
-class FormulaQ(val message:Elem) extends Question[Option[Formula]] {
+class FormulaQ(val message:Elem,
+               @deprecated val newFormula:Formula=null
+              ) extends Question[Option[Formula]] {
   val answerType = typeTag[Option[Formula]]
   val questionType = typeTag[FormulaQ]
   val default = None
@@ -39,6 +41,15 @@ class StringQ(val message:Elem) extends Question[String] {
   val default = ""
 }
 
+class ShowFormulaQ(val message:Elem, val formula : Formula) extends Question[BoxedUnit] {
+  import scala.reflect.runtime.universe._
+  //  super(typeTag[BoxedUnit])
+  val answerType = typeTag[BoxedUnit]
+  val questionType = typeTag[ShowFormulaQ]
+  val default = BoxedUnit.UNIT
+  override def toString = s"[MSG: $message, $formula]"
+}
+
 
 object MessageQ {
   object Type extends Enumeration {
@@ -47,7 +58,6 @@ object MessageQ {
   type Type = Type.Value
   def Error(msg : Elem) = new MessageQ(Type.ERROR, msg)
 }
-
 class MessageQ(val typ:MessageQ.Type, val message:Elem) extends Question[BoxedUnit] {
   import scala.reflect.runtime.universe._
 //  super(typeTag[BoxedUnit])
@@ -78,7 +88,7 @@ final case class InteractionFailed[T]() extends Interaction[T] {
   override def isFailed: Boolean = true
 }
 
-sealed trait Interaction[T] {
+sealed trait Interaction[+T] {
   final def flatMap[U](f: T => Interaction[U]) : Interaction[U] = this match {
     case InteractionRunning(id, question, answer) => InteractionRunning(id, question, a => answer(a).flatMap(f))
     case InteractionFinished(result) => f(result)

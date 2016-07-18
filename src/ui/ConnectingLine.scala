@@ -64,7 +64,7 @@ class ConnectingLine(val owner : Node, val overlay : Pane) {
   line.setStrokeWidth(4)
   line.setStroke(Color.BLUE.opacity(.3))
 
-  line.disableProperty <== owner.disabledProperty
+//  line.disableProperty <== owner.disabledProperty
   line.visibleProperty <== owner.visibleProperty && visibleProperty
 
   addedProperty.onChange { (_, oldValue, newValue) =>

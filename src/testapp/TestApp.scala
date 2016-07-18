@@ -4,8 +4,10 @@ import java.lang.Boolean
 import java.lang.System.out
 import java.util.logging.{Level, Logger}
 import javafx.application.{Application, Platform}
+import javafx.beans.property.{Property, SimpleObjectProperty}
 import javafx.beans.value.{ChangeListener, ObservableValue}
 import javafx.beans.{InvalidationListener, Observable}
+import javafx.collections.FXCollections
 import javafx.event.ActionEvent
 import javafx.fxml.{FXML, FXMLLoader}
 import javafx.geometry.Insets
@@ -18,16 +20,18 @@ import javafx.stage.Stage
 import cmathml._
 import com.sun.javafx.webkit.WebConsoleListener
 import ui.mathview.MathView
-import misc.GetterSetterProperty
+import misc.{GetterSetterProperty, Utils}
 import misc.Utils.JavaFXImplicits._
 import theory.Formula
-import trafo.{FormulaQ, IdentityTransformation, Question, TrafoInstance}
+import trafo._
 import ui.Interactor.{Editor, EditorFactory}
 import ui.{ConnectingLine, Interactor, TheoryView}
 import z3.Z3
 
 import scala.collection.mutable
 import scala.reflect.runtime.universe._
+import scala.runtime.BoxedUnit
+import scalafx.scene.layout
 
 object TestApp {
   def main(args: Array[String]) = Application.launch(classOf[TestApp], args:_*)
@@ -40,27 +44,35 @@ class TestApp extends Application {
     CI("x").negate()
   )
 
-//  @deprecated("transitioning to TheoryView","today")
-//  private def formulaList = theoryView : VBox
+  final case class TrafoChoice(label:String, trafo:Transformation) {
+    override def toString = label
+  }
+
+  val transformations = FXCollections.observableArrayList(
+    TrafoChoice("Copy formula", new CopyTrafo),
+    TrafoChoice("Equality check", new CheckEqualTrafo)
+  )
+
+
+
   @FXML protected[this] var theoryView = null : TheoryView
   @FXML protected[this] var logArea = null: TextArea
   @FXML protected[this] var interactor = null: Interactor[TrafoInstance]
-  @FXML protected[this] var overlay = null : Pane
-//  private def getOverlay() = overlay
+  @FXML protected[this] var overlay = null : javafx.scene.layout.Pane
+  @FXML protected[this] var trafoChoice = null : ChoiceBox[TrafoChoice]
+  @FXML protected[this] var useButton = null : Button
 
   private def errorPopup(msg: String): Unit =
     new Alert(Alert.AlertType.ERROR, msg).showAndWait()
 
   @FXML private def idTrafo(event: ActionEvent): Unit = {
-    interactor.setInteraction(new IdentityTransformation().createInteractive)
-//    errorPopup("Not implemented")
+    interactor.setInteraction(new CheckEqualTrafo().createInteractive)
   }
 
-  @FXML
-  private def newFormula(event: ActionEvent): Unit = {
-//    addMath(CI("x"), Some(Path.empty))
-    errorPopup("not implemented")
+  @FXML private def copyTrafo(event: ActionEvent): Unit = {
+    interactor.setInteraction(new CopyTrafo().createInteractive)
   }
+
 
   @FXML
   private def quit(event: ActionEvent): Unit = {
@@ -118,34 +130,6 @@ class TestApp extends Application {
     theoryView.deleteFormula(math)
   }
 
-//  @deprecated("transitioning to TheoryView","today")
-//  private def currentlySelectedMath: MathView = theoryView.currentlySelectedMath
-
-//  @deprecated("transitioning to TheoryView","today")
-//  private val mathviews = new mutable.MutableList[MathView]
-
-//  @deprecated("transitioning to TheoryView","today")
-//  def addMath(math: CMathML, editPath: Option[Path] = None) = {
-//    if (!editPath.isEmpty) math.subterm(editPath.get) // Make sure the editPath is valid
-//    addFormula(Formula(math))
-//    if (!editPath.isEmpty) errorPopup("Editing NYI")
-//  }
-
-//  @deprecated("use theoryView.addFormula(formula)","today")
-//  def addFormula(formula: Formula) = {
-//    theoryView.addFormula(formula)
-////    val mw = new MathView()
-////    mw.setMath(math, editPath)
-//    //    mathviews += mw
-////    mw.selectedProperty.addListener((selected: Boolean) => currentlySelectedMath = mw)
-////    mw.addEditedListener(m => {
-////      println("edited", m, mw);
-////      mw.setMath(mw.getMath.replace(mw.editPath.get, m))
-////    })
-////    formulaList.getChildren.add(mw)
-////    mw
-//  }
-
   def log(msg: String, numLines: Int = -1) = {
     var msg2: String = msg
     if (numLines >= 0) {
@@ -167,9 +151,8 @@ class TestApp extends Application {
     val loader = new FXMLLoader(fxmlSrc)
     loader.setController(this)
     val fxml: Parent = loader.load()
-//    println("formulaList", formulaList)
 
-    Logger.getLogger("").log(Level.WARNING, "logging test")
+//    Logger.getLogger("").log(Level.WARNING, "logging test")
     Thread.currentThread().setUncaughtExceptionHandler({ (t: Thread, e: Throwable) =>
       val e2 = actualException(e)
       e2.printStackTrace()
@@ -189,23 +172,25 @@ class TestApp extends Application {
     for (m <- examples) theoryView.addFormula(Formula(m))
 
     primaryStage.getScene.getStylesheets.add(getClass().getResource("testapp.css").toExternalForm())
+
+    useButton.setDisable(true)
+    interactor.result.addListener(new ChangeListener[Option[TrafoInstance]] {
+      override def changed(observable: ObservableValue[_ <: Option[TrafoInstance]], oldValue: Option[TrafoInstance], newValue: Option[TrafoInstance]): Unit = {
+//        println("interactor result change: "+newValue)
+        useButton.setDisable(newValue.isEmpty)
+    }})
+
+    trafoChoice.setItems(transformations)
+    // TODO: selection listener
+    trafoChoice.getSelectionModel.selectedItemProperty.addListener(new ChangeListener[TrafoChoice] {
+      override def changed(observable: ObservableValue[_ <: TrafoChoice], oldValue: TrafoChoice, newValue: TrafoChoice): Unit =
+        interactor.setInteraction(newValue.trafo.createInteractive)
+    })
+    trafoChoice.getSelectionModel.select(0)
+
+//    copyTrafo(null)
     primaryStage.show
-
-//    idTrafo(null)
   }
-
-//  def logProperty[T](name : String, prop : ObservableValue[T], force:Boolean=false) = {
-//    if (force) prop.addListener(new ChangeListener[T] {
-//      override def changed(observable: ObservableValue[_ <: T], oldValue: T, newValue: T): Unit =
-//        println(name+": "+prop)
-//    })
-//    prop.addListener(new InvalidationListener {
-//      override def invalidated(observable: Observable): Unit = {
-//        println(name+" invalidated")
-//    }})
-//    println(name+" initial: "+prop)
-//  }
-
 
   class FormulaEditor extends HBox with Editor[Option[Formula]] {
     override val editedType: TypeTag[Option[Formula]] = typeTag[Option[Formula]]
@@ -236,6 +221,7 @@ class TestApp extends Application {
         formula = None
         mathview.setVisible(false)
         line.rightProperty.set(null)
+        valueProperty.fireValueChangedEvent()
     })
     pickButton.addEventHandler(ActionEvent.ACTION, { (_:ActionEvent) =>
       if (theoryView.selectedFormula==null) {
@@ -251,12 +237,28 @@ class TestApp extends Application {
     })
   }
 
+  class ShowFormula(q:ShowFormulaQ) extends HBox with Editor[BoxedUnit] {
+    override val editedType: TypeTag[BoxedUnit] = typeTag[BoxedUnit]
+    override val questionType = typeTag[ShowFormulaQ]
+    val mathview = new MathView()
+    var formula : Option[Formula] = None
+    override val valueProperty = new SimpleObjectProperty[BoxedUnit](BoxedUnit.UNIT)
+    mathview.setMath(q.formula.math)
+    getChildren.add(mathview)
+  }
+
 
   val editorFactory = new EditorFactory {
     override def create[T<:AnyRef](q: Question[T]): Editor[T] = {
-      if (q.questionType==typeTag[FormulaQ])
-        cast(q.answerType, new FormulaEditor())
-      else
+      if (q.questionType==typeTag[FormulaQ]) {
+        val q2 = q.asInstanceOf[FormulaQ]
+        val edit = /*if (q2.newFormula != null) new FreshFormulaGenerator(q2)
+        else*/ new FormulaEditor()
+        cast(q.answerType, edit)
+      } else if (q.questionType==typeTag[ShowFormulaQ]) {
+        val edit = new ShowFormula(q.asInstanceOf[ShowFormulaQ])
+        cast(q.answerType, edit)
+      } else
         Interactor.defaultEditorFactory.create(q)
     }
   }

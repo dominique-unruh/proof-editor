@@ -16,23 +16,9 @@ import scala.collection.mutable
 import scala.reflect.api.TypeTags
 import scala.runtime.BoxedUnit
 import scala.xml.Elem
+import scalafx.beans.Observable
+import scalafx.beans.property.{ObjectProperty, ReadOnlyObjectWrapper}
 
-//protected class QA[T](val interaction : Interaction[T], val answer : Option[_]) {
-//  assert(answer.isEmpty || interaction.question.get.answerType.isInstance(answer.get))
-////  var dirty = true
-//
-//  override def toString : String = {
-//    val str = new StringBuilder("QA(")
-//    if (interaction.question.isEmpty) str ++= "done"
-//    else str ++= interaction.question.get.message.text
-//    if (!answer.isEmpty) { str += ','; str ++= answer.get.toString }
-//    if (!interaction.error.isEmpty) { str += ','; str ++= "error: "; str ++= interaction.error.get.message.text }
-//    if (!interaction.result.isEmpty) { str += ','; str ++= "result: "; str ++= interaction.result.get.toString }
-//    str += ')'
-//    str.toString
-//  }
-//  def setAnswer(newAnswer : Any) = new QA(interaction, Some(newAnswer))
-//}
 
 
 
@@ -41,6 +27,8 @@ class Interactor[T]() extends VBox {
   private val interactions = new mutable.ArrayBuffer[Interaction[T]]
   private val answers = new mutable.HashMap[String, AnyRef]()
   private var interaction : Interaction[T] = null
+  private val result_ = ReadOnlyObjectWrapper(None : Option[T])
+  val result = result_.readOnlyProperty
 
   private var editorFactory : Interactor.EditorFactory = Interactor.defaultEditorFactory
 
@@ -52,6 +40,7 @@ class Interactor[T]() extends VBox {
     interactions.clear()
     answers.clear()
     interaction = null
+    result_.set(None)
   }
 
   def setInteraction(interaction : Interaction[T]) : Unit = {
@@ -65,53 +54,40 @@ class Interactor[T]() extends VBox {
     private val label = new Label("<initialize me>")
     var edit: Interactor.Editor[_] = null
     var question: Question[_] = null
-//    private var eq : EQPair[_] = null
-    //    var edit : Interactor.Editor[_ <: AnyRef] = null
-//    var questionType : Class[_] = null
-//    var question : Question[_ <: AnyRef] = null
 
     def setHtml(html: Elem) : Unit = {
-//      label.setHtmlText(<html contentEditable="false"><head></head><body contentEditable="false">{html}</body></html>.toString)
       label.setText(html.text)
     }
 
     def noQuestion() : Unit = {
       if (edit!=null) getChildren.remove(edit)
       edit = null
-//      eq.questionType = null
       question = null
     }
 
     def setQuestion[T<:AnyRef](q : Question[T]): Unit = {
-//      val qt = q.getClass
       if (question == null || q.questionType!=question.questionType) {
         if (edit != null) getChildren.remove(edit)
         edit = null
         question = null
         val edit0: Interactor.Editor[T] = editorFactory.create(q)
-//        assert(q.answerType.isAssignableFrom(edit0.editedType),
-//          "question was for type " + q.answerType + " but editor factory returned editor for type " + edit0.editedType)
         edit0.setQuestion(q)
-//        eq = EQPair(edit0,q)
         question = q
         edit = edit0
-//        eq.questionType = qt
         edit0.valueProperty.addListener(new ChangeListener[T] {
-          override def changed(obs: ObservableValue[_ <: T], old: T, answer: T): Unit = setAnswer(idx, answer)
+          override def changed(obs: ObservableValue[_ <: T], old: T, answer: T): Unit =
+            setAnswer(idx, answer)
         })
+        if (edit0.valueProperty.getValue!=null)
+          setAnswer(idx, edit0.valueProperty.getValue)
         getChildren.add(edit0)
       } else {
         if (question!=q) {
-//          println("XXX",edit.questionType,q.questionType)
           assert(edit.questionType==q.questionType)
           edit.asInstanceOf[Editor[T]].setQuestion(q)
-//          val q2 = Utils.cast(q)(q.questionType, eq.edit.questionType)
-//          eq.edit.setQuestion(q2)
-//          eq = eq.copy(question = q2)
         }
       }
     }
-//    edit.valueProperty.addListener((answer:Int) => setAnswer(idx,answer))
     getChildren.addAll(label)
   }
 
@@ -125,35 +101,31 @@ class Interactor[T]() extends VBox {
     assert(idx >= 1)
     val int = interactions(idx - 1)
     int match {
-      case InteractionFinished(_) | InteractionFailed() =>
+      case InteractionFinished(res) =>
         interactions.remove(idx, interactions.length - idx)
         getChildren.remove(idx, getChildren.size)
+        result_.set(Some(res))
+      case InteractionFailed() =>
+        interactions.remove(idx, interactions.length - idx)
+        getChildren.remove(idx, getChildren.size)
+        result_.set(None)
       case InteractionRunning(id,question,answer) =>
         val int2 = answer(answers.getOrElse(id,question.default))
-//        println("set int", idx, id, int2, int2.question)
         updateInteraction(idx, int2)
     }
   }
 
   def setAnswer(idx: Int, answer: AnyRef) : Unit = interactions(idx) match {
     case InteractionRunning(id, question, _) =>
-//      if (answer.isEmpty)
-//        answers.remove(id)
-//      else {
-//        assert(question.answerType.isInstance(answer),
-//          "q-type " + question.answerType + ", a-type " + answer.getClass)
-        answers.update(id, answer)
-        updateGUI(idx)
-        recompute(idx + 1)
-//      }
+        if (answers.get(id)!=answer) {
+          answers.update(id, answer)
+          updateGUI(idx)
+          recompute(idx + 1)
+        }
     case InteractionFinished(_) | InteractionFailed() =>
       throw new IndexOutOfBoundsException("setAnswer(" + idx + ",...)")
   }
 
-  //  setItems(FXCollections.observableArrayList())
-  //  private def setGUIStr(idx:Int, str:String) = {
-  //    if (idx==getItems.size) getItems.add(str) else getItems.set(idx,str)
-  //  }
   private def updateGUI(idx: Int) = {
     if (idx == getChildren.size) getChildren.add(new Cell(idx))
     val int = interactions(idx)
@@ -170,7 +142,6 @@ class Interactor[T]() extends VBox {
         cell.setHtml(<span>{question.message.text} <i>#{id}</i></span>)
         val answer : AnyRef = answers.getOrElse(id,question.default)
         // TODO: add typetag check
-//        println("XXX",cell.edit,answer)
         cell.edit.asInstanceOf[Editor[answer.type]].setValue(answer)
     }
   }

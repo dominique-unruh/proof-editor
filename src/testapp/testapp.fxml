@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ChoiceBox?>
 <?import javafx.scene.control.Menu?>
 <?import javafx.scene.control.MenuBar?>
 <?import javafx.scene.control.MenuItem?>
@@ -32,8 +33,6 @@
                 </Menu>
                   <Menu text="_Edit">
                     <items>
-                      <MenuItem onAction="#newFormula" text="_New formula" />
-                        <MenuItem onAction="#editSelection" text="_Edit selection" />
                         <MenuItem onAction="#newFromSelection" text="New from _selection" />
                     </items>
                   </Menu>
@@ -41,27 +40,31 @@
             </MenuBar>
             <ToolBar prefHeight="40.0" prefWidth="200.0">
               <items>
-                <Button mnemonicParsing="false" onAction="#newFormula" text="New formula" />
-                  <Button mnemonicParsing="false" onAction="#deleteFormula" text="Delete formula" />
-                  <Button mnemonicParsing="false" onAction="#editSelection" text="Edit selection" />
                   <Button mnemonicParsing="false" onAction="#newFromSelection" text="New from selection" />
                   <Button mnemonicParsing="false" onAction="#simplify" text="Simplify" />
                   <Button mnemonicParsing="false" onAction="#idTrafo" text="Id-Trafo" />
+                  <Button mnemonicParsing="false" onAction="#copyTrafo" text="Copy-Trafo" />
               </items>
             </ToolBar>
             <SplitPane dividerPositions="0.33, 0.66" VBox.vgrow="ALWAYS">
                <items>
-                  <ScrollPane prefHeight="200.0" prefWidth="200.0">
+                  <ScrollPane fitToWidth="true">
                      <content>
-                        <Interactor fx:id="interactor" />
+                        <VBox>
+                           <children>
+                              <ChoiceBox fx:id="trafoChoice" />
+                              <Interactor fx:id="interactor" />
+                              <Button fx:id="useButton" mnemonicParsing="false" text="Use" />
+                           </children>
+                        </VBox>
                      </content>
                   </ScrollPane>
-                  <ScrollPane>
+                  <ScrollPane fitToWidth="true">
                      <content>
                         <TheoryView fx:id="theoryView" />
                      </content>
                   </ScrollPane>
-                  <TextArea fx:id="logArea" editable="false" prefHeight="200.0" prefWidth="200.0" />
+                  <TextArea fx:id="logArea" editable="false" />
                </items>
             </SplitPane>
          </children>

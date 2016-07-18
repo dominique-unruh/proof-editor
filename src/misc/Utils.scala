@@ -9,11 +9,10 @@ import javafx.beans.value.{ChangeListener, ObservableValue}
 import javafx.event.Event
 import javafx.scene.shape.Rectangle
 import javafx.scene.web.{HTMLEditor, WebView}
+import scala.reflect.runtime.universe.TypeTag
 
 import com.sun.javafx.webkit.WebConsoleListener
 
-import scala.reflect.api.TypeTags
-import scala.reflect.internal.Types
 
 object Utils {
   /** Makes a copy of xs with sep interspersed. E.g., intersperse(ArrayBuffer(x,y),sep) = List(x,sep,y). */
@@ -27,10 +26,10 @@ object Utils {
   }
 
   @Pure
-  def cast[A,B](x : A)(implicit a: TypeTags#TypeTag[A], b: TypeTags#TypeTag[B]) : B =
+  def cast[A,B](x : A)(implicit a: TypeTag[A], b: TypeTag[B]) : B =
     cast(a,b,x)
   @Pure
-  def cast[A,B](a: TypeTags#TypeTag[A], b: TypeTags#TypeTag[B], x:A) : B =
+  def cast[A,B](a: TypeTag[A], b: TypeTag[B], x:A) : B =
     if (a!=null && b!=null && a==b) x.asInstanceOf[B] else throw new ClassCastException(s"$a != $b in type cast")
 
   @Pure
@@ -71,6 +70,7 @@ object Utils {
   * and override [[get]] (must return the current value of the property), [[setter]] (must set the value).
   * When the value of the property changes (i.e., if [[getter]] would return a different value from now on),
   * invoke [[fireValueChangedEvent]]. (Do not invoke [[fireValueChangedEvent]] if the value was changed via [[setter]].)
+  *
   * @tparam T
   */
 abstract class GetterSetterProperty[T] extends SimpleObjectProperty[T] {
@@ -84,3 +84,5 @@ abstract class GetterSetterProperty[T] extends SimpleObjectProperty[T] {
   protected def setter(value:T): Unit
   override def fireValueChangedEvent() = super.fireValueChangedEvent()
 }
+
+
