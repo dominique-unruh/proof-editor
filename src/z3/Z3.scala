@@ -25,6 +25,7 @@ class Z3(config:Map[String,String]) {
     case e : ArithExpr if e.isMul => Apply(CMathML.times, e.getArgs map toCMathML : _*)
     case e : ArithExpr if e.isSub => Apply(CMathML.minus, e.getArgs map toCMathML : _*)
     case e : ArithExpr if e.isDiv => Apply(CMathML.divide, e.getArgs map toCMathML : _*)
+    case e : ArithExpr if e.isUMinus => Apply(CMathML.uminus, e.getArgs map toCMathML : _*)
     case e : BoolExpr if e.isEq => Apply(CMathML.equal, e.getArgs map toCMathML : _*)
     case e : ArithExpr if e.isConst => CI(e.getFuncDecl.getName.toString)
     case e : RatNum =>
@@ -50,6 +51,7 @@ class Z3(config:Map[String,String]) {
     case Apply(CMathML.divide,x,y) => context.mkDiv(fromCMathML(x).asInstanceOf[ArithExpr],
                                                     fromCMathML(y).asInstanceOf[ArithExpr])
     case Apply(CMathML.equal,x,y) => context.mkEq(fromCMathML(x),fromCMathML(y))
+    case Apply(CMathML.uminus,x) => context.mkUnaryMinus(fromCMathML(x).asInstanceOf[ArithExpr])
   }
 
 //  def arithExpr(m: CMathML) : ArithExpr = m match {
@@ -87,8 +89,9 @@ class Z3(config:Map[String,String]) {
 object Z3 {
 
   monkeyPatchZ3Native()
-//  loadLib("/libz3.so","/libz3.so.0")
+//  loadLib("/libz3.so")
 //  loadLib("/libz3java.so")
+  print("java.library.path",System.getProperty("java.library.path"))
   System.loadLibrary("z3")
   System.loadLibrary("z3java")
 

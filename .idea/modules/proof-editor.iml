@@ -20,21 +20,22 @@
       <excludeFolder url="file://$MODULE_DIR$/../../target/resolution-cache" />
       <excludeFolder url="file://$MODULE_DIR$/../../target/streams" />
       <excludeFolder url="file://$MODULE_DIR$/../../target/test-reports" />
+      <excludeFolder url="file://$MODULE_DIR$/../../target/z3" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="SBT: commons-io:commons-io:2.5:jar" level="project" />
-    <orderEntry type="library" name="SBT: org.scalafx:scalafx_2.11:8.0.92-R10:jar" level="project" />
-    <orderEntry type="library" name="SBT: org.scala-lang:scala-reflect:2.11.8:jar" level="project" />
     <orderEntry type="module-library">
       <library name="SBT: unmanaged-jars">
         <CLASSES>
-          <root url="jar:///usr/lib/java/com.microsoft.z3.jar!/" />
+          <root url="jar://$MODULE_DIR$/../../target/z3/com.microsoft.z3.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
       </library>
     </orderEntry>
+    <orderEntry type="library" name="SBT: org.scalafx:scalafx_2.11:8.0.92-R10:jar" level="project" />
+    <orderEntry type="library" name="SBT: org.scala-lang:scala-reflect:2.11.8:jar" level="project" />
     <orderEntry type="library" scope="TEST" name="SBT: org.scalatest:scalatest_2.11:2.2.6:jar" level="project" />
     <orderEntry type="library" name="SBT: org.scala-lang.modules:scala-xml_2.11:1.0.5:jar" level="project" />
     <orderEntry type="library" name="SBT: org.scala-lang:scala-library:2.11.8:jar" level="project" />

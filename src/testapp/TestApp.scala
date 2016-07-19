@@ -1,6 +1,7 @@
 package testapp
 import java.io.{PrintWriter, StringWriter}
 import java.lang.System.out
+import java.util.IllegalFormatCodePointException
 import javafx.application.{Application, Platform}
 import javafx.beans.property.SimpleObjectProperty
 import javafx.beans.value.{ChangeListener, ObservableValue}
@@ -28,6 +29,7 @@ import z3.Z3
 
 import scala.reflect.runtime.universe._
 import scala.runtime.BoxedUnit
+import scalafx.application.JFXApp
 
 object TestApp {
   def main(args: Array[String]) = Application.launch(classOf[TestApp], args:_*)
@@ -180,7 +182,6 @@ class TestApp extends Application {
     }})
 
     trafoChoice.setItems(transformations)
-    // TODO: selection listener
     trafoChoice.getSelectionModel.selectedItemProperty.addListener(new ChangeListener[TrafoChoice] {
       override def changed(observable: ObservableValue[_ <: TrafoChoice], oldValue: TrafoChoice, newValue: TrafoChoice): Unit =
         interactor.setInteraction(newValue.trafo.createInteractive)

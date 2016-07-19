@@ -21,8 +21,8 @@ abstract class Question[T] {
   val default : T
 }
 
-class FormulaQ(val message:Elem,
-               @deprecated val newFormula:Formula=null
+class FormulaQ(val message:Elem
+//               @deprecated val newFormula:Formula=null
               ) extends Question[Option[Formula]] {
   val answerType = typeTag[Option[Formula]]
   val questionType = typeTag[FormulaQ]

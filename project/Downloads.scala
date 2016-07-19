@@ -10,13 +10,15 @@ object Downloads extends AutoPlugin {
     lazy val installDependencies = taskKey[Seq[File]]("Download and build dependencies - if needed")
     lazy val downloadMathQuill = taskKey[Unit]("Download and build MathQuill")
     lazy val downloadJQuery = taskKey[Unit]("Download JQuery")
+    lazy val downloadZ3 = taskKey[Unit]("Download Z3")
     lazy val enableDownloads = settings
   }
 
   def settings = Seq(
       autoImport.downloadMathQuill := downloadMathQuill(Keys.baseDirectory.value),
       autoImport.downloadJQuery := downloadJQuery(Keys.baseDirectory.value),
-      autoImport.installDependencies := installDependencies(Keys.baseDirectory.value)
+      autoImport.installDependencies := installDependencies(Keys.baseDirectory.value),
+      autoImport.downloadZ3 := downloadZ3(Keys.baseDirectory.value)
     )
 
 //  val base = Keys.baseDirectory.value
@@ -36,6 +38,31 @@ object Downloads extends AutoPlugin {
     IO.move(dir/"build", base/mathquillTargetDir)
   }
 
+  // ---- Z3 ----
+  val z3TargetDir = "target/z3"
+  private def downloadZ3(version:String,os:String,base:File) : File = {
+    println(s"Downloading Z3 - $os")
+    val dir = base / s"tmp/z3-$os"
+    IO.delete(dir)
+    val files = IO.unzipURL(new URL(s"https://github.com/Z3Prover/z3/releases/download/z3-$version/z3-$version-$os.zip"), dir)
+    val actualDir = dir / s"z3-$version-$os"
+    actualDir
+  }
+  private def downloadZ3(base:File) : Unit = {
+    val target = base / z3TargetDir
+    IO.createDirectory(target)
+    var version = "4.4.1"
+    val ubuntudir = downloadZ3(version,"x64-ubuntu-14.04",base)
+    println("Ubuntu dir: "+ubuntudir)
+    def move(z3dir:File,file:String) =
+      IO.move(z3dir / file, target / (z3dir/file).name)
+    move(ubuntudir, "bin/com.microsoft.z3.jar")
+    move(ubuntudir, "bin/libz3.so")
+    move(ubuntudir, "bin/libz3java.so")
+    val windir = downloadZ3(version,"x64-win",base)
+    move(windir, "bin/libz3.dll")
+    move(windir, "bin/libz3java.dll")
+  }
 
   // ---- JQuery ----
   val jqueryFile = "resources/ui/mathview/jquery.js"
@@ -55,7 +82,8 @@ object Downloads extends AutoPlugin {
   def installDependencies(base:File) = {
     if (!(base/jqueryFile).exists()) downloadJQuery(base)
     if (!(base/mathquillTargetDir).isDirectory()) downloadMathQuill(base)
-    recursiveFiles(base, jqueryFile, mathquillTargetDir)
+    if (!(base/z3TargetDir).isDirectory) downloadZ3(base)
+    recursiveFiles(base, jqueryFile, mathquillTargetDir, z3TargetDir) // TODO: Z3 jars should not be included
   }
 
 }

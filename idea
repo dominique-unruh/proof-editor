@@ -1,1 +1,1 @@
-LD_LIBRARY_PATH=/usr/lib64:/usr/lib64/z3 idea "$@" &
+LD_LIBRARY_PATH=/home/unruh/svn/proof-editor/target/scala-2.11/classes idea "$@" &
