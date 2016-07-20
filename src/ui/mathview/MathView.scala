@@ -33,7 +33,7 @@ class MathView extends BorderPane {
   /** Whether the editor is selected. Currently, this means that it (or a subelement) has the focus. */
   val selectedProperty : ReadOnlyBooleanProperty = web.focusedProperty
   MathView // Causes the singleton object to be initialized
-  web.getEngine.load(getClass.getResource("mathview.html").toString)
+  web.getEngine.load(MathView.mathviewHTML.toString)
   private val window = web.getEngine.executeScript("window").asInstanceOf[JSObject]
   window.setMember("controller", JSBridge)
   center = web
@@ -118,17 +118,17 @@ class MathView extends BorderPane {
 
 private object MathView {
 //  private val base = getClass.getResource("/").toString
-  checkResources
+//  checkResources
+  private val mathviewHTML = checkResource("mathview.html")
+  val jQueryJs = checkResource("jquery.js")
+  val mathQuillCss = checkResource("mathquill/mathquill.css")
+  val mathQuillJs = checkResource("mathquill/mathquill.js")
+  val mathViewCss = checkResource("mathview.css")
+  val mathViewJs = checkResource("mathview.js")
 
-  private def checkResources() = {
-    def checkResource(name:String) =
-      if (getClass.getResource(name)==null) throw new RuntimeException("missing resource "+name)
-    checkResource("mathquill/mathquill.css")
-    checkResource("mathquill/mathquill.js")
-    checkResource("mathview.html")
-    checkResource("jquery.js")
-    checkResource("mathview.css")
-    checkResource("mathview.js")
+  private def checkResource(name:String) = {
+    val res = getClass.getResource(name)
+    if (res == null) throw new RuntimeException("missing resource " + name)
+    res
   }
-
 }
