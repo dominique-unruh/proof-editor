@@ -2,6 +2,10 @@
 
 name := "proof-editor"
 
+version := "0.1"
+
+maintainer := "unruh"
+
 scalaVersion := "2.11.8"
 libraryDependencies += "org.scala-lang.modules" % "scala-xml_2.11" % "1.0.5"
 libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.6" % Test
@@ -65,3 +69,25 @@ jfxSettings
 //  if (!mathquillTargetDir.isDirectory()) downloadMathQuill_
 //  List(jqueryFile, mathquillTargetDir)
 //}
+
+NativePackagerKeys.bashScriptExtraDefines += "export LD_LIBRARY_PATH=$lib_dir"
+//NativePackagerKeys.batScriptExtraDefines += """set _JAVA_OPTS=%_JAVA_OPTS% -Djava.library.path=%APP_LIB_DIR%"""
+NativePackagerKeys.batScriptExtraDefines += """cd %APP_LIB_DIR%"""
+mappings in Universal += baseDirectory.value / "target/z3/ubuntu64/libz3.so" -> "lib/libz3.so"
+mappings in Universal += baseDirectory.value / "target/z3/ubuntu64/libz3java.so" -> "lib/libz3java.so"
+//mappings in Universal += baseDirectory.value / "target/z3/libz3.dll" -> "lib/libz3.dll"
+//mappings in Universal += baseDirectory.value / "target/z3/libz3java.dll" -> "lib/libz3java.dll"
+//mappings in Universal += baseDirectory.value / "target/z3/win32/libz3.dll" -> "lib/z3.dll"
+mappings in Universal += baseDirectory.value / "target/z3/win32/libz3.dll" -> "lib/libz3.dll"
+mappings in Universal += baseDirectory.value / "target/z3/win32/libz3java.dll" -> "lib/libz3java.dll"
+mappings in Universal += baseDirectory.value / "target/z3/win32/vcomp110.dll" -> "lib/vcomp110.dll"
+enablePlugins(JavaAppPackaging)
+//enablePlugins(UniversalPlugin)
+//antPackagerTasks in JDKPackager := Some(file("/usr/java/jdk1.8.0_92/lib/ant-javafx.jar"))
+//enablePlugins(JDKPackagerPlugin)
+
+
+//import com.github.retronym.SbtOneJar._
+//oneJarSettings
+
+//classpathTypes ++= Set("jnilib", "dll")

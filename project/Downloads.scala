@@ -54,14 +54,19 @@ object Downloads extends AutoPlugin {
     var version = "4.4.1"
     val ubuntudir = downloadZ3(version,"x64-ubuntu-14.04",base)
     println("Ubuntu dir: "+ubuntudir)
-    def move(z3dir:File,file:String) =
+    def move(z3dir:File,file:String,target:File) =
       IO.move(z3dir / file, target / (z3dir/file).name)
-    move(ubuntudir, "bin/com.microsoft.z3.jar")
-    move(ubuntudir, "bin/libz3.so")
-    move(ubuntudir, "bin/libz3java.so")
-    val windir = downloadZ3(version,"x64-win",base)
-    move(windir, "bin/libz3.dll")
-    move(windir, "bin/libz3java.dll")
+    move(ubuntudir, "bin/com.microsoft.z3.jar", target)
+    move(ubuntudir, "bin/libz3.so", target/"ubuntu64")
+    move(ubuntudir, "bin/libz3java.so", target/"ubuntu64")
+    //val windir = downloadZ3(version,"x64-win",base)
+    //move(windir, "bin/libz3.dll", target/"win64")
+    //move(windir, "bin/libz3java.dll", target/"win64")
+    //move(windir, "bin/vcomp110.dll", target/"win64")
+    val windir32 = downloadZ3(version,"x86-win",base)
+    move(windir32, "bin/libz3.dll", target/"win32")
+    move(windir32, "bin/libz3java.dll", target/"win32")
+    move(windir32, "bin/vcomp110.dll", target/"win32")
   }
 
   // ---- JQuery ----

@@ -92,8 +92,10 @@ object Z3 {
 //  loadLib("/libz3.so")
 //  loadLib("/libz3java.so")
   print("java.library.path",System.getProperty("java.library.path"))
-  System.loadLibrary("z3")
-  System.loadLibrary("z3java")
+//  try System.loadLibrary("z3")
+//  catch { case _ : UnsatisfiedLinkError => System.loadLibrary("libz3") }
+  try System.loadLibrary("z3java")
+  catch { case _ : UnsatisfiedLinkError => System.loadLibrary("libz3java") }
 
   private def loadLib(name:String*) = {
 //    try {
