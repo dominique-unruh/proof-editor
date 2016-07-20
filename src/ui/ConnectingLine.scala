@@ -12,7 +12,7 @@ import scalafx.scene.layout.Pane
 import scalafx.scene.shape.Line
 
 /** Displays a connecting line between two components.
-  * [[ConnectingLine.setLeft]] and [[ConnectingLine.setRight]] set those two components.
+  * [[setLeft]] and [[setRight]] set those two components.
   *
   * The two components and the [[overlay]] must be part of the same [[javafx.scene.Scene]].
   *

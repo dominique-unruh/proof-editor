@@ -1,23 +1,16 @@
 package ui.mathview
 
 import javafx.application.Platform
-import javafx.beans.property.{ObjectProperty, SimpleObjectProperty}
-import javafx.beans.value.{ChangeListener, ObservableValue}
-import javafx.scene.{Group, Node}
-import javafx.scene.control.DialogPane
-
-import scalafx.scene.layout.{BorderPane, Pane}
 import javafx.scene.web.WebView
-import javafx.stage.Stage
 
-import cmathml.{CMathML, Path, PathRev}
-import misc.Pure
-import netscape.javascript.JSObject
+import cmathml.{CMathML, Path}
 import misc.Utils.JavaFXImplicits._
+import netscape.javascript.JSObject
 
 import scala.collection.mutable
 import scalafx.Includes._
-import scalafx.beans.property.{BooleanProperty, ReadOnlyBooleanProperty}
+import scalafx.beans.property.ReadOnlyBooleanProperty
+import scalafx.scene.layout.BorderPane
 
 
 
@@ -27,7 +20,7 @@ import scalafx.beans.property.{BooleanProperty, ReadOnlyBooleanProperty}
   * Must only be created in JavaFX application thread.
   *
   * @see [[setMath]] for setting the displayed math
-  * @see [[CMathML]] for describing math
+  * @see [[cmathml.CMathML]] for describing math
   * */
 class MathView extends BorderPane {
   // TODO port to ScalaFX

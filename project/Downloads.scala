@@ -7,7 +7,8 @@ import scala.collection.mutable.ArrayBuffer
 
 object Downloads extends AutoPlugin {
   object autoImport {
-    lazy val installDependencies = taskKey[Seq[File]]("Download and build dependencies - if needed")
+    lazy val installResources = taskKey[Seq[File]]("Download and build dependencies - if needed; returns list of resource files")
+    lazy val installJars = taskKey[Seq[File]]("Download and build dependencies - if needed; returns list of jar files")
     lazy val downloadMathQuill = taskKey[Unit]("Download and build MathQuill")
     lazy val downloadJQuery = taskKey[Unit]("Download JQuery")
     lazy val downloadZ3 = taskKey[Unit]("Download Z3")
@@ -17,8 +18,9 @@ object Downloads extends AutoPlugin {
   def settings = Seq(
       autoImport.downloadMathQuill := downloadMathQuill(Keys.baseDirectory.value),
       autoImport.downloadJQuery := downloadJQuery(Keys.baseDirectory.value),
-      autoImport.installDependencies := installDependencies(Keys.baseDirectory.value),
-      autoImport.downloadZ3 := downloadZ3(Keys.baseDirectory.value)
+      autoImport.downloadZ3 := downloadZ3(Keys.baseDirectory.value),
+      autoImport.installResources := installResources(Keys.baseDirectory.value),
+      autoImport.installJars := installJars(Keys.baseDirectory.value)
     )
 
 //  val base = Keys.baseDirectory.value
@@ -48,6 +50,7 @@ object Downloads extends AutoPlugin {
     val actualDir = dir / s"z3-$version-$os"
     actualDir
   }
+
   private def downloadZ3(base:File) : Unit = {
     val target = base / z3TargetDir
     IO.createDirectory(target)
@@ -69,6 +72,8 @@ object Downloads extends AutoPlugin {
     move(windir32, "bin/vcomp110.dll", target/"win32")
   }
 
+  scala.reflect.runtime.universe.typeOf[String]
+
   // ---- JQuery ----
   val jqueryFile = "resources/ui/mathview/jquery.js"
   def downloadJQuery(base:File) = {
@@ -88,7 +93,15 @@ object Downloads extends AutoPlugin {
     if (!(base/jqueryFile).exists()) downloadJQuery(base)
     if (!(base/mathquillTargetDir).isDirectory()) downloadMathQuill(base)
     if (!(base/z3TargetDir).isDirectory) downloadZ3(base)
-    recursiveFiles(base, jqueryFile, mathquillTargetDir, z3TargetDir) // TODO: Z3 jars should not be included
   }
 
+  def installJars(base:File) = {
+    installDependencies(base)
+    (base/z3TargetDir) ** "*.jar" get
+  }
+
+  def installResources(base:File) = {
+    installDependencies(base)
+    recursiveFiles(base, jqueryFile, mathquillTargetDir)
+  }
 }
