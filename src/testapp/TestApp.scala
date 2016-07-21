@@ -47,7 +47,7 @@ class TestApp extends Application {
   )
 
   val transformations = FXCollections.observableArrayList(
-    TrafoChoice("Copy formula", new CopyTrafo),
+    TrafoChoice("Simplify formula", new SimplifyTrafo),
     TrafoChoice("Equality check", new CheckEqualTrafo)
   )
 
@@ -118,7 +118,7 @@ class TestApp extends Application {
     }
     val expr = z3.fromCMathML(math.getMath)
     val simp = expr.simplify
-    val simp2 = z3.toCMathML(simp)
+    val simp2 = simp.toCMathML
     theoryView.addFormula(Formula(simp2))
   }
 
