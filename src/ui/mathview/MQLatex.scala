@@ -73,6 +73,7 @@ import org.antlr.v4.runtime.{Parser, RecognitionException, Recognizer}
   val applyRenderers : Map[(String,String),Seq[String] => String] = Map(
     ("arith1","plus") -> {case Seq(x,y) => s"\\left({$x}+{$y}\\right)"},
     ("arith1","minus") -> {case Seq(x,y) => s"\\left({$x}-{$y}\\right)"},
+    ("arith1","unary_minus") -> {case Seq(x) => s"\\left(-{$x}\\right)"},
     ("arith1","times") -> {case Seq(x,y) => s"\\left({$x}\\cdot{$y}\\right)"},
     ("arith1","divide") -> {case Seq(x,y) => s"\\frac{$x}{$y}"},
     ("arith1","power") -> {case Seq(x,y) => s"\\left({$x}^{$y}\\right)"},
