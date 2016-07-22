@@ -1,6 +1,9 @@
 val os = { val os = sys.props("os.name"); if (os.startsWith("Windows")) "win" else if (os.startsWith("Linux")) "linux" else error("Unrecognized OS: "+os) }
 val osbits = os + sys.props("sun.arch.data.model")
 
+val targetOs = "win"
+val targetBits = 32
+
 name := "proof-editor"
 version := "0.1"
 maintainer := "Dominique Unruh"
@@ -14,9 +17,6 @@ libraryDependencies += "org.ow2.asm" % "asm" % "5.1"
 libraryDependencies += "commons-io" % "commons-io" % "2.5"
 libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaVersion.value
 libraryDependencies += "org.scalafx" %% "scalafx" % "8.0.92-R10" // https://mvnrepository.com/artifact/org.scalafx/scalafx_2.11
-//libraryDependencies += "com.lihaoyi" % "ammonite-repl" % "0.6.2" cross CrossVersion.full
-//libraryDependencies += "com.lihaoyi" % "ammonite-sshd" % "0.6.2" cross CrossVersion.full
-//libraryDependencies += "org.testfx" % "testfx-core" % "4.0.4-alpha" % Test
 
 scalaSource in Compile := baseDirectory.value / "src"
 scalaSource in Test := baseDirectory.value / "test"
@@ -53,14 +53,31 @@ jfxSettings
 
 z3Version := "4.4.1"
 
+cancelable in Global := true
 
-NativePackagerKeys.bashScriptExtraDefines += "export LD_LIBRARY_PATH=$lib_dir"
-NativePackagerKeys.batScriptExtraDefines += """cd %APP_LIB_DIR%"""
-mappings in Universal += baseDirectory.value / "lib/linux64/libz3.so" -> "lib/libz3.so"
-mappings in Universal += baseDirectory.value / "lib/linux64/libz3java.so" -> "lib/libz3java.so"
-mappings in Universal += baseDirectory.value / "lib/win32/libz3.dll" -> "lib/libz3.dll"
-mappings in Universal += baseDirectory.value / "lib/win32/libz3java.dll" -> "lib/libz3java.dll"
-mappings in Universal += baseDirectory.value / "lib/win32/vcomp110.dll" -> "lib/vcomp110.dll"
 enablePlugins(JavaAppPackaging)
 
-cancelable in Global := true
+stagingDirectory in Universal := (target in Universal).value / s"stage_$targetOs$targetBits"
+NativePackagerKeys.bashScriptExtraDefines += "export LD_LIBRARY_PATH=$lib_dir"
+NativePackagerKeys.batScriptExtraDefines += """cd %APP_LIB_DIR%"""
+
+mappings in Universal ++= {
+  if (targetOs == "linux")
+    Seq(baseDirectory.value / s"lib/linux$targetBits/libz3.so" -> "lib/libz3.so",
+      baseDirectory.value / s"lib/linux$targetBits/libz3java.so" -> "lib/libz3java.so")
+  else if (targetOs == "win")
+    Seq(baseDirectory.value / s"lib/win$targetBits/libz3.dll" -> "lib/libz3.dll",
+      baseDirectory.value / s"lib/win$targetBits/libz3java.dll" -> "lib/libz3java.dll",
+      baseDirectory.value / s"lib/win$targetBits/vcomp110.dll" -> "lib/vcomp110.dll")
+  else sys.error(s"Don't know how to handle targetOs=$targetOs")
+}
+
+//NativePackagerKeys.bashScriptExtraDefines += "export LD_LIBRARY_PATH=$lib_dir"
+//NativePackagerKeys.batScriptExtraDefines += """cd %APP_LIB_DIR%"""
+//mappings in Universal += baseDirectory.value / "lib/linux64/libz3.so" -> "lib/libz3.so"
+//mappings in Universal += baseDirectory.value / "lib/linux64/libz3java.so" -> "lib/libz3java.so"
+//mappings in Universal += baseDirectory.value / "lib/win32/libz3.dll" -> "lib/libz3.dll"
+//mappings in Universal += baseDirectory.value / "lib/win32/libz3java.dll" -> "lib/libz3java.dll"
+//mappings in Universal += baseDirectory.value / "lib/win32/vcomp110.dll" -> "lib/vcomp110.dll"
+//enablePlugins(JavaAppPackaging)
+
