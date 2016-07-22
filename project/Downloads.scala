@@ -9,12 +9,11 @@ import Keys._
 object Downloads extends AutoPlugin {
 //  lazy val installDependencies = taskKey[Unit]("Download and build dependencies - if needed")
   lazy val installMathQuill = TaskKey[File]("Download and build MathQuill")
-  lazy val installJQuery = TaskKey[File]("Download and build MathQuill")
+  lazy val installJQuery = TaskKey[File]("Download JQuery")
   lazy val installZ3Linux64 = TaskKey[Unit]("Download and build Z3 (Linux 64)")
   lazy val installZ3Win64 = TaskKey[Unit]("Download and build Z3 (Windows 64)")
 
   def copyInto(from:File,to:File) = IO.copyFile(from, to / from.name)
-
 
   object autoImport {
     lazy val installResources = TaskKey[Seq[File]]("Download and build dependencies - if needed; returns list of resource files")
@@ -22,7 +21,7 @@ object Downloads extends AutoPlugin {
     lazy val z3Version = SettingKey[String]("Z3 version")
 
     lazy val enableDownloads = Seq(
-      installResources := recursiveFiles(installJQuery.value, installMathQuill.value),
+      installResources := recursiveFiles(installJQuery.value,installMathQuill.value),
 
       installJars := { installZ3Linux64.value; ((base.value/"lib") ** "*.jar").get },
 

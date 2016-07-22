@@ -1,4 +1,5 @@
-
+val os = { val os = sys.props("os.name"); if (os.startsWith("Windows")) "win" else if (os.startsWith("Linux")) "linux" else error("Unrecognized OS: "+os) }
+val osbits = os + sys.props("sun.arch.data.model")
 
 name := "proof-editor"
 version := "0.1"
@@ -41,7 +42,7 @@ resourceGenerators in Compile += installResources.taskValue
 dependencyClasspath in Compile ++= installJars.value
 dependencyClasspath in Test ++= installJars.value
 
-envVars := Map("LD_LIBRARY_PATH" -> (baseDirectory.value / "lib/linux64").getAbsolutePath)
+envVars := Map("LD_LIBRARY_PATH" -> (baseDirectory.value / "lib" / osbits).getAbsolutePath)
 
 fork in Test := true // Needed because otherwise we try to load the same shared lib in different classloaders during consecutive test runs
 
@@ -52,6 +53,7 @@ jfxSettings
 
 z3Version := "4.4.1"
 
+
 NativePackagerKeys.bashScriptExtraDefines += "export LD_LIBRARY_PATH=$lib_dir"
 NativePackagerKeys.batScriptExtraDefines += """cd %APP_LIB_DIR%"""
 mappings in Universal += baseDirectory.value / "lib/linux64/libz3.so" -> "lib/libz3.so"
@@ -60,3 +62,5 @@ mappings in Universal += baseDirectory.value / "lib/win32/libz3.dll" -> "lib/lib
 mappings in Universal += baseDirectory.value / "lib/win32/libz3java.dll" -> "lib/libz3java.dll"
 mappings in Universal += baseDirectory.value / "lib/win32/vcomp110.dll" -> "lib/vcomp110.dll"
 enablePlugins(JavaAppPackaging)
+
+cancelable in Global := true
