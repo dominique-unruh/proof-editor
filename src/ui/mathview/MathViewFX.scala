@@ -5,9 +5,14 @@ import java.io.IOException
 import cmathml._
 
 import scala.collection.mutable
-import scalafx.scene.layout.{HBox, Pane}
+import scalafx.beans.binding.Bindings
+import scalafx.geometry.{Orientation, Pos}
+import scalafx.scene.control.Separator
+import scalafx.scene.layout.{HBox, Pane, VBox}
 import scalafx.scene.text.{Font, FontPosture, Text}
 import scalafx.scene.{Group, Node}
+import scalafx.Includes._
+import scalafx.scene.shape.Line
 
 //trait MathNode extends Node {
 //  val math : MutableCMathML
@@ -21,33 +26,67 @@ object MathText {
   val fontSize = 28.8 : Double
 //  for (f <- Font.fontNames) println(f)
   val VariableFont = Font("FreeSerif",FontPosture.Italic,fontSize)
-  println(VariableFont)
-  val SymbolFont = new Font("Symbola",fontSize)
+//  println(VariableFont)
+  val SymbolFont = symbolFont(fontSize)
+  def symbolFont(size:Double) = new Font("Symbola",size)
   println(SymbolFont)
   def text(txt:String, font:Font) = { val t = new Text(txt); t.font = font; t }
   def variableText(txt:String) = text(txt,VariableFont)
   def symbolText(txt:String) = text(txt,SymbolFont)
 }
 
-class BinOp(op:String, a:Node, b:Node)
-  extends HBox {
+class BinOp(op:String, a:Node, b:Node) extends HBox {
   import MathText._
-  children.addAll(symbolText("("),a,symbolText(op),b,symbolText(")"))
+  alignment = Pos.Center
+  val open = symbolText("(")
+  val close = symbolText(")")
+  val opTxt = symbolText(op)
+
+  val innerHeight = Bindings.createDoubleBinding(
+    () => math.max(opTxt.layoutBounds.get.getHeight, math.max(a.layoutBounds.get.getHeight,b.layoutBounds.get.getHeight)),
+    opTxt.layoutBounds, a.layoutBounds, b.layoutBounds)
+
+  def updateParens() = {
+    val h = innerHeight.get
+    val font = symbolFont(h)
+    open.font = font
+    close.font = font
+    println("height",h)
+  }
+
+  innerHeight.onChange(updateParens())
+  updateParens()
+
+  children.addAll(open,a,opTxt,b,close)
+}
+
+class Fraction(a:Node, b:Node) extends VBox {
+  alignment = Pos.Center
+  val line = new Line()
+  children.addAll(a, line, b)
+
+  line.startX = 0
+  line.endX <== Bindings.createDoubleBinding(
+    () => math.max(a.layoutBounds.get.getWidth, b.layoutBounds.get.getWidth) + 6,
+    a.layoutBounds, b.layoutBounds)
+  line.strokeWidth = 2
 }
 
 class GenericApply(head:Node, args:Seq[Node])
   extends HBox {
   import MathText._
+  alignment = Pos.Center
   children.addAll(head,symbolText("("))
   var first = true
   for (a <- args) {
     if (!first) children.add(symbolText(","))
     children.add(a)
+    first = false
   }
   children.add(symbolText(")"))
 }
 
-class Var(math:MCI) extends Text(math.v) {
+class Var(math:MCI) extends Text(math.name) {
   font = MathText.VariableFont
 }
 
@@ -55,12 +94,38 @@ class GenericSymbol(cd:String, name:String) extends Text(s"$cd.$name") {
 //  font = MathText.VariableFont
 }
 
-class Missing() extends Text("???") {
-//  font = MathText.VariableFont
+class Missing() extends Text("\u2603") {
+  font = MathText.SymbolFont
 }
 
 
-
+/** Invariants:
+  *
+  * For every [[MutableCMathML]] (short 'math') (not necessarily descendant of [[mathDoc]].root) there is:
+  * - potentially an rendering [[MathNode]]
+  * - potentially an owning [[MathNode]]
+  * - potentially an embedding [[MathNode]]
+  *
+  * No math can have both an owning and embedding [[MathNode]].
+  *
+  * A math with an embedding [[MathNode]] has an rendering [[MathNode]].
+  *
+  * An owning or embedding [[MathNode]] of math m is rendering an ancestor of m.
+  *
+  * If m is embedded or owned by n, then m is a child of a math owned or rendered by n.
+  *
+  * Every valid [[MathNode]] renders exactly one math. No [[MathNode]] renders more than one math.
+  *
+  * If a valid [[MathNode]] n1 contains [[MathNode]] n2 as a scene-graph descendant (not passing through other [[MathNode]]s),
+  * then n2 is valid and n1 embeds the math rendered by n2.
+  *
+  * If a valid [[MathNode]]'s n rendering (excluding the rendering of its descendant [[MathNode]]s) depends on a math m, then
+  * n renders or owns m.
+  *
+  * [[mathDoc]].root is valid.
+  *
+  * (there's more...)
+  */
 class MathViewFX extends Pane { mathView =>
   def setMath(m: CMathML) = mathDoc.setRoot(m)
 
@@ -72,14 +137,14 @@ class MathViewFX extends Pane { mathView =>
 
   private def cmmlChanged(info: Info): Unit = {
     if (info.ownedBy!=null)
-      info.ownedBy.update()
+      info.ownedBy.update() // TODO: why does this preserve invariants?
     else if (info.node.invalid) ()
     else if (info.embeddedIn!=null)
-      info.node.update()
+      info.node.update() // TODO: why does this preserve invariants?
     else if (info.node == mathDoc.root)
-      info.node.update()
+      info.node.update() // TODO: why does this preserve invariants?
     else
-      info.node.invalid = true
+      info.node.invalid = true // TODO: why does this preserve invariants?
   }
 
   private def getInfo(cmml: MutableCMathML) =infos.getOrElseUpdate(cmml, {
@@ -210,8 +275,8 @@ class MathViewFX extends Pane { mathView =>
         case m: MCI => setChild(new Var(m))
         case MApply(hd@MCSymbol("arith1", "plus"), x, y) => binop(hd,"+",x,y)
         case MApply(hd@MCSymbol("arith1", "minus"), x, y) => binop(hd,"-",x,y)
-        case MApply(hd@MCSymbol("arith1", "times"), x, y) => binop(hd,"*",x,y)
-        case MApply(hd@MCSymbol("arith1", "divide"), x, y) => binop(hd,"/",x,y)
+        case MApply(hd@MCSymbol("arith1", "times"), x, y) => binop(hd,"\u22c5",x,y)
+        case MApply(hd@MCSymbol("arith1", "divide"), x, y) => { own(hd); setChild(new Fraction(getNode(x),getNode(y))) }
         case MCNone() => setChild(new Missing())
         case MApply(hd, args @ _*) => setChild(new GenericApply(getNode(hd),args.map(getNode(_))))
         case MCSymbol(cd,name) => setChild(new GenericSymbol(cd,name))

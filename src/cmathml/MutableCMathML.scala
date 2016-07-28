@@ -161,8 +161,13 @@ final class MApply extends MutableCMathML {
   override def toCMathML: CMathML =
     Apply(_head.toCMathML, _args.map(_.toCMathML) : _*)
 }
-final case class MCI(val v:String) extends MutableCMathML {
-  override def toCMathML: CMathML = CI(v)
+final case class MCI(private var _name:String) extends MutableCMathML {
+  override def toCMathML: CMathML = CI(_name)
+  def name = _name
+  def name_=(name:String) = {
+    _name = name
+    fireChange()
+  }
 }
 final case class MCN(val n:BigDecimal) extends MutableCMathML {
   override def toCMathML: CMathML = CN(n)
