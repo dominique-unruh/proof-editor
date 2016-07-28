@@ -17,6 +17,8 @@ libraryDependencies += "org.ow2.asm" % "asm" % "5.1"
 libraryDependencies += "commons-io" % "commons-io" % "2.5"
 libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaVersion.value
 libraryDependencies += "org.scalafx" %% "scalafx" % "8.0.92-R10" // https://mvnrepository.com/artifact/org.scalafx/scalafx_2.11
+libraryDependencies += "org.apache.xmlgraphics" % "batik-swing" % "1.8"
+libraryDependencies += "org.apache.xmlgraphics" % "xmlgraphics-commons" % "2.1"
 
 scalaSource in Compile := baseDirectory.value / "src"
 scalaSource in Test := baseDirectory.value / "test"

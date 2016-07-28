@@ -1,0 +1,19 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="ScalaTests in 'test'" type="ScalaTestRunConfiguration" factoryName="ScalaTest" singleton="true" nameIsGenerated="true">
+    <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
+    <module name="proof-editor" />
+    <setting name="path" value="" />
+    <setting name="package" value="" />
+    <setting name="vmparams" value="" />
+    <setting name="params" value="" />
+    <setting name="workingDirectory" value="file://$PROJECT_DIR$" />
+    <setting name="searchForTest" value="Across module dependencies" />
+    <setting name="testName" value="" />
+    <setting name="testKind" value="All in package" />
+    <setting name="showProgressMessages" value="true" />
+    <envs>
+      <envVar name="LD_LIBRARY_PATH" value="lib/linux64" />
+    </envs>
+    <method />
+  </configuration>
+</component>

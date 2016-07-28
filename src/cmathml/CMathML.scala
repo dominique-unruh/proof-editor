@@ -108,6 +108,11 @@ final case class CSymbol(cd: String, name: String) extends CMathML with Leaf
   * @see [[https://www.w3.org/TR/MathML3/chapter4.html#contm.cerror]] */
 final case class CError(cd: String, name: String, args: Any*) extends CMathML with Leaf
 
+/** An addition to the Content MathML standard. Represents a missing node.
+  * Not valid Content MathML, cannot be exported to valid XML
+  */
+final case class CNone() extends CMathML with Leaf
+
 object Path {
   def fromString(str: String): Path = if (str=="") Path.empty else Path(str.split('-').map{_.toInt}.toList)
   val empty = Path(List.empty)
