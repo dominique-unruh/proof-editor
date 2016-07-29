@@ -5,8 +5,8 @@ import java.math.BigInteger
 import cmathml.{Apply, CI, CMathML, CN}
 import com.microsoft.z3.{BoolSort, _}
 import misc.{Pure, Utils}
-import org.apache.commons.io.IOUtils
-import org.objectweb.asm.{ClassReader, ClassVisitor, ClassWriter, Opcodes}
+//import org.apache.commons.io.IOUtils
+//import org.objectweb.asm.{ClassReader, ClassVisitor, ClassWriter, Opcodes}
 import scala.collection.{JavaConversions, JavaConverters}
 
 
@@ -101,7 +101,7 @@ final class Z3(config:Map[String,String]) {
 object Z3 {
   lazy val default = new Z3(Map())
 
-  monkeyPatchZ3Native()
+//  monkeyPatchZ3Native() // TODO needed?
 //  loadLib("/libz3.so")
 //  loadLib("/libz3java.so")
   print("java.library.path",System.getProperty("java.library.path"))
@@ -141,34 +141,34 @@ object Z3 {
 //    def getFormula : Expr = { val fs = goal.getFormulas; assert(fs.length==1, "getFormulas.length="+fs.length); fs(0) }
 //  }
 
-  /** Loads the class [[com.microsoft.z3.Native]] with the static initializer removes.
-    * The static initializer is supposed to load the native library z3java, but fails.
-    * We load the library ourselves in the initializer of [[Z3]],
-    * so we can remove the static initializer of [[Native]] without harm.
-    *
-    * This function must be called before any classes from [[com.microsoft.z3]] are accessed,
-    * and it must be called only once.
-    */
-  private def monkeyPatchZ3Native(): Unit = {
-    val byteCodeStream = getClass.getResource("/com/microsoft/z3/Native.class").openStream()
-    val byteCode = IOUtils.toByteArray(byteCodeStream)
-    byteCodeStream.close()
-    val cw = new ClassWriter(0)
-    val cv = new ClassVisitor(Opcodes.ASM5, cw) {
-      override def visitMethod(access:Int, name:String, desc:String, signature:String, exceptions:Array[String]) = {
-        if (name=="<clinit>")
-          null
-        else
-          super.visitMethod(access, name, desc, signature, exceptions)
+  /*  /** Loads the class [[com.microsoft.z3.Native]] with the static initializer removed.
+      * The static initializer is supposed to load the native library z3java, but fails.
+      * We load the library ourselves in the initializer of [[Z3]],
+      * so we can remove the static initializer of [[Native]] without harm.
+      *
+      * This function must be called before any classes from [[com.microsoft.z3]] are accessed,
+      * and it must be called only once.
+      */
+    private def monkeyPatchZ3Native(): Unit = {
+      val byteCodeStream = getClass.getResource("/com/microsoft/z3/Native.class").openStream()
+      val byteCode = IOUtils.toByteArray(byteCodeStream)
+      byteCodeStream.close()
+      val cw = new ClassWriter(0)
+      val cv = new ClassVisitor(Opcodes.ASM5, cw) {
+        override def visitMethod(access:Int, name:String, desc:String, signature:String, exceptions:Array[String]) = {
+          if (name=="<clinit>")
+            null
+          else
+            super.visitMethod(access, name, desc, signature, exceptions)
+        }
       }
-    }
-    val cr = new ClassReader(byteCode)
-    cr.accept(cv,0)
-    var byteCodeMod = cw.toByteArray
-    val argTypes : Array[Class[_]] = null
-    val method =
-      classOf[ClassLoader].getDeclaredMethod("defineClass",classOf[String],classOf[Array[Byte]],classOf[Int],classOf[Int])
-    method.setAccessible(true)
-    method.invoke(getClass.getClassLoader,null,byteCodeMod,0.asInstanceOf[Object],byteCodeMod.length.asInstanceOf[Object])
-  }
+      val cr = new ClassReader(byteCode)
+      cr.accept(cv,0)
+      var byteCodeMod = cw.toByteArray
+      val argTypes : Array[Class[_]] = null
+      val method =
+        classOf[ClassLoader].getDeclaredMethod("defineClass",classOf[String],classOf[Array[Byte]],classOf[Int],classOf[Int])
+      method.setAccessible(true)
+      method.invoke(getClass.getClassLoader,null,byteCodeMod,0.asInstanceOf[Object],byteCodeMod.length.asInstanceOf[Object])
+    } */
 }
