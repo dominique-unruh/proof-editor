@@ -9,9 +9,10 @@ import cmathml.CMathML.{divide, minus, plus, times}
 import cmathml._
 import org.scalatest.FunSuite
 import ui.TestFxApp
+import ui.mathview.MathViewFX.{CursorLeft, CursorPos}
 
 import scala.sys
-import scalafx.scene.control.Label
+import scalafx.scene.control.{Control, Label}
 import scalafx.scene.layout.VBox
 
 object MathViewFXExample {
@@ -20,8 +21,10 @@ object MathViewFXExample {
   def main(args: Array[String]) = {
     TestFxApp.run {
       TestFxApp.useTestAppCss()
+      val mwx = new MathEdit()
 
-      val mw = new MathViewFX()
+
+      val mw = new MathEdit()
       val m = plus(minus(CNone(),CI("y")),times(CI("z"),CI("w")))
       mw.setMath(m)
 
@@ -36,7 +39,7 @@ object MathViewFXExample {
           { s1 = h1; s2 = h2; s3 = h3; z = zz; w = ww }
       }
 
-      val box = new VBox(new Label("X"),new Label("I"),mw)
+      val box = new VBox(/*mwx,*/new Label("X"),new Label("I"),mw)
 
 //      s1.name = "meh"
 //      s2.name = "la"
@@ -61,7 +64,7 @@ object MathViewFXExample {
 
 //      mw.setMath(CNone())
 
-      mw.cursorNode.value = z
+      mw.cursorPos.value = CursorPos(z,CursorLeft)
 
       def pr() =
         mw.mathDoc.root match {
@@ -74,6 +77,8 @@ object MathViewFXExample {
       s3.name="divide"
       pr()
 //      sys.exit(1)
+
+//      mw.requestFocus()
 
       box
     }

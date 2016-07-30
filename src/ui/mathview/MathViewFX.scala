@@ -158,16 +158,26 @@ class MathCursor(val size : Property[Bounds,Bounds], val cursorSide: CursorSide)
   */
 class MathViewFX extends Pane { mathView =>
   import MathViewFX._
-  def setMath(m: CMathML) = { mathDoc.setRoot(m); cursorNode.value = mathDoc.root; cursorSide.value = CursorLeft }
+  def setMath(m: CMathML) = {
+    mathDoc.setRoot(m)
+//    cursorNode.value = mathDoc.root; cursorSide.value = CursorLeft
+    cursorPos.value = CursorPos(mathDoc.root, CursorLeft)
+  }
 
   val mathDoc = new MutableCMathMLDocument(CNone())
-  val cursorNode = ObjectProperty[MutableCMathML](mathDoc.root)
-  cursorNode.onChange { (_,oldNode,newNode) =>
-    println("cursor set",newNode)
-    assert(oldNode ne newNode); getInfo(oldNode).node.setCursor(None); getInfo(newNode).node.setCursor(Some(cursorSide.value)) }
-  val cursorSide = ObjectProperty[CursorSide](CursorLeft)
-  cursorSide.onChange { (_,_,newValue) =>
-    getInfo(cursorNode.value).node.setCursor(Some(newValue)) }
+  val cursorPos = ObjectProperty[CursorPos](CursorPos(mathDoc.root,CursorLeft))
+  cursorPos.onChange { (_,oldPos,newPos) =>
+    if (oldPos.node ne newPos.node)
+      getInfoWithNewNode(oldPos.node).node.setCursor(None)
+    getInfoWithNewNode(newPos.node).node.setCursor(Some(newPos.side))
+  }
+//  @deprecated val cursorNode = ObjectProperty[MutableCMathML](mathDoc.root)
+//  cursorNode.onChange { (_,oldNode,newNode) =>
+//    println("cursor set",newNode)
+//    assert(oldNode ne newNode); getInfoWithNewNode(oldNode).node.setCursor(None); getInfoWithNewNode(newNode).node.setCursor(Some(cursorSide.value)) }
+//  @deprecated val cursorSide = ObjectProperty[CursorSide](CursorLeft)
+//  cursorSide.onChange { (_,_,newValue) =>
+//    getInfoWithNewNode(cursorNode.value).node.setCursor(Some(newValue)) }
 
   /*TODO private */case class Info(val node : MathNode, var ownedBy : MathNode = null, var embeddedIn : MathNode = null)
   /*TODO private */val infos = new mutable.WeakHashMap[MutableCMathML,Info] // Relies on the fact that MutableCMathML.equals is reference-equality
@@ -186,7 +196,8 @@ class MathViewFX extends Pane { mathView =>
       info.node.invalid = true // TODO: why does this preserve invariants?
   }
 
-  private def getInfo(cmml: MutableCMathML) = infos.getOrElseUpdate(cmml, {
+  /** This will create a node (which will then own and embed other nodes)! */
+  private def getInfoWithNewNode(cmml: MutableCMathML) = infos.getOrElseUpdate(cmml, {
     val info = Info(node = new MathNode(cmml))
     cmml.addChangeListener(() => cmmlChanged(info))
     info
@@ -196,7 +207,7 @@ class MathViewFX extends Pane { mathView =>
     println(s"own(${node},${mathChild})")
     assert(node != null)
     assert(node.math ne mathChild)
-    val info = getInfo(mathChild)
+    val info = getInfoWithNewNode(mathChild)
     assert(info.embeddedIn ne node)
     assert(info.ownedBy ne node)
     if (info.ownedBy != null) info.ownedBy.invalid = true
@@ -206,12 +217,19 @@ class MathViewFX extends Pane { mathView =>
   }
   /** It is permissible to call [[disown]] if you 'node' is not the owner. In this case, nothing happens. */
   private def disown(node : MathNode, mathChild : MutableCMathML) : Unit = {
-    val info = getInfo(mathChild)
+    val info = getInfoWithNewNode(mathChild)
     if (info.ownedBy==node) info.ownedBy = null
   }
 
-  private def getNode(node: MathNode, mathChild: MutableCMathML): Node = {
-    val info = getInfo(mathChild)
+  private def getNode(node : MutableCMathML) = {
+    infos.get(node) match {
+      case None => None
+      case Some(info) => assert(info.node!=null); Some(info.node)
+    }
+  }
+
+  private def getNodeForEmbedding(node: MathNode, mathChild: MutableCMathML): Node = {
+    val info = getInfoWithNewNode(mathChild)
     assert(info.embeddedIn ne node)
     assert(info.ownedBy ne node)
     if (info.ownedBy != null) info.ownedBy.invalid = true
@@ -222,7 +240,7 @@ class MathViewFX extends Pane { mathView =>
     info.node
   }
   private def getNodeForRoot() : MathNode = {
-    val info = getInfo(mathDoc.root)
+    val info = getInfoWithNewNode(mathDoc.root)
     if (info.ownedBy != null) info.ownedBy.invalid = true
     if (info.embeddedIn != null) info.embeddedIn.invalid = true
     info.ownedBy = null
@@ -232,7 +250,7 @@ class MathViewFX extends Pane { mathView =>
   }
   /** It is permissible to call [[disembed]] if you 'node' is not the embedder. In this case, nothing happens. */
   private def disembed(node : MathNode, mathChild : MutableCMathML) : Unit = {
-    val info = getInfo(mathChild)
+    val info = getInfoWithNewNode(mathChild)
     if (info.embeddedIn==node) info.embeddedIn = null
   }
 
@@ -242,21 +260,99 @@ class MathViewFX extends Pane { mathView =>
     children.setAll(rootNode)
   }
 
+  def leftOf(cursor:CursorPos, jump:Boolean=false) : Option[CursorPos] = {
+    val node = getNode(cursor.node).getOrElse(throw new IllegalArgumentException("cursor points to a non-visual subterm"))
+    cursor.side match {
+      case CursorLeft | CursorSelect => leftOf(node) match {
+        case None => embedderOf(node) match {
+          case None => None
+          case Some(embedder) => Some(CursorPos(embedder.math, CursorLeft))
+        }
+        case Some(left) => Some(CursorPos(left,CursorRight))
+      }
+      case CursorRight =>
+        if (jump)
+          Some(CursorPos(node.math,CursorLeft))
+        else
+          node.rightmostChild match {
+            case None => Some(CursorPos(node.math,CursorLeft))
+            case Some(child) => Some(CursorPos(child,CursorRight))
+      }
+    }
+  }
+  def rightOf(cursor:CursorPos, jump:Boolean=false) : Option[CursorPos] = {
+    val node = getNode(cursor.node).getOrElse(throw new IllegalArgumentException("cursor points to a non-visual subterm"))
+    cursor.side match {
+      case CursorRight | CursorSelect => rightOf(node) match {
+        case None => embedderOf(node) match {
+          case None => None
+          case Some(embedder) => Some(CursorPos(embedder.math, CursorRight))
+        }
+        case Some(right) => Some(CursorPos(right,CursorLeft))
+      }
+      case CursorLeft =>
+        if (jump)
+          Some(CursorPos(node.math,CursorRight))
+        else
+          node.leftmostChild match {
+            case None => Some(CursorPos(node.math,CursorRight))
+            case Some(child) => Some(CursorPos(child,CursorLeft))
+          }
+    }
+  }
+
+//  def rightmostChild(node:MathNode) : Option[MathNode] = ???
+  private def embedderOf(node:MathNode) : Option[MathNode] =
+    infos.get(node.math).flatMap(x => Option(x.embeddedIn))
+  /** Left sibling according to visual representation */
+  private def leftOf(node:MathNode) : Option[MutableCMathML] =
+  embedderOf(node).flatMap(_.leftOf(node))
+  private def rightOf(node:MathNode) : Option[MutableCMathML] =
+    embedderOf(node).flatMap(_.rightOf(node))
+
+//  def leftOf(cursor:CursorPos) : Option[CursorPos] = cursor.side match {
+//    case CursorLeft => leftOf(cursor.node) match {
+//      case None => cursor.node.parent match {
+//        case null => None
+//        case parent : MutableCMathML => Some(CursorPos(parent,CursorLeft))
+//        case _ : MutableCMathMLDocument => None
+//      }
+//      case Some(node) => Some(CursorPos(node,CursorRight))
+//    }
+//    case CursorRight => leftmostChild(cursor.node)
+//  }
+
+
   setRootNode()
   mathDoc.addChangeListener(() => setRootNode())
 
   /*TODO private*/ class MathNode(val math : MutableCMathML) extends Group {
+    def rightmostChild: Option[MutableCMathML] = embedded.lastOption
+    def leftmostChild: Option[MutableCMathML] = embedded.headOption
+
+    def leftOf(node: MathNode): Option[MutableCMathML] =
+      embedded.indexOf(node.math) match {
+        case -1 => throw new IllegalArgumentException("node is not embedded")
+        case 0 => None
+        case i if i>=1 => Some(embedded(i-1))
+        //        case _ => sys.error("unreachable")
+      }
+    def rightOf(node: MathNode): Option[MutableCMathML] = {
+      val lastIdx = embedded.length-1
+      embedded.indexOf(node.math) match {
+        case -1 => throw new IllegalArgumentException("node is not embedded")
+        case `lastIdx` => None
+        case i => Some(embedded(i + 1))
+      }
+    }
+
     id = Integer.toHexString(hashCode) // TODO: remove
-    //    private var _cursorState : Option[CursorSide] = None
     private var _cursor : Node = null
-//    def cursorState = _cursorState
     def setCursor(state:Option[CursorSide]) : Unit = {
       println("cursorState", state)
       state match {
         case None => _cursor = null
         case Some(side) => _cursor = new MathCursor(size,side)
-//        case Some(CursorRight) => _cursor = Rectangle(30,30)
-//        case Some(CursorSelect) => _cursor = Rectangle(30,30)
       }
       updateChildren()
     }
@@ -270,13 +366,13 @@ class MathViewFX extends Pane { mathView =>
       println("Invalid: "+invalid)
       println("Owned: "+owned)
       println("Embedded: "+embedded)
-      println("Info: "+getInfo(math))
+      println("Info: "+getInfoWithNewNode(math))
     }
 
     override def toString(): String = s"[MathNode: ${math}]"
 
     /** Rules:
-      * - If [[getNode]] is called for some proper descendent x of [[math]], then [[own]](x) must be called before.
+      * - If [[getNodeForEmbedding]] is called for some proper descendent x of [[math]], then [[own]](x) must be called before.
       * - If [[own]] is called for some proper descendent x of [[math]], then [[own]](x) must be called before.
       * - [[own]] must not be called for [[math]], and must only be called for descendents of [[math]]
       * - [[own]] must be called for all [[MutableCMathML]]'s that this node logically depends on (except for children that are simply embedded as subnodes)
@@ -293,8 +389,8 @@ class MathViewFX extends Pane { mathView =>
     /** Gets a [[Node]] containing the rendering of 'mathChild'.
       * These nodes can be added as children to 'this' (or its descendants) but must not otherwise be touched.
       */
-    private def getNode(mathChild: MutableCMathML): Node = {
-      val node = mathView.getNode(this, mathChild)
+    private def getNodeForEmbedding(mathChild: MutableCMathML): Node = {
+      val node = mathView.getNodeForEmbedding(this, mathChild)
       embedded += mathChild
       node
     }
@@ -333,16 +429,16 @@ class MathViewFX extends Pane { mathView =>
       invalid = false
       def binop(hd:MutableCMathML,op:String,x:MutableCMathML,y:MutableCMathML) = {
         own(hd)
-        setChild(new BinOp(op, getNode(x), getNode(y)))
+        setChild(new BinOp(op, getNodeForEmbedding(x), getNodeForEmbedding(y)))
       }
       math match {
         case m: MCI => setChild(new Var(m))
         case MApply(hd@MCSymbol("arith1", "plus"), x, y) => binop(hd,"+",x,y)
         case MApply(hd@MCSymbol("arith1", "minus"), x, y) => binop(hd,"-",x,y)
         case MApply(hd@MCSymbol("arith1", "times"), x, y) => binop(hd,"\u22c5",x,y)
-        case MApply(hd@MCSymbol("arith1", "divide"), x, y) => { own(hd); setChild(new Fraction(getNode(x),getNode(y))) }
+        case MApply(hd@MCSymbol("arith1", "divide"), x, y) => { own(hd); setChild(new Fraction(getNodeForEmbedding(x),getNodeForEmbedding(y))) }
         case MCNone() => setChild(new Missing())
-        case MApply(hd, args @ _*) => setChild(new GenericApply(getNode(hd),args.map(getNode(_))))
+        case MApply(hd, args @ _*) => setChild(new GenericApply(getNodeForEmbedding(hd),args.map(getNodeForEmbedding(_))))
         case MCSymbol(cd,name) => setChild(new GenericSymbol(cd,name))
       }
       assert(child!=null)
@@ -356,4 +452,5 @@ object MathViewFX {
   final object CursorLeft extends CursorSide
   final object CursorRight extends CursorSide
   final object CursorSelect extends CursorSide
+  case class CursorPos(node:MutableCMathML, side:CursorSide)
 }
