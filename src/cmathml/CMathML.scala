@@ -2,6 +2,7 @@ package cmathml
 
 import java.math.MathContext
 
+import cmathml.CMathML.{Attributes, NoAttr}
 import misc.Pure
 
 import scala.math.BigDecimal.RoundingMode
@@ -24,9 +25,13 @@ sealed trait CMathML {
     * Otherwise arith1.unary_minus is applied.
     */
   @Pure def negate() : CMathML = Apply(CMathML.uminus,this)
+  /** Only immutable objects may be inserted into this map */
+  val attributes : Attributes
 }
 
 object CMathML {
+  type Attributes = Map[(String,String),Any]
+  val NoAttr : Attributes = Map.empty
   val equal = CSymbol("relation1","eq")
   def equal(a: CMathML, b: CMathML) : CMathML = Apply(equal,a,b)
 
@@ -51,7 +56,7 @@ sealed protected trait Leaf extends CMathML {
 
 /** <apply>-Content MathML element
   * @see [[https://www.w3.org/TR/MathML3/chapter4.html#contm.apply]] */
-final case class Apply(hd: CMathML, args: CMathML*) extends CMathML {
+final case class Apply(val attributes : Attributes, hd: CMathML, args: CMathML*) extends CMathML {
   override def mapAt(p: Path, f: (CMathML) => CMathML): CMathML = {
     if (p.isEmpty) return f(this)
     val idx = p.head; val tl = p.tail
@@ -74,25 +79,34 @@ final case class Apply(hd: CMathML, args: CMathML*) extends CMathML {
     "Apply("+hd+","+args.mkString(",")+")"
   }
 }
+object Apply {
+  def apply(hd: CMathML, args: CMathML*) = new Apply(NoAttr,hd,args:_*)
+}
 
 /** <ci>-Content MathML element
   * @see [[https://www.w3.org/TR/MathML3/chapter4.html#contm.ci]] */
-final case class CI(v: String) extends CMathML with Leaf
+final case class CI(val attributes : Attributes = NoAttr, name : String) extends CMathML with Leaf {
+  def this(name:String) = this(NoAttr,name)
+}
+object CI {
+  def apply(name:String) = new CI(NoAttr,name)
+}
 
 /** <cn>-Content MathML element
   * The BigDecimal *must* have rounding mode [[java.math.RoundingMode.UNNECESSARY]] and precision 0.
   * @see [[https://www.w3.org/TR/MathML3/chapter4.html#contm.cn]] */
-final case class CN(n: BigDecimal) extends CMathML with Leaf {
+final case class CN(val attributes : Attributes = NoAttr, n: BigDecimal) extends CMathML with Leaf {
   assert(n.mc.getPrecision==0)
   assert(n.mc.getRoundingMode==java.math.RoundingMode.UNNECESSARY)
   @Pure final def isNegative = (n < 0)
   override def negate() = CN(-n)
 }
 object CN {
-  def apply(i:Int) = new CN(BigDecimal(i,MATHCONTEXT))
-  def apply(i:Double) = new CN(BigDecimal.exact(i)(MATHCONTEXT))
+  def apply(d:BigDecimal) = new CN(NoAttr,d)
+  def apply(i:Int) = new CN(NoAttr,BigDecimal(i,MATHCONTEXT))
+  def apply(i:Double) = new CN(NoAttr,BigDecimal.exact(i)(MATHCONTEXT))
 //  def apply(i:BigDecimal) = { if (i.mc!=MATHCONTEXT) new CN(new BigDecimal(i.bigDecimal,MATHCONTEXT)) else i }
-  def apply(i:String) = new CN(BigDecimal(i,MATHCONTEXT))
+  def apply(i:String) = new CN(NoAttr,BigDecimal(i,MATHCONTEXT))
 
   /** Use this math context to construct [[BigDecimal]]s for [[CN]] */
   val MATHCONTEXT = new MathContext(0,java.math.RoundingMode.UNNECESSARY)
@@ -101,17 +115,20 @@ object CN {
 /** <csymbol>-Content MathML element
  *
   * @see [[https://www.w3.org/TR/MathML3/chapter4.html#contm.csymbol]] */
-final case class CSymbol(cd: String, name: String) extends CMathML with Leaf
+final case class CSymbol(val attributes : Attributes = NoAttr, cd: String, name: String) extends CMathML with Leaf
+object CSymbol {
+  def apply(cd: String, name: String) = new CSymbol(NoAttr,cd,name)
+}
 
 /** <cerror>-Content MathML element
   * We are more flexible than the standard here, we allow arbitrary elements as error arguments (not just MathML)
   * @see [[https://www.w3.org/TR/MathML3/chapter4.html#contm.cerror]] */
-final case class CError(cd: String, name: String, args: Any*) extends CMathML with Leaf
+final case class CError(val attributes : Attributes, cd: String, name: String, args: Any*) extends CMathML with Leaf
 
 /** An addition to the Content MathML standard. Represents a missing node.
   * Not valid Content MathML, cannot be exported to valid XML
   */
-final case class CNone() extends CMathML with Leaf
+final case class CNone(val attributes : Attributes = NoAttr) extends CMathML with Leaf
 
 object Path {
   def fromString(str: String): Path = if (str=="") Path.empty else Path(str.split('-').map{_.toInt}.toList)

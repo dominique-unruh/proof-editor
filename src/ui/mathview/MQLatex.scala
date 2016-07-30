@@ -1,17 +1,9 @@
 package ui.mathview
 
-import java.util
-
 import cmathml._
-import jdk.internal.org.xml.sax.ErrorHandler
-import jdk.nashorn.internal.runtime.regexp.joni.exception.SyntaxException
-import ui.mathview.MQLatexParser._
-import misc._
 import misc.Pure
 import org.antlr.v4.runtime._
-import org.antlr.v4.runtime.tree.{ErrorNode, ParseTree, RuleNode, TerminalNode}
-import org.antlr.v4.runtime.atn.ATNConfigSet
-import org.antlr.v4.runtime.dfa.DFA
+import org.antlr.v4.runtime.tree.ParseTree
 
 import scala.collection.mutable
 
@@ -56,7 +48,6 @@ private[mathview] object MQLatex {
   /** Used by the generated parser */
   @Pure @annotation.varargs
   def op(cd:String,name:String,args:CMathML*): CMathML = {
-import org.antlr.v4.runtime.{Parser, RecognitionException, Recognizer}
     assert(cd!=null); assert(name!=null)
     for (a <- args) assert(a!=null,"parser produced null CMathML")
     Apply(CSymbol(cd,name),args:_*)
@@ -92,11 +83,11 @@ import org.antlr.v4.runtime.{Parser, RecognitionException, Recognizer}
       s"\\MathQuillMathField[edit]{$tex}"
     } else {
       m match {
-      case CN(n) => addPath(if (options.edit) n.toString else s"\\class{number}{$n}",path,options)
-      case CI(v) => addPath(if (options.edit) v else s"\\class{variable}{$v}",path,options)
-      case CSymbol(cd,name) => if (options.edit) s"\\text{$cd.$name}}" else s"\\class{symbol}{\\text{$cd.$name}}"
-      case Apply(hd,args @ _*) =>
-        val renderer = hd match { case CSymbol(cd,name) => applyRenderers.get((cd,name)); case _ => None }
+      case CN(_, n) => addPath(if (options.edit) n.toString else s"\\class{number}{$n}",path,options)
+      case CI(_, v) => addPath(if (options.edit) v else s"\\class{variable}{$v}",path,options)
+      case CSymbol(_, cd,name) => if (options.edit) s"\\text{$cd.$name}}" else s"\\class{symbol}{\\text{$cd.$name}}"
+      case Apply(_, hd,args @ _*) =>
+        val renderer = hd match { case CSymbol(_,cd,name) => applyRenderers.get((cd,name)); case _ => None }
         val renderedArgs = renderList(args,path,options)
         val result : Option[String] = renderer match { case None => None;
         case Some(r) => try { Some(r(renderedArgs)) } catch { case _ : MatchError => None } }
@@ -104,7 +95,8 @@ import org.antlr.v4.runtime.{Parser, RecognitionException, Recognizer}
           case None => cmathmlToLatexApplyDefault(cmathmlToLatex(hd,path.append(0),options),renderedArgs)
           case Some(r) => r }
         addPath(result2,path,options)
-      case CError(_,_,_*) => addPath("\\embed{error}[]",path,options);
+      case CError(_,_,_,_*) => addPath("\\embed{error}[]",path,options)
+      case CNone(_) => addPath("{}",path,options)
       }
     }
 

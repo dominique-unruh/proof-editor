@@ -13,9 +13,12 @@ import javafx.stage.Stage
 
 import com.sun.javafx.webkit.WebConsoleListener
 
+
 class TestFxApp extends Application {
-  override def start(stage: Stage): Unit = {
+  override def start(st: Stage): Unit = {
     import TestFxApp._
+
+    stage = st
 
     WebConsoleListener.setDefaultListener(new WebConsoleListener {
       override def messageAdded(webView: WebView, message: String, lineNumber: Int, sourceId: String): Unit =
@@ -38,6 +41,10 @@ object TestFxApp {
   var pane : Pane = null
   var callMe : () => Unit = null
   var name : String = "TestFxApp"
+  val testAppCss = getClass().getResource("/testapp/testapp.css").toExternalForm()
+  var stage : Stage = null
+  def useTestAppCss() = stage.getScene.getStylesheets.add(testAppCss)
+
 
   def run(init: =>Node) = {
     callMe = { () => val node = init; pane.getChildren.add(node) }

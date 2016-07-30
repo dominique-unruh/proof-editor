@@ -3,21 +3,20 @@ package ui.mathview
 import java.io.IOException
 
 import cmathml._
+import ui.mathview.MathViewFX.{CursorLeft, CursorSide}
 
 import scala.collection.mutable
 import scalafx.beans.binding.Bindings
 import scalafx.geometry.{Orientation, Pos}
 import scalafx.scene.control.Separator
-import scalafx.scene.layout.{HBox, Pane, VBox}
+import scalafx.scene.layout._
 import scalafx.scene.text.{Font, FontPosture, Text}
 import scalafx.scene.{Group, Node}
 import scalafx.Includes._
-import scalafx.scene.shape.Line
-
-//trait MathNode extends Node {
-//  val math : MutableCMathML
-//  val mathView : MathViewFX
-//}
+import scalafx.beans.property.{ObjectProperty, Property}
+import scalafx.scene.paint.{Color, Paint}
+import scalafx.scene.shape.{Line, Rectangle}
+import javafx.geometry.Bounds
 
 object MathText {
   if (Font.loadFont(getClass.getResource("mathquill/font/Symbola.otf").toString,0)==null)
@@ -37,6 +36,7 @@ object MathText {
 
 class BinOp(op:String, a:Node, b:Node) extends HBox {
   import MathText._
+  id = Integer.toHexString(hashCode()) // TODO: remove
   alignment = Pos.Center
   val open = symbolText("(")
   val close = symbolText(")")
@@ -61,6 +61,7 @@ class BinOp(op:String, a:Node, b:Node) extends HBox {
 }
 
 class Fraction(a:Node, b:Node) extends VBox {
+  id = Integer.toHexString(hashCode()) // TODO: remove
   alignment = Pos.Center
   val line = new Line()
   children.addAll(a, line, b)
@@ -87,6 +88,7 @@ class GenericApply(head:Node, args:Seq[Node])
 }
 
 class Var(math:MCI) extends Text(math.name) {
+  id = Integer.toHexString(hashCode()) // TODO: remove
   font = MathText.VariableFont
 }
 
@@ -95,7 +97,35 @@ class GenericSymbol(cd:String, name:String) extends Text(s"$cd.$name") {
 }
 
 class Missing() extends Text("\u2603") {
+  id = Integer.toHexString(hashCode()) // TODO: remove
   font = MathText.SymbolFont
+}
+
+class MathCursor(val size : Property[Bounds,Bounds], val cursorSide: CursorSide) extends Region {
+  import MathViewFX._
+  id = Integer.toHexString(hashCode) // TODO: remove
+  styleClass += "mathCursor"
+  cursorSide match {
+    case CursorLeft => styleClass += "mathCursorLeft"
+    case CursorRight => styleClass += "mathCursorRight"
+    case CursorSelect => styleClass += "mathCursorSelect"
+  }
+  def updateSize(): Unit = {
+    val _size = size.value
+    println("size",_size)
+    layoutX = _size.minX
+    layoutY = _size.minY
+    prefWidth = _size.width
+    prefHeight = _size.height
+    resize(_size.width,_size.height)
+//    x = _size.minX
+//    y = _size.minY
+//    width = _size.width
+//    height = _size.height
+  }
+  size.onChange(updateSize()) // TODO: this causes MathCursor not to be GC'd
+  updateSize()
+//  fill = Color.LightGray
 }
 
 
@@ -127,11 +157,20 @@ class Missing() extends Text("\u2603") {
   * (there's more...)
   */
 class MathViewFX extends Pane { mathView =>
-  def setMath(m: CMathML) = mathDoc.setRoot(m)
+  import MathViewFX._
+  def setMath(m: CMathML) = { mathDoc.setRoot(m); cursorNode.value = mathDoc.root; cursorSide.value = CursorLeft }
 
   val mathDoc = new MutableCMathMLDocument(CNone())
-  private case class Info(val node : MathNode, var ownedBy : MathNode = null, var embeddedIn : MathNode = null)
-  private val infos = new mutable.WeakHashMap[MutableCMathML,Info] // Relies on the fact that MutableCMathML.equals is reference-equality
+  val cursorNode = ObjectProperty[MutableCMathML](mathDoc.root)
+  cursorNode.onChange { (_,oldNode,newNode) =>
+    println("cursor set",newNode)
+    assert(oldNode ne newNode); getInfo(oldNode).node.setCursor(None); getInfo(newNode).node.setCursor(Some(cursorSide.value)) }
+  val cursorSide = ObjectProperty[CursorSide](CursorLeft)
+  cursorSide.onChange { (_,_,newValue) =>
+    getInfo(cursorNode.value).node.setCursor(Some(newValue)) }
+
+  /*TODO private */case class Info(val node : MathNode, var ownedBy : MathNode = null, var embeddedIn : MathNode = null)
+  /*TODO private */val infos = new mutable.WeakHashMap[MutableCMathML,Info] // Relies on the fact that MutableCMathML.equals is reference-equality
 
   styleClass += "mathview"
 
@@ -147,7 +186,7 @@ class MathViewFX extends Pane { mathView =>
       info.node.invalid = true // TODO: why does this preserve invariants?
   }
 
-  private def getInfo(cmml: MutableCMathML) =infos.getOrElseUpdate(cmml, {
+  private def getInfo(cmml: MutableCMathML) = infos.getOrElseUpdate(cmml, {
     val info = Info(node = new MathNode(cmml))
     cmml.addChangeListener(() => cmmlChanged(info))
     info
@@ -206,7 +245,24 @@ class MathViewFX extends Pane { mathView =>
   setRootNode()
   mathDoc.addChangeListener(() => setRootNode())
 
-  private class MathNode(val math : MutableCMathML) extends Group {
+  /*TODO private*/ class MathNode(val math : MutableCMathML) extends Group {
+    id = Integer.toHexString(hashCode) // TODO: remove
+    //    private var _cursorState : Option[CursorSide] = None
+    private var _cursor : Node = null
+//    def cursorState = _cursorState
+    def setCursor(state:Option[CursorSide]) : Unit = {
+      println("cursorState", state)
+      state match {
+        case None => _cursor = null
+        case Some(side) => _cursor = new MathCursor(size,side)
+//        case Some(CursorRight) => _cursor = Rectangle(30,30)
+//        case Some(CursorSelect) => _cursor = Rectangle(30,30)
+      }
+      updateChildren()
+    }
+
+    val size = ObjectProperty[Bounds](initialValue=null)
+
     def printInfo() = {
       println(this)
       println("CMML: "+math.toCMathML.toString)
@@ -249,8 +305,16 @@ class MathViewFX extends Pane { mathView =>
     private def setChild(n: Node) =
       if (child != n) {
         child = n
-        children.setAll(n)
+        size <== child.boundsInLocal
+        updateChildren()
       }
+
+    private def updateChildren() : Unit = {
+      if (_cursor!=null)
+        children.setAll(_cursor,child)
+      else
+        children.setAll(child)
+    }
 
     private def disownAll() = {
       for (n <- owned) mathView.disown(this,n)
@@ -285,4 +349,11 @@ class MathViewFX extends Pane { mathView =>
     }
   }
 
+}
+
+object MathViewFX {
+  sealed trait CursorSide
+  final object CursorLeft extends CursorSide
+  final object CursorRight extends CursorSide
+  final object CursorSelect extends CursorSide
 }

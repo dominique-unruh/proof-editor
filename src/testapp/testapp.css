@@ -7,3 +7,21 @@
   -fx-border-color: blue;
   -fx-border-width: 2;
 }
+
+.mathCursorLeft {
+  -fx-border-color: blue;
+  -fx-border-width: 0 0 0 2;
+  -fx-background-color: rgba(0,255,255,0.1);
+}
+
+.mathCursorRight {
+  -fx-border-color: blue;
+  -fx-border-width: 0 2 0 0;
+  -fx-background-color: rgba(0,255,255,0.1);
+}
+
+.mathCursorSelect {
+  -fx-border-color: blue;
+  -fx-border-width: 2;
+  -fx-background-color: rgba(0,0,0,0.1);
+}

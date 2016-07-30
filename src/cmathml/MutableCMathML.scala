@@ -1,5 +1,8 @@
 package cmathml
 
+import cmathml.MutableCMathML.{Attributes, AttributesRO}
+import ui.mathview.MathViewFX.CursorSide
+
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
@@ -12,7 +15,7 @@ sealed abstract class MutableCMathMLParent {
   def getDocument : Option[MutableCMathMLDocument]
 }
 
-final case class MutableCMathMLDocument private () extends MutableCMathMLParent {
+final class MutableCMathMLDocument private () extends MutableCMathMLParent {
   private var _root : MutableCMathML = null
   def toCMathML = _root.toCMathML
 
@@ -55,7 +58,31 @@ final case class MutableCMathMLDocument private () extends MutableCMathMLParent 
   def getDocument = Some(this)
 }
 
-sealed abstract class MutableCMathML extends MutableCMathMLParent {
+sealed abstract class MutableCMathML(attribs : AttributesRO) extends MutableCMathMLParent {
+  val _attributes : Attributes = new mutable.HashMap
+  for ((k,a) <- _attributes)
+    a match {
+      case a$ : MutableCMathML =>
+        assert(!a$.isAttached)
+        a$.setParent(this)
+        _attributes.update(k,a$)
+      case a$ : CMathML =>
+        val a$$ = MutableCMathML.fromCMathML(a$)
+        a$$.setParent(this)
+        _attributes.update(k,a$$)
+      case _ =>
+        _attributes.update(k,a)
+    }
+//  val _attributes = attributes
+  val attributes : Attributes = new mutable.AbstractMap[(String,String),Any] {
+    override def +=(kv: ((String, String), Any)): this.type = ??? // TODO: parent, accept CMathML
+    override def -=(key: (String, String)): this.type = ??? // TODO: parent
+    override def get(key: (String, String)): Option[Any] =
+      _attributes.get(key)
+    override def iterator: Iterator[((String, String), Any)] =
+      _attributes.iterator
+  }
+
   private[cmathml] def setParent(parent: MutableCMathMLParent) = {
     assert(_parent==null)
     assert(parent!=null)
@@ -63,7 +90,7 @@ sealed abstract class MutableCMathML extends MutableCMathMLParent {
     for (l <- parentListeners) l(null)
   }
 
-  override def toString = s"[M(${Integer.toHexString(hashCode)}): ${toCMathML}]"
+  override def toString = s"[M(${Integer.toHexString(System.identityHashCode(this))}): ${toCMathML}]"
 
   private var _parent : MutableCMathMLParent = null
   def isAttached = _parent!=null
@@ -80,24 +107,34 @@ sealed abstract class MutableCMathML extends MutableCMathMLParent {
 
   def toCMathML : CMathML
 
+  def attributesToCMathML : CMathML.Attributes =
+    attributes.mapValues({
+      case m : MutableCMathML => m.toCMathML
+      case x => x
+    }).toMap
+
   def getDocument = if (_parent==null) None else _parent.getDocument
 }
 
 object MutableCMathML {
+  type Attributes = mutable.Map[(String,String),Any]
+  type AttributesRO = Map[(String,String),Any]
+//  private def fromCMathMLAttr(attributes:CMathML.Attributes) : AttributesRO =
+//    attributes.mapValues { case m : CMathML => fromCMathML(m); case x => x }
   def fromCMathML(math:CMathML) : MutableCMathML = math match {
-    case Apply(hd, args @ _*) => new MApply(fromCMathML(hd),args.map(fromCMathML(_)) : _*)
-    case CI(v) => new MCI(v)
-    case CN(n) => new MCN(n)
-    case CSymbol(cd, name) => new MCSymbol(cd,name)
-    case CError(cd, name, args @ _*) => new MCError(cd,name,args)
-    case CNone() => new MCNone()
+    case Apply(att, hd, args @ _*) => new MApply(att,fromCMathML(hd),args.map(fromCMathML(_)) : _*)
+    case CI(att, v) => new MCI(att,v)
+    case CN(att, n) => new MCN(att,n)
+    case CSymbol(att, cd, name) => new MCSymbol(att,cd,name)
+    case CError(att, cd, name, args @ _*) => new MCError(att,cd,name,args)
+    case CNone(att) => new MCNone(att)
   }
 }
 
 object MApply {
   def unapplySeq(arg: MApply): Some[(MutableCMathML,Seq[MutableCMathML])] = Some((arg._head,arg._args))
 }
-final class MApply extends MutableCMathML {
+final class MApply(attributes:AttributesRO) extends MutableCMathML(attributes) {
   def setHead(head: MutableCMathML) = {
     assert(!head.isAttached)
     _removeHead()
@@ -115,8 +152,8 @@ final class MApply extends MutableCMathML {
     fireChange()
   }
 
-  def this(head:MutableCMathML, args:MutableCMathML*) = {
-    this()
+  def this(attributes: AttributesRO, head:MutableCMathML, args:MutableCMathML*) = {
+    this(attributes)
     setHead(head)
     setArgs(args : _*)
   }
@@ -159,21 +196,24 @@ final class MApply extends MutableCMathML {
   }
 
   override def toCMathML: CMathML =
-    Apply(_head.toCMathML, _args.map(_.toCMathML) : _*)
+    Apply(attributesToCMathML, _head.toCMathML, _args.map(_.toCMathML) : _*)
 }
-final case class MCI(private var _name:String) extends MutableCMathML {
-  override def toCMathML: CMathML = CI(_name)
+final class MCI(attributes: AttributesRO, private var _name:String) extends MutableCMathML(attributes) {
+  override def toCMathML: CMathML = CI(attributesToCMathML,_name)
   def name = _name
   def name_=(name:String) = {
     _name = name
     fireChange()
   }
 }
-final case class MCN(val n:BigDecimal) extends MutableCMathML {
-  override def toCMathML: CMathML = CN(n)
+final class MCN(attributes: AttributesRO, val n:BigDecimal) extends MutableCMathML(attributes) {
+  override def toCMathML: CMathML = CN(attributesToCMathML,n)
 }
-final case class MCSymbol(private var _cd:String, private var _name:String) extends MutableCMathML {
-  override def toCMathML: CMathML = CSymbol(_cd,_name)
+object MCSymbol {
+  def unapply(that:MCSymbol) = Some((that._cd,that._name))
+}
+final class MCSymbol(attributes: AttributesRO, private var _cd:String, private var _name:String) extends MutableCMathML(attributes) {
+  override def toCMathML: CMathML = CSymbol(attributesToCMathML,_cd,_name)
   def cd = _cd
   def cd_=(cd:String) = {
     _cd = cd
@@ -185,9 +225,12 @@ final case class MCSymbol(private var _cd:String, private var _name:String) exte
     fireChange()
   }
 }
-final case class MCError(val cd: String, val name: String, val args: Any*) extends MutableCMathML {
-  override def toCMathML: CMathML = CError(cd,name,args)
+final class MCError(attributes: AttributesRO, val cd: String, val name: String, val args: Any*) extends MutableCMathML(attributes) {
+  override def toCMathML: CMathML = CError(attributesToCMathML,cd,name,args)
 }
-final case class MCNone() extends MutableCMathML {
-  override def toCMathML: CMathML = CNone()
+object MCNone {
+  def unapply(that:MCNone) = true
+}
+final class MCNone(attributes: AttributesRO) extends MutableCMathML(attributes) {
+  override def toCMathML: CMathML = CNone(attributesToCMathML)
 }

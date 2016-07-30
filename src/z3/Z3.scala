@@ -39,18 +39,18 @@ final class Z3(config:Map[String,String]) {
 
   /** Not thread safe */
   private def fromCMathML_(m: CMathML) : Expr = m match {
-    case CN(i) => context.mkNumeral(i.toString, realSort_)
-    case CI(n) => context.mkConst(n, realSort_)
-    case Apply(CMathML.plus,x,y) => context.mkAdd(fromCMathML_(x).asInstanceOf[ArithExpr],
+    case CN(_, i) => context.mkNumeral(i.toString, realSort_)
+    case CI(_, n) => context.mkConst(n, realSort_)
+    case Apply(_, CMathML.plus,x,y) => context.mkAdd(fromCMathML_(x).asInstanceOf[ArithExpr],
                                                   fromCMathML_(y).asInstanceOf[ArithExpr])
-    case Apply(CMathML.minus,x,y) => context.mkSub(fromCMathML_(x).asInstanceOf[ArithExpr],
+    case Apply(_, CMathML.minus,x,y) => context.mkSub(fromCMathML_(x).asInstanceOf[ArithExpr],
                                                    fromCMathML_(y).asInstanceOf[ArithExpr])
-    case Apply(CMathML.times,x,y) => context.mkMul(fromCMathML_(x).asInstanceOf[ArithExpr],
+    case Apply(_, CMathML.times,x,y) => context.mkMul(fromCMathML_(x).asInstanceOf[ArithExpr],
                                                    fromCMathML_(y).asInstanceOf[ArithExpr])
-    case Apply(CMathML.divide,x,y) => context.mkDiv(fromCMathML_(x).asInstanceOf[ArithExpr],
+    case Apply(_, CMathML.divide,x,y) => context.mkDiv(fromCMathML_(x).asInstanceOf[ArithExpr],
                                                     fromCMathML_(y).asInstanceOf[ArithExpr])
-    case Apply(CMathML.equal,x,y) => context.mkEq(fromCMathML_(x),fromCMathML_(y))
-    case Apply(CMathML.uminus,x) => context.mkUnaryMinus(fromCMathML_(x).asInstanceOf[ArithExpr])
+    case Apply(_, CMathML.equal,x,y) => context.mkEq(fromCMathML_(x),fromCMathML_(y))
+    case Apply(_, CMathML.uminus,x) => context.mkUnaryMinus(fromCMathML_(x).asInstanceOf[ArithExpr])
   }
 
 

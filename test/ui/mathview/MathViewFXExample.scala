@@ -10,6 +10,7 @@ import cmathml._
 import org.scalatest.FunSuite
 import ui.TestFxApp
 
+import scala.sys
 import scalafx.scene.control.Label
 import scalafx.scene.layout.VBox
 
@@ -18,6 +19,8 @@ object MathViewFXExample {
 
   def main(args: Array[String]) = {
     TestFxApp.run {
+      TestFxApp.useTestAppCss()
+
       val mw = new MathViewFX()
       val m = plus(minus(CNone(),CI("y")),times(CI("z"),CI("w")))
       mw.setMath(m)
@@ -35,9 +38,9 @@ object MathViewFXExample {
 
       val box = new VBox(new Label("X"),new Label("I"),mw)
 
-      s1.name = "meh"
-      s2.name = "la"
-      s3.name = "lu"
+//      s1.name = "meh"
+//      s2.name = "la"
+//      s3.name = "lu"
 
 //      s1.name = "minus"
 //      s2.name = "divide"
@@ -45,19 +48,32 @@ object MathViewFXExample {
       val timeline = new Timeline(
         new KeyFrame(util.Duration.millis(2000), (_:ActionEvent) => s1.name = "divide"),
         new KeyFrame(util.Duration.millis(4000), (_:ActionEvent) => s2.name = "divide"),
-        new KeyFrame(util.Duration.millis(6000), (_:ActionEvent) => s3.name = "divide")
+        new KeyFrame(util.Duration.millis(16000), (_:ActionEvent) => s3.name = "divide")
 //        new KeyFrame(util.Duration.millis(8000), (_:ActionEvent) => s3.parent.asInstanceOf[MApply].setArgs(MCI("a"),MCI("b")))
       )
-      timeline.play()
+//      timeline.play()
 
       var count = 0
       val timeline2 = new Timeline(
         new KeyFrame(util.Duration.millis(1000), {(_:ActionEvent) => count += 1; z.name = "z" * count }))
       timeline2.setCycleCount(1000)
-      timeline2.play()
+//      timeline2.play()
 
 //      mw.setMath(CNone())
 
+      mw.cursorNode.value = z
+
+      def pr() =
+        mw.mathDoc.root match {
+          case MApply(h1 : MCSymbol, MApply(h2 : MCSymbol, _*), a3 @ MApply(h3 : MCSymbol, zz : MCI, ww : MCI)) =>
+            println(s"****************** $zz - ${mw.infos.get(zz) match {case Some(i) => i.node; case None => "<missing>"}}")
+        }
+      pr()
+      z.name = "zz"
+      pr()
+      s3.name="divide"
+      pr()
+//      sys.exit(1)
 
       box
     }
