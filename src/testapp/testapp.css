@@ -20,8 +20,12 @@
   -fx-background-color: rgba(0,255,255,0.1);
 }
 
-.mathCursorSelect {
+.mathSelection {
+  -fx-background-color: rgba(0,0,0,0.2);
+}
+
+/*.mathCursorSelect {
   -fx-border-color: blue;
   -fx-border-width: 2;
   -fx-background-color: rgba(0,0,0,0.1);
-}
+}*/

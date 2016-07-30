@@ -1,12 +1,14 @@
 package cmathml
 
-import cmathml.MutableCMathML.{Attributes, AttributesRO}
+import cmathml.MutableCMathML.{Attributes, AttributesRO, NoAttr}
 import ui.mathview.MathViewFX.CursorSide
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
 sealed abstract class MutableCMathMLParent {
+  def replace(a: MutableCMathML, b: MutableCMathML): Unit
+
   val changeListeners = new ListBuffer[() => Unit]
   protected def fireChange() : Unit =
     for (l <- changeListeners) l()
@@ -16,6 +18,11 @@ sealed abstract class MutableCMathMLParent {
 }
 
 final class MutableCMathMLDocument private () extends MutableCMathMLParent {
+  def isEmpty: Boolean = _root match {
+    case MCNone() => true
+    case _ => false
+  }
+
   private var _root : MutableCMathML = null
   def toCMathML = _root.toCMathML
 
@@ -49,16 +56,26 @@ final class MutableCMathMLDocument private () extends MutableCMathMLParent {
       h
     } else null
   }
-  def removeHead() : MutableCMathML = {
+  def removeRoot() : MutableCMathML = {
     val hd = _removeRoot()
     if (hd!=null) fireChange()
     hd
   }
 
   def getDocument = Some(this)
+
+  override def replace(a: MutableCMathML, b: MutableCMathML): Unit = {
+    assert(_root==a)
+    setRoot(b)
+  }
 }
 
 sealed abstract class MutableCMathML(attribs : AttributesRO) extends MutableCMathMLParent {
+  def replaceWith(m: MutableCMathML): Unit =
+    parent.replace(this,m)
+
+  def replaceInAttributes(a: MutableCMathML, b: MutableCMathML): Unit = ???
+
   val _attributes : Attributes = new mutable.HashMap
   for ((k,a) <- _attributes)
     a match {
@@ -119,6 +136,7 @@ sealed abstract class MutableCMathML(attribs : AttributesRO) extends MutableCMat
 object MutableCMathML {
   type Attributes = mutable.Map[(String,String),Any]
   type AttributesRO = Map[(String,String),Any]
+  val NoAttr : AttributesRO = Map.empty
 //  private def fromCMathMLAttr(attributes:CMathML.Attributes) : AttributesRO =
 //    attributes.mapValues { case m : CMathML => fromCMathML(m); case x => x }
   def fromCMathML(math:CMathML) : MutableCMathML = math match {
@@ -140,6 +158,13 @@ final class MApply(attributes:AttributesRO) extends MutableCMathML(attributes) {
     _removeHead()
     head.setParent(this)
     _head = head
+    fireChange()
+  }
+  def setArg(i:Int, m:MutableCMathML) = {
+    assert(!m.isAttached)
+    _removeArg(i)
+    m.setParent(this)
+    _args.update(i,m)
     fireChange()
   }
 
@@ -172,11 +197,13 @@ final class MApply(attributes:AttributesRO) extends MutableCMathML(attributes) {
   }
   def removeHead() : MutableCMathML = {
     val hd = _removeHead()
+    _head = new MCNone()
     if (hd!=null) fireChange()
     hd
   }
   def removeArg(i:Int) : MutableCMathML = {
     val a = _removeArg(i)
+    _args(i) = new MCNone()
     if (a!=null) fireChange()
     a
   }
@@ -185,7 +212,6 @@ final class MApply(attributes:AttributesRO) extends MutableCMathML(attributes) {
     val a = _args(i)
     if (a!=null) {
       _args.update(i, null)
-      fireChange()
       a
     } else null
   }
@@ -197,6 +223,17 @@ final class MApply(attributes:AttributesRO) extends MutableCMathML(attributes) {
 
   override def toCMathML: CMathML =
     Apply(attributesToCMathML, _head.toCMathML, _args.map(_.toCMathML) : _*)
+
+  override def replace(a: MutableCMathML, b: MutableCMathML): Unit = {
+    if (_head==a) setHead(b)
+    else {
+      val i = _args.indexOf(a)
+      if (i>=0)
+        setArg(i,b)
+      else
+        replaceInAttributes(a,b)
+    }
+  }
 }
 final class MCI(attributes: AttributesRO, private var _name:String) extends MutableCMathML(attributes) {
   override def toCMathML: CMathML = CI(attributesToCMathML,_name)
@@ -205,9 +242,15 @@ final class MCI(attributes: AttributesRO, private var _name:String) extends Muta
     _name = name
     fireChange()
   }
+
+  override def replace(a: MutableCMathML, b: MutableCMathML): Unit =
+    replaceInAttributes(a,b)
 }
 final class MCN(attributes: AttributesRO, val n:BigDecimal) extends MutableCMathML(attributes) {
   override def toCMathML: CMathML = CN(attributesToCMathML,n)
+
+  override def replace(a: MutableCMathML, b: MutableCMathML): Unit =
+    replaceInAttributes(a,b)
 }
 object MCSymbol {
   def unapply(that:MCSymbol) = Some((that._cd,that._name))
@@ -224,13 +267,19 @@ final class MCSymbol(attributes: AttributesRO, private var _cd:String, private v
     _name = name
     fireChange()
   }
+  override def replace(a: MutableCMathML, b: MutableCMathML): Unit =
+    replaceInAttributes(a,b)
 }
 final class MCError(attributes: AttributesRO, val cd: String, val name: String, val args: Any*) extends MutableCMathML(attributes) {
   override def toCMathML: CMathML = CError(attributesToCMathML,cd,name,args)
+  override def replace(a: MutableCMathML, b: MutableCMathML): Unit =
+    replaceInAttributes(a,b)
 }
 object MCNone {
   def unapply(that:MCNone) = true
 }
-final class MCNone(attributes: AttributesRO) extends MutableCMathML(attributes) {
+final class MCNone(attributes: AttributesRO = NoAttr) extends MutableCMathML(attributes) {
   override def toCMathML: CMathML = CNone(attributesToCMathML)
+  override def replace(a: MutableCMathML, b: MutableCMathML): Unit =
+    replaceInAttributes(a,b)
 }

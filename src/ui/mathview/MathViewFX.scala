@@ -5,6 +5,7 @@ import java.io.IOException
 import cmathml._
 import ui.mathview.MathViewFX.{CursorLeft, CursorSide}
 
+import scala.util.control.Breaks._
 import scala.collection.mutable
 import scalafx.beans.binding.Bindings
 import scalafx.geometry.{Orientation, Pos}
@@ -13,10 +14,14 @@ import scalafx.scene.layout._
 import scalafx.scene.text.{Font, FontPosture, Text}
 import scalafx.scene.{Group, Node}
 import scalafx.Includes._
-import scalafx.beans.property.{ObjectProperty, Property}
+import scalafx.beans.property.{ObjectProperty, Property, ReadOnlyObjectWrapper}
 import scalafx.scene.paint.{Color, Paint}
 import scalafx.scene.shape.{Line, Rectangle}
 import javafx.geometry.Bounds
+
+import misc.GetterSetterProperty
+
+import scalafx.Includes._
 
 object MathText {
   if (Font.loadFont(getClass.getResource("mathquill/font/Symbola.otf").toString,0)==null)
@@ -101,14 +106,14 @@ class Missing() extends Text("\u2603") {
   font = MathText.SymbolFont
 }
 
-class MathCursor(val size : Property[Bounds,Bounds], val cursorSide: CursorSide) extends Region {
+private class MathCursor(val size : Property[Bounds,Bounds], val cursorSide: CursorSide) extends Region {
   import MathViewFX._
   id = Integer.toHexString(hashCode) // TODO: remove
   styleClass += "mathCursor"
   cursorSide match {
     case CursorLeft => styleClass += "mathCursorLeft"
     case CursorRight => styleClass += "mathCursorRight"
-    case CursorSelect => styleClass += "mathCursorSelect"
+//    case CursorSelect => styleClass += "mathCursorSelect"
   }
   def updateSize(): Unit = {
     val _size = size.value
@@ -126,6 +131,23 @@ class MathCursor(val size : Property[Bounds,Bounds], val cursorSide: CursorSide)
   size.onChange(updateSize()) // TODO: this causes MathCursor not to be GC'd
   updateSize()
 //  fill = Color.LightGray
+}
+
+private class MathSelection(val size : Property[Bounds,Bounds]) extends Region {
+  import MathViewFX._
+  id = Integer.toHexString(hashCode) // TODO: remove
+  styleClass += "mathSelection"
+  def updateSize(): Unit = {
+    val _size = size.value
+    println("size",_size)
+    layoutX = _size.minX
+    layoutY = _size.minY
+    prefWidth = _size.width
+    prefHeight = _size.height
+    resize(_size.width,_size.height)
+  }
+  size.onChange(updateSize()) // TODO: this causes MathSelection not to be GC'd
+  updateSize()
 }
 
 
@@ -156,21 +178,37 @@ class MathCursor(val size : Property[Bounds,Bounds], val cursorSide: CursorSide)
   *
   * (there's more...)
   */
-class MathViewFX extends Pane { mathView =>
+class MathViewFX extends Pane {
+  mathView =>
+
   import MathViewFX._
+
   def setMath(m: CMathML) = {
     mathDoc.setRoot(m)
-//    cursorNode.value = mathDoc.root; cursorSide.value = CursorLeft
+    //    cursorNode.value = mathDoc.root; cursorSide.value = CursorLeft
     cursorPos.value = CursorPos(mathDoc.root, CursorLeft)
   }
 
   val mathDoc = new MutableCMathMLDocument(CNone())
-  val cursorPos = ObjectProperty[CursorPos](CursorPos(mathDoc.root,CursorLeft))
-  cursorPos.onChange { (_,oldPos,newPos) =>
+  val cursorPos = ObjectProperty[CursorPos](CursorPos(mathDoc.root, CursorLeft))
+  cursorPos.onChange { (_, oldPos, newPos) =>
     if (oldPos.node ne newPos.node)
-      getInfoWithNewNode(oldPos.node).node.setCursor(None)
-    getInfoWithNewNode(newPos.node).node.setCursor(Some(newPos.side))
+      getNode(oldPos.node).get.setCursor(None)
+    getNode(newPos.node).get.setCursor(Some(newPos.side))
   }
+
+  val selection = ObjectProperty[Option[MutableCMathML]](None)
+  selection.onChange { (_, oldSel, newSel) =>
+    if (oldSel != newSel) {
+      println("Selection", newSel)
+      if (oldSel.isDefined)
+        getNode(oldSel.get).get.setSelection(false)
+      if (newSel.isDefined)
+        getNode(newSel.get).get.setSelection(true)
+    }
+  }
+
+
 //  @deprecated val cursorNode = ObjectProperty[MutableCMathML](mathDoc.root)
 //  cursorNode.onChange { (_,oldNode,newNode) =>
 //    println("cursor set",newNode)
@@ -190,7 +228,7 @@ class MathViewFX extends Pane { mathView =>
     else if (info.node.invalid) ()
     else if (info.embeddedIn!=null)
       info.node.update() // TODO: why does this preserve invariants?
-    else if (info.node == mathDoc.root)
+    else if (info.node.math == mathDoc.root)
       info.node.update() // TODO: why does this preserve invariants?
     else
       info.node.invalid = true // TODO: why does this preserve invariants?
@@ -263,7 +301,7 @@ class MathViewFX extends Pane { mathView =>
   def leftOf(cursor:CursorPos, jump:Boolean=false) : Option[CursorPos] = {
     val node = getNode(cursor.node).getOrElse(throw new IllegalArgumentException("cursor points to a non-visual subterm"))
     cursor.side match {
-      case CursorLeft | CursorSelect => leftOf(node) match {
+      case CursorLeft /*| CursorSelect*/ => leftOf(node) match {
         case None => embedderOf(node) match {
           case None => None
           case Some(embedder) => Some(CursorPos(embedder.math, CursorLeft))
@@ -283,7 +321,7 @@ class MathViewFX extends Pane { mathView =>
   def rightOf(cursor:CursorPos, jump:Boolean=false) : Option[CursorPos] = {
     val node = getNode(cursor.node).getOrElse(throw new IllegalArgumentException("cursor points to a non-visual subterm"))
     cursor.side match {
-      case CursorRight | CursorSelect => rightOf(node) match {
+      case CursorRight /*| CursorSelect */ => rightOf(node) match {
         case None => embedderOf(node) match {
           case None => None
           case Some(embedder) => Some(CursorPos(embedder.math, CursorRight))
@@ -301,7 +339,36 @@ class MathViewFX extends Pane { mathView =>
     }
   }
 
-//  def rightmostChild(node:MathNode) : Option[MathNode] = ???
+  private def embeddingPath(m:MutableCMathML) : List[MutableCMathML] = {
+    var tmp = getNode(m)
+    assert(tmp.isDefined)
+    var path = Nil : List[MutableCMathML]
+    while (tmp.isDefined) {
+      path = tmp.get.math::path
+      tmp = embedderOf(tmp.get)
+    }
+    path
+  }
+
+  /** Returns the smallest rendered math that contains a and b */
+  def encompassingNode(a:MutableCMathML, b:MutableCMathML) : MutableCMathML = {
+    var result : MutableCMathML = null
+    val itA = embeddingPath(a).iterator
+    val itB = embeddingPath(b).iterator
+    breakable {
+      while (itA.hasNext && itB.hasNext) {
+        val a$ = itA.next()
+        val b$ = itB.next()
+        if (a$ eq b$)
+          result = a$
+        else
+          break
+      }
+    }
+    assert(result!=null)
+    result
+  }
+
   private def embedderOf(node:MathNode) : Option[MathNode] =
     infos.get(node.math).flatMap(x => Option(x.embeddedIn))
   /** Left sibling according to visual representation */
@@ -309,18 +376,6 @@ class MathViewFX extends Pane { mathView =>
   embedderOf(node).flatMap(_.leftOf(node))
   private def rightOf(node:MathNode) : Option[MutableCMathML] =
     embedderOf(node).flatMap(_.rightOf(node))
-
-//  def leftOf(cursor:CursorPos) : Option[CursorPos] = cursor.side match {
-//    case CursorLeft => leftOf(cursor.node) match {
-//      case None => cursor.node.parent match {
-//        case null => None
-//        case parent : MutableCMathML => Some(CursorPos(parent,CursorLeft))
-//        case _ : MutableCMathMLDocument => None
-//      }
-//      case Some(node) => Some(CursorPos(node,CursorRight))
-//    }
-//    case CursorRight => leftmostChild(cursor.node)
-//  }
 
 
   setRootNode()
@@ -349,13 +404,19 @@ class MathViewFX extends Pane { mathView =>
     id = Integer.toHexString(hashCode) // TODO: remove
     private var _cursor : Node = null
     def setCursor(state:Option[CursorSide]) : Unit = {
-      println("cursorState", state)
       state match {
         case None => _cursor = null
         case Some(side) => _cursor = new MathCursor(size,side)
       }
       updateChildren()
     }
+
+    private var _selection : Node = null
+    def setSelection(state:Boolean) : Unit = {
+      _selection = if (state) new MathSelection(size) else null
+      updateChildren()
+    }
+
 
     val size = ObjectProperty[Bounds](initialValue=null)
 
@@ -406,10 +467,10 @@ class MathViewFX extends Pane { mathView =>
       }
 
     private def updateChildren() : Unit = {
-      if (_cursor!=null)
-        children.setAll(_cursor,child)
-      else
-        children.setAll(child)
+      var cs = List(child : javafx.scene.Node)
+      if (_selection!=null) cs = _selection::cs
+      if (_cursor!=null) cs = _cursor::cs
+      children.setAll(cs : _*)
     }
 
     private def disownAll() = {
@@ -451,6 +512,6 @@ object MathViewFX {
   sealed trait CursorSide
   final object CursorLeft extends CursorSide
   final object CursorRight extends CursorSide
-  final object CursorSelect extends CursorSide
+//  final object CursorSelect extends CursorSide
   case class CursorPos(node:MutableCMathML, side:CursorSide)
 }

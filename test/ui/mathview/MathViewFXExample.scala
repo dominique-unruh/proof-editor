@@ -16,7 +16,11 @@ import scalafx.scene.control.{Control, Label}
 import scalafx.scene.layout.VBox
 
 object MathViewFXExample {
-
+  def after(time : Double, action : => Unit) = {
+    val timeline = new Timeline(
+      new KeyFrame(util.Duration.millis(time*1000), (_:ActionEvent) => action))
+    timeline.play()
+  }
 
   def main(args: Array[String]) = {
     TestFxApp.run {
@@ -33,10 +37,12 @@ object MathViewFXExample {
       var s3 : MCSymbol = null
       var z : MCI = null
       var w : MCI = null
+      var a1 : MApply = null
+      var r : MApply = null
 
       mw.mathDoc.root match {
-        case MApply(h1 : MCSymbol, MApply(h2 : MCSymbol, _*), MApply(h3 : MCSymbol, zz : MCI, ww : MCI)) =>
-          { s1 = h1; s2 = h2; s3 = h3; z = zz; w = ww }
+        case r$ @ MApply(h1 : MCSymbol, a1$ @ MApply(h2 : MCSymbol, _*), MApply(h3 : MCSymbol, zz : MCI, ww : MCI)) =>
+          { r = r$; s1 = h1; s2 = h2; s3 = h3; z = zz; w = ww; a1 = a1$ }
       }
 
       val box = new VBox(/*mwx,*/new Label("X"),new Label("I"),mw)
@@ -79,6 +85,12 @@ object MathViewFXExample {
 //      sys.exit(1)
 
 //      mw.requestFocus()
+
+      val none = new MCNone()
+
+//      s1.name = "times"
+//      a1.replaceWith(new MCNone())
+//      r.setArg(0,none)
 
       box
     }
