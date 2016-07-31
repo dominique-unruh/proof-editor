@@ -25,8 +25,6 @@ object MathViewFXExample {
   def main(args: Array[String]) = {
     TestFxApp.run {
       TestFxApp.useTestAppCss()
-      val mwx = new MathEdit()
-
 
       val mw = new MathEdit()
       val m = plus(minus(CNone(),CI("y")),times(CI("z"),CI("w")))
@@ -45,7 +43,9 @@ object MathViewFXExample {
           { r = r$; s1 = h1; s2 = h2; s3 = h3; z = zz; w = ww; a1 = a1$ }
       }
 
-      val box = new VBox(/*mwx,*/new Label("X"),new Label("I"),mw)
+      mw.editable.value = Some(a1)
+
+      val box = new VBox(new Label("X"),new Label("I"),mw)
 
 //      s1.name = "meh"
 //      s2.name = "la"
@@ -72,16 +72,16 @@ object MathViewFXExample {
 
       mw.cursorPos.value = CursorPos(z,CursorLeft)
 
-      def pr() =
-        mw.mathDoc.root match {
-          case MApply(h1 : MCSymbol, MApply(h2 : MCSymbol, _*), a3 @ MApply(h3 : MCSymbol, zz : MCI, ww : MCI)) =>
-            println(s"****************** $zz - ${mw.infos.get(zz) match {case Some(i) => i.node; case None => "<missing>"}}")
-        }
-      pr()
-      z.name = "zz"
-      pr()
-      s3.name="divide"
-      pr()
+//      def pr() =
+//        mw.mathDoc.root match {
+//          case MApply(h1 : MCSymbol, MApply(h2 : MCSymbol, _*), a3 @ MApply(h3 : MCSymbol, zz : MCI, ww : MCI)) =>
+//            println(s"****************** $zz - ${mw.infos.get(zz) match {case Some(i) => i.node; case None => "<missing>"}}")
+//        }
+//      pr()
+//      z.name = "zz"
+//      pr()
+//      s3.name="divide"
+//      pr()
 //      sys.exit(1)
 
 //      mw.requestFocus()

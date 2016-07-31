@@ -18,7 +18,6 @@ trait MathHighlight extends Node {
 }
 
 
-
 /** Invariants:
   *
   * For every [[cmathml.MutableCMathML]] (short 'math') (not necessarily descendant of [[MathViewFX!.mathDoc mathDoc]].root) there is:
@@ -57,15 +56,14 @@ class MathViewFX extends Pane {
 
   val mathDoc = new MutableCMathMLDocument(CNone())
 
-  /*TODO private */val infos = new mutable.WeakHashMap[MutableCMathML,Info] // Relies on the fact that MutableCMathML.equals is reference-equality
+  private val infos = new mutable.WeakHashMap[MutableCMathML,Info] // Relies on the fact that MutableCMathML.equals is reference-equality
   styleClass += "mathview"
 
 
   def setMath(m: CMathML) =
     mathDoc.setRoot(m)
 
-
-  /*TODO private */case class Info(node : MathNode, var ownedBy : MathNode = null, var embeddedIn : MathNode = null)
+  private case class Info(node : MathNode, var ownedBy : MathNode = null, var embeddedIn : MathNode = null)
 
   private def cmmlChanged(info: Info): Unit = {
     if (info.ownedBy!=null)
@@ -222,11 +220,10 @@ class MathViewFX extends Pane {
   private def rightOf(node:MathNode) : Option[MutableCMathML] =
     embedderOf(node).flatMap(_.rightOf(node))
 
-
   setRootNode()
   mathDoc.addChangeListener(() => setRootNode())
 
-  /*TODO private*/ class MathNode(val math : MutableCMathML) extends Group with MathRendererContext {
+  private class MathNode(val math : MutableCMathML) extends Group with MathRendererContext {
     def rightmostChild: Option[MutableCMathML] = embedded.lastOption
     def leftmostChild: Option[MutableCMathML] = embedded.headOption
 
@@ -268,6 +265,7 @@ class MathViewFX extends Pane {
     }
 
 
+    /*
 //    @deprecated(null,null) private var _cursor : MathHighlight = null
     @deprecated("Access highlights directly",null) def setCursor(state:Option[CursorSide]) : Unit = {
       highlights.removeIf { (_:MathHighlight).isInstanceOf[MathCursor] }
@@ -278,6 +276,7 @@ class MathViewFX extends Pane {
       for (side <- state) highlights += new MathCursor(side)
 //      updateChildren()
     }
+    */
 
 
     val size = ObjectProperty[Bounds](null : Bounds)

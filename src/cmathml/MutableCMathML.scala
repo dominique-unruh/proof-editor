@@ -3,6 +3,7 @@ package cmathml
 import cmathml.MutableCMathML.{Attributes, AttributesRO, NoAttr}
 import ui.mathview.MathViewFX.CursorSide
 
+import scala.annotation.tailrec
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
@@ -73,6 +74,16 @@ final class MutableCMathMLDocument private () extends MutableCMathMLParent {
 }
 
 sealed abstract class MutableCMathML(attribs : AttributesRO) extends MutableCMathMLParent {
+  /** Returns true is `this` is equal to or a descendant of `ancestor`
+    */
+  @tailrec final def isDescendantOf(ancestor: MutableCMathMLParent) : Boolean =
+    if (this eq ancestor)
+      true
+    else if (_parent != null && _parent.isInstanceOf[MutableCMathML])
+      _parent.asInstanceOf[MutableCMathML].isDescendantOf(ancestor)
+    else
+      false
+
   def replaceWith(m: MutableCMathML): Unit =
     parent.replace(this,m)
 
@@ -190,6 +201,13 @@ final class MApply(attributes:AttributesRO) extends MutableCMathML(attributes) {
     setHead(head)
     setArgs(args : _*)
   }
+  def this(head:MutableCMathML, args:MutableCMathML*) = {
+    this(NoAttr)
+    setHead(head)
+    setArgs(args : _*)
+  }
+
+
   private var _head : MutableCMathML = null
   private val _args : mutable.ArrayBuffer[MutableCMathML] = new mutable.ArrayBuffer()
   def head = _head
@@ -220,6 +238,7 @@ final class MApply(attributes:AttributesRO) extends MutableCMathML(attributes) {
     val a = _args(i)
     if (a!=null) {
       _args.update(i, null)
+      a.detach()
       a
     } else null
   }
