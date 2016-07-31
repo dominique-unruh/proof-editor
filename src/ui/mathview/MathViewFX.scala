@@ -22,63 +22,6 @@ trait MathHighlight extends Node {
 }
 
 
-private class MathCursor(val cursorSide: CursorSide) extends Region with MathHighlight {
-  import MathViewFX._
-  id = Integer.toHexString(hashCode) // TODO: remove
-  styleClass += "mathCursor"
-  cursorSide match {
-    case CursorLeft => styleClass += "mathCursorLeft"
-    case CursorRight => styleClass += "mathCursorRight"
-//    case CursorSelect => styleClass += "mathCursorSelect"
-  }
-  override def setSize(size:Bounds) = {
-    layoutX = size.minX
-    layoutY = size.minY
-    prefWidth = size.width
-    prefHeight = size.height
-    resize(size.width,size.height)
-  }
-//  def updateSize(): Unit = {
-//    val _size = size.value
-//    println("size",_size)
-//    layoutX = _size.minX
-//    layoutY = _size.minY
-//    prefWidth = _size.width
-//    prefHeight = _size.height
-//    resize(_size.width,_size.height)
-////    x = _size.minX
-////    y = _size.minY
-////    width = _size.width
-////    height = _size.height
-//  }
-//  size.onChange(updateSize()) // TODO: this causes MathCursor not to be GC'd
-//  updateSize()
-//  fill = Color.LightGray
-}
-
-private class MathSelection extends Region with MathHighlight {
-  id = Integer.toHexString(hashCode) // TODO: remove
-  styleClass += "mathSelection"
-  override def setSize(size:Bounds) = {
-    layoutX = size.minX
-    layoutY = size.minY
-    prefWidth = size.width
-    prefHeight = size.height
-    resize(size.width,size.height)
-  }
-//  def updateSize(): Unit = {
-//    val _size = size.value
-//    println("size",_size)
-//    layoutX = _size.minX
-//    layoutY = _size.minY
-//    prefWidth = _size.width
-//    prefHeight = _size.height
-//    resize(_size.width,_size.height)
-//  }
-//  size.onChange(updateSize()) // TODO: this causes MathSelection not to be GC'd
-//  updateSize()
-}
-
 
 /** Invariants:
   *
@@ -117,43 +60,13 @@ class MathViewFX extends Pane {
     getNode(math).get.highlights
 
   val mathDoc = new MutableCMathMLDocument(CNone())
-  @deprecated(null,null) val cursorPos = ObjectProperty[CursorPos](CursorPos(mathDoc.root, CursorLeft))
-  cursorPos.onChange { (_, oldPos, newPos) =>
-//    if (oldPos.node ne newPos.node) {
-      val oldHighlights = getHighlights(oldPos.node)
-      oldHighlights.removeIf((_: MathHighlight).isInstanceOf[MathCursor])
-//    }
-    val newHighlights = getHighlights(newPos.node)
-//    newHighlights.removeIf((_: MathHighlight).isInstanceOf[MathCursor])
-    newHighlights += new MathCursor(newPos.side)
-  }
-
-  @deprecated(null,null) val selection = ObjectProperty[Option[MutableCMathML]](None)
-  selection.onChange { (_, oldSel, newSel) =>
-    assert(oldSel!=newSel)
-    if (oldSel != newSel) {
-      if (oldSel.isDefined) {
-        val oldHighlights = getHighlights(oldSel.get)
-        oldHighlights.removeIf((_: MathHighlight).isInstanceOf[MathSelection])
-        //        getNode(oldSel.get).get.setSelection(false)
-      }
-      if (newSel.isDefined) {
-        val newHighlights = getHighlights(newSel.get)
-        newHighlights += new MathSelection()
-//        getNode(newSel.get).get.setSelection(true)
-      }
-    }
-  }
 
   /*TODO private */val infos = new mutable.WeakHashMap[MutableCMathML,Info] // Relies on the fact that MutableCMathML.equals is reference-equality
   styleClass += "mathview"
 
 
-  def setMath(m: CMathML) = {
+  def setMath(m: CMathML) =
     mathDoc.setRoot(m)
-    //    cursorNode.value = mathDoc.root; cursorSide.value = CursorLeft
-    cursorPos.value = CursorPos(mathDoc.root, CursorLeft)
-  }
 
 
   /*TODO private */case class Info(node : MathNode, var ownedBy : MathNode = null, var embeddedIn : MathNode = null)
@@ -370,29 +283,10 @@ class MathViewFX extends Pane {
 //      updateChildren()
     }
 
-//    @deprecated(null,null) private var _selection : MathHighlight = null
-    @deprecated("Access highlights directly",null)
-    def setSelection(state:Boolean) : Unit = {
-      highlights.removeIf { (_:MathHighlight).isInstanceOf[MathSelection] }
-      if(state)
-        highlights += new MathSelection
-//      highlights.remove(_selection)
-//      if (state) {
-//        _selection = new MathSelection
-//        highlights += _selection
-////        _selection.setSize(size.value)
-//      } else
-//        _selection = null
-////      _selection = if (state) new MathSelection() else null
-////      updateChildren()
-    }
-
 
     val size = ObjectProperty[Bounds](null : Bounds)
     size.onChange { (_, _, s) =>
       for (h <- highlights) h.setSize(s)
-//      if (_cursor!=null) _cursor.setSize(s)
-//      if (_selection!=null) _selection.setSize(s)
     }
 
     def printInfo() = {
@@ -444,8 +338,6 @@ class MathViewFX extends Pane {
     private def updateChildren() : Unit = {
       var cs = List(child : javafx.scene.Node)
       for (h <- highlights) cs = h::cs
-//      if (_selection!=null) cs = _selection::cs
-//      if (_cursor!=null) cs = _cursor::cs
       children.setAll(cs : _*)
     }
 

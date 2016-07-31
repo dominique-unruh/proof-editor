@@ -1,17 +1,50 @@
 package ui.mathview
 
-import cmathml.{CNone, MCNone, MutableCMathML}
-import ui.mathview.MathViewFX.{CursorLeft, CursorPos, CursorRight}
+import javafx.geometry.Bounds
+
+import cmathml.{CMathML, CNone, MCNone, MutableCMathML}
 
 import scalafx.Includes._
+import scalafx.beans.property.ObjectProperty
 import scalafx.event.ActionEvent
 import scalafx.scene.control.{ContextMenu, MenuItem, Separator, SeparatorMenuItem}
 import scalafx.scene.input.{ContextMenuEvent, KeyCode, KeyEvent}
+import misc.Utils.ImplicitConversions._
+import ui.mathview.MathViewFX.{CursorLeft, CursorPos, CursorRight, CursorSide}
+
+import scalafx.scene.layout.Region
 
 class MathEdit extends MathViewFX {
   focusTraversable = true
 
+  override def setMath(m : CMathML): Unit = {
+    super.setMath(m)
+    cursorPos.value = CursorPos(mathDoc.root, CursorLeft)
+  }
+
   private var selectingFrom : Option[CursorPos] = None
+  val cursorPos = ObjectProperty[CursorPos](CursorPos(mathDoc.root, CursorLeft))
+  cursorPos.onChange { (_, oldPos, newPos) =>
+    val oldHighlights = getHighlights(oldPos.node)
+    oldHighlights.removeIf((_: MathHighlight).isInstanceOf[MathCursor])
+    val newHighlights = getHighlights(newPos.node)
+    newHighlights += new MathCursor(newPos.side)
+  }
+
+  val selection = ObjectProperty[Option[MutableCMathML]](None)
+  selection.onChange { (_, oldSel, newSel) =>
+    assert(oldSel!=newSel)
+    if (oldSel != newSel) {
+      if (oldSel.isDefined) {
+        val oldHighlights = getHighlights(oldSel.get)
+        oldHighlights.removeIf((_: MathHighlight).isInstanceOf[MathSelection])
+      }
+      if (newSel.isDefined) {
+        val newHighlights = getHighlights(newSel.get)
+        newHighlights += new MathSelection()
+      }
+    }
+  }
 
   private def menuItem(text:String, action: => Unit) = {
     val item = new MenuItem(text)
@@ -63,7 +96,7 @@ class MathEdit extends MathViewFX {
             if (selectingFrom.isEmpty)
               selectingFrom = Some(cursorPos.value)
             val selected = encompassingNode(newPos.get.node,selectingFrom.get.node)
-            println(s"Selection: From ${selectingFrom.get.node} to ${newPos.get.node}: ${selected}")
+            println(s"Selection: From ${selectingFrom.get.node} to ${newPos.get.node}: $selected")
             selection.value = Some(selected)
           } else
             clearSelection()
@@ -73,3 +106,33 @@ class MathEdit extends MathViewFX {
     }
   }
 }
+
+
+private class MathCursor(val cursorSide: CursorSide) extends Region with MathHighlight {
+  id = Integer.toHexString(hashCode) // TODO: remove
+  styleClass += "mathCursor"
+  cursorSide match {
+    case CursorLeft => styleClass += "mathCursorLeft"
+    case CursorRight => styleClass += "mathCursorRight"
+  }
+  override def setSize(size:Bounds) = {
+    layoutX = size.minX
+    layoutY = size.minY
+    prefWidth = size.width
+    prefHeight = size.height
+    resize(size.width,size.height)
+  }
+}
+
+private class MathSelection extends Region with MathHighlight {
+  id = Integer.toHexString(hashCode) // TODO: remove
+  styleClass += "mathSelection"
+  override def setSize(size:Bounds) = {
+    layoutX = size.minX
+    layoutY = size.minY
+    prefWidth = size.width
+    prefHeight = size.height
+    resize(size.width,size.height)
+  }
+}
+
