@@ -25,10 +25,6 @@ class MathEdit extends MathViewFX {
   private var selectingFrom : Option[CursorPos] = None
   val cursorPos = ObjectProperty[CursorPos](CursorPos(mathDoc.root, CursorLeft))
   cursorPos.onChange { (_, oldPos, newPos) =>
-//    val oldHighlights = getHighlights(oldPos.node)
-//    oldHighlights.removeIf((_: MathHighlight).isInstanceOf[MathCursor])
-//    val newHighlights = getHighlights(newPos.node)
-//    newHighlights += new MathCursor(newPos.side)
     removeCursor(oldPos)
     if (focused.value)
       showCursor(newPos)

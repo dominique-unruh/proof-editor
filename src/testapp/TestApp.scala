@@ -23,7 +23,7 @@ import testapp.TestApp.TrafoChoice
 import theory.Formula
 import trafo._
 import ui.Interactor.{Editor, EditorFactory}
-import ui.mathview.{MathEdit, MathView}
+import ui.mathview.MathEdit
 import ui.{ConnectingLine, Interactor, TheoryView}
 import z3.Z3
 

@@ -1,17 +1,8 @@
 package ui
 
-import java.lang.Boolean
-import javafx.beans.value
-import javafx.beans.value.{ChangeListener, ObservableValue}
-import javafx.scene.layout.VBox
-
-import theory.{Formula, MutableTheory, Theory}
-import ui.mathview.{MathEdit, MathView}
-import misc.Utils.ImplicitConversions._
+import theory.{Formula, MutableTheory}
 import trafo.TrafoInstance
-
-import scala.collection.mutable
-import scalafx.scene.control.{TextField, TextInputControl}
+import ui.mathview.MathEdit
 
 class TheoryView extends javafx.scene.layout.VBox {
 

@@ -20,7 +20,7 @@ libraryDependencies += "org.scalafx" %% "scalafx" % "8.0.92-R10" // https://mvnr
 //libraryDependencies += "org.apache.xmlgraphics" % "batik-swing" % "1.8"
 //libraryDependencies += "org.apache.xmlgraphics" % "xmlgraphics-commons" % "2.1"
 //libraryDependencies += "org.jetbrains" % "annotations" % "15.0"
-libraryDependencies += "com.google.code.findbugs" % "jsr305" % "3.0.1"
+//libraryDependencies += "com.google.code.findbugs" % "jsr305" % "3.0.1"
 
 scalaSource in Compile := baseDirectory.value / "src"
 scalaSource in Test := baseDirectory.value / "test"
@@ -28,18 +28,20 @@ scalaSource in Test := baseDirectory.value / "test"
 resourceDirectory in Compile := baseDirectory.value / "src"
 managedResourceDirectories in Compile += baseDirectory.value / "resources"
 
-excludeFilter in unmanagedResources <<= (excludeFilter in unmanagedResources) { _ || "*.java" || "*.scala" || "*~" || "*~" || "*.orig" }
+excludeFilter in unmanagedResources <<= (excludeFilter in unmanagedResources) { _ || "*.java" || "*.scala" || "*~" || "*.orig" }
 
 sourcesInBase := false
 scalacOptions ++= Seq("-unchecked", "-deprecation","-feature")
 
 enableDownloads
 
+/*
 antlr4Settings
 antlr4PackageName in Antlr4 := Some("ui.mathview")
 sourceDirectory in Antlr4 := baseDirectory.value / "src"
 compileOrder in Compile := CompileOrder.Mixed
 javaSource in Antlr4 := (sourceManaged in Compile).value
+*/
 
 resourceGenerators in Compile += installResources.taskValue
 
