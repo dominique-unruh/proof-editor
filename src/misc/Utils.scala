@@ -3,14 +3,15 @@ package misc
 import java.io.FileNotFoundException
 import java.lang.Thread.UncaughtExceptionHandler
 import java.security.{AccessController, PrivilegedAction}
+import java.util.function.Predicate
 import javafx.beans.property.{ObjectProperty, ObjectPropertyBase, Property, SimpleObjectProperty}
 import javafx.beans.property.adapter.JavaBeanObjectProperty
 import javafx.beans.value.{ChangeListener, ObservableValue}
 import javafx.event.Event
 import javafx.scene.shape.Rectangle
 import javafx.scene.web.{HTMLEditor, WebView}
-import scala.reflect.runtime.universe.TypeTag
 
+import scala.reflect.runtime.universe.TypeTag
 import com.sun.javafx.webkit.WebConsoleListener
 
 
@@ -41,7 +42,7 @@ object Utils {
     throw new FileNotFoundException("Resource "+name.mkString(" or ")+" as file")
   }
 
-  object JavaFXImplicits {
+  object ImplicitConversions {
     import scala.language.implicitConversions
     implicit def lambdaToEventHandler[T <: Event](handler: T => Unit) = new javafx.event.EventHandler[T] {
       override def handle(dEvent: T): Unit = handler(dEvent)
@@ -63,6 +64,10 @@ object Utils {
       new UncaughtExceptionHandler {
         override def uncaughtException(t: Thread, e: Throwable): Unit = handler(t, e)
       }
+
+    implicit def lambdaToPredicate[E](pred: E => Boolean) = new Predicate[E] {
+      override def test(t: E): Boolean = pred(t)
+    }
   }
 }
 

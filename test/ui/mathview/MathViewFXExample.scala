@@ -1,6 +1,6 @@
 package ui.mathview
 
-import misc.Utils.JavaFXImplicits._
+import misc.Utils.ImplicitConversions._
 import javafx.animation.{KeyFrame, Timeline}
 import javafx.event.ActionEvent
 import javafx.util

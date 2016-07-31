@@ -8,7 +8,7 @@ import javafx.scene.control._
 import javafx.scene.layout.VBox
 
 import misc.Utils
-import misc.Utils.JavaFXImplicits._
+import misc.Utils.ImplicitConversions._
 import trafo._
 import ui.Interactor.Editor
 

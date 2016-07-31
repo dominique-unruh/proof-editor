@@ -18,7 +18,7 @@ import javafx.stage.Stage
 import cmathml._
 import com.sun.javafx.webkit.WebConsoleListener
 import misc.GetterSetterProperty
-import misc.Utils.JavaFXImplicits._
+import misc.Utils.ImplicitConversions._
 import testapp.TestApp.TrafoChoice
 import theory.Formula
 import trafo._

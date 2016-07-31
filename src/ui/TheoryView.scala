@@ -7,7 +7,7 @@ import javafx.scene.layout.VBox
 
 import theory.{Formula, MutableTheory, Theory}
 import ui.mathview.MathView
-import misc.Utils.JavaFXImplicits._
+import misc.Utils.ImplicitConversions._
 import trafo.TrafoInstance
 
 import scala.collection.mutable

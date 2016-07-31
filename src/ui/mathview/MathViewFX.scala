@@ -1,5 +1,6 @@
 package ui.mathview
 
+import javafx.collections.ObservableList
 import javafx.geometry.Bounds
 
 import cmathml._
@@ -9,11 +10,19 @@ import scala.collection.mutable
 import scala.util.control.Breaks._
 import scalafx.Includes._
 import scalafx.beans.property.{ObjectProperty, Property}
+import scalafx.collections.ObservableBuffer
+import scalafx.collections.ObservableBuffer.{Add, Remove, Reorder, Update}
 import scalafx.scene.layout._
 import scalafx.scene.{Group, Node}
 
+import misc.Utils.ImplicitConversions._
 
-private class MathCursor(val size : Property[Bounds,Bounds], val cursorSide: CursorSide) extends Region {
+trait MathHighlight extends Node {
+  def setSize(size:Bounds) : Unit
+}
+
+
+private class MathCursor(val cursorSide: CursorSide) extends Region with MathHighlight {
   import MathViewFX._
   id = Integer.toHexString(hashCode) // TODO: remove
   styleClass += "mathCursor"
@@ -22,38 +31,52 @@ private class MathCursor(val size : Property[Bounds,Bounds], val cursorSide: Cur
     case CursorRight => styleClass += "mathCursorRight"
 //    case CursorSelect => styleClass += "mathCursorSelect"
   }
-  def updateSize(): Unit = {
-    val _size = size.value
-    println("size",_size)
-    layoutX = _size.minX
-    layoutY = _size.minY
-    prefWidth = _size.width
-    prefHeight = _size.height
-    resize(_size.width,_size.height)
-//    x = _size.minX
-//    y = _size.minY
-//    width = _size.width
-//    height = _size.height
+  override def setSize(size:Bounds) = {
+    layoutX = size.minX
+    layoutY = size.minY
+    prefWidth = size.width
+    prefHeight = size.height
+    resize(size.width,size.height)
   }
-  size.onChange(updateSize()) // TODO: this causes MathCursor not to be GC'd
-  updateSize()
+//  def updateSize(): Unit = {
+//    val _size = size.value
+//    println("size",_size)
+//    layoutX = _size.minX
+//    layoutY = _size.minY
+//    prefWidth = _size.width
+//    prefHeight = _size.height
+//    resize(_size.width,_size.height)
+////    x = _size.minX
+////    y = _size.minY
+////    width = _size.width
+////    height = _size.height
+//  }
+//  size.onChange(updateSize()) // TODO: this causes MathCursor not to be GC'd
+//  updateSize()
 //  fill = Color.LightGray
 }
 
-private class MathSelection(val size : Property[Bounds,Bounds]) extends Region {
+private class MathSelection extends Region with MathHighlight {
   id = Integer.toHexString(hashCode) // TODO: remove
   styleClass += "mathSelection"
-  def updateSize(): Unit = {
-    val _size = size.value
-    println("size",_size)
-    layoutX = _size.minX
-    layoutY = _size.minY
-    prefWidth = _size.width
-    prefHeight = _size.height
-    resize(_size.width,_size.height)
+  override def setSize(size:Bounds) = {
+    layoutX = size.minX
+    layoutY = size.minY
+    prefWidth = size.width
+    prefHeight = size.height
+    resize(size.width,size.height)
   }
-  size.onChange(updateSize()) // TODO: this causes MathSelection not to be GC'd
-  updateSize()
+//  def updateSize(): Unit = {
+//    val _size = size.value
+//    println("size",_size)
+//    layoutX = _size.minX
+//    layoutY = _size.minY
+//    prefWidth = _size.width
+//    prefHeight = _size.height
+//    resize(_size.width,_size.height)
+//  }
+//  size.onChange(updateSize()) // TODO: this causes MathSelection not to be GC'd
+//  updateSize()
 }
 
 
@@ -118,7 +141,7 @@ class MathViewFX extends Pane {
   }
 
 
-  /*TODO private */case class Info(val node : MathNode, var ownedBy : MathNode = null, var embeddedIn : MathNode = null)
+  /*TODO private */case class Info(node : MathNode, var ownedBy : MathNode = null, var embeddedIn : MathNode = null)
 
   private def cmmlChanged(info: Info): Unit = {
     if (info.ownedBy!=null)
@@ -300,23 +323,62 @@ class MathViewFX extends Pane {
     }
 
     id = Integer.toHexString(hashCode) // TODO: remove
-    private var _cursor : Node = null
-    def setCursor(state:Option[CursorSide]) : Unit = {
-      state match {
-        case None => _cursor = null
-        case Some(side) => _cursor = new MathCursor(size,side)
+
+    val highlights = new ObservableBuffer[MathHighlight]
+    highlights.onChange { (_,changes) =>
+      var needsUpdate = false
+      for (c <- changes) c match {
+        case Add(_,added) =>
+          for (h <- added) h.setSize(size.value)
+          needsUpdate = true
+        case Remove(_,_) =>
+          needsUpdate = true
+        case Reorder(_,_,_) => {}
+        case Update(from,to) =>
+          for (i <- from until to)
+            highlights(i).setSize(size.value)
+          needsUpdate = true
       }
-      updateChildren()
+      if (needsUpdate)
+        updateChildren()
     }
 
-    private var _selection : Node = null
+
+//    @deprecated(null,null) private var _cursor : MathHighlight = null
+    @deprecated("Access highlights directly",null) def setCursor(state:Option[CursorSide]) : Unit = {
+      highlights.removeIf { (_:MathHighlight).isInstanceOf[MathCursor] }
+//      state match {
+//        case None => _cursor = null
+//        case Some(side) => _cursor = new MathCursor(side); highlights += _cursor //; _cursor.setSize(size.value)
+//      }
+      for (side <- state) highlights += new MathCursor(side)
+//      updateChildren()
+    }
+
+//    @deprecated(null,null) private var _selection : MathHighlight = null
+    @deprecated("Access highlights directly",null)
     def setSelection(state:Boolean) : Unit = {
-      _selection = if (state) new MathSelection(size) else null
-      updateChildren()
+      highlights.removeIf { (_:MathHighlight).isInstanceOf[MathCursor] }
+      if(state)
+        highlights += new MathSelection
+//      highlights.remove(_selection)
+//      if (state) {
+//        _selection = new MathSelection
+//        highlights += _selection
+////        _selection.setSize(size.value)
+//      } else
+//        _selection = null
+////      _selection = if (state) new MathSelection() else null
+////      updateChildren()
     }
 
 
     val size = ObjectProperty[Bounds](initialValue=null)
+    size.onChange { (_, _, s) =>
+      for (h <- highlights) h.setSize(s)
+//      if (_cursor!=null) _cursor.setSize(s)
+//      if (_selection!=null) _selection.setSize(s)
+    }
 
     def printInfo() = {
       println(this)
@@ -366,8 +428,9 @@ class MathViewFX extends Pane {
 
     private def updateChildren() : Unit = {
       var cs = List(child : javafx.scene.Node)
-      if (_selection!=null) cs = _selection::cs
-      if (_cursor!=null) cs = _cursor::cs
+      for (h <- highlights) cs = h::cs
+//      if (_selection!=null) cs = _selection::cs
+//      if (_cursor!=null) cs = _cursor::cs
       children.setAll(cs : _*)
     }
 

@@ -4,7 +4,7 @@ import javafx.application.Platform
 import javafx.scene.web.WebView
 
 import cmathml.{CMathML, Path}
-import misc.Utils.JavaFXImplicits._
+import misc.Utils.ImplicitConversions._
 import netscape.javascript.JSObject
 
 import scala.collection.mutable

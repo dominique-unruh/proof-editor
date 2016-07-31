@@ -4,7 +4,7 @@ import javafx.animation.{KeyFrame, Timeline}
 import javafx.event.ActionEvent
 import javafx.util
 
-import misc.Utils.JavaFXImplicits._
+import misc.Utils.ImplicitConversions._
 import trafo.Interaction._
 import trafo.{IntQ, Interaction, StringQ}
 
