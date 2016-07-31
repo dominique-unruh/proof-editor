@@ -26,8 +26,6 @@ class MathEdit extends MathViewFX {
 
   private def createContextMenu = {
     val cm = new ContextMenu
-//    if (!mathDoc.isEmpty)
-//      cm.items += menuItem("_Clear", setMath(CNone()))
     if (selection.value.isDefined)
       cm.items += menuItem("_Clear", {
         val none = new MCNone
@@ -38,10 +36,6 @@ class MathEdit extends MathViewFX {
       cm.items += menuItem("No actions available")
     cm
   }
-
-//  val contextMenu = new ContextMenu {
-//    items += MenuItem.sfxMenuItem2jfx(new MenuItem("Hello") { onAction = { e:ActionEvent => println("Hello",e) }})
-//  }
 
   onContextMenuRequested = { e:ContextMenuEvent =>
     println("Context menu requested: "+e)

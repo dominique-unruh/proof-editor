@@ -1,110 +1,17 @@
 package ui.mathview
 
-import java.io.IOException
-
-import cmathml._
-import ui.mathview.MathViewFX.{CursorLeft, CursorSide}
-
-import scala.util.control.Breaks._
-import scala.collection.mutable
-import scalafx.beans.binding.Bindings
-import scalafx.geometry.{Orientation, Pos}
-import scalafx.scene.control.Separator
-import scalafx.scene.layout._
-import scalafx.scene.text.{Font, FontPosture, Text}
-import scalafx.scene.{Group, Node}
-import scalafx.Includes._
-import scalafx.beans.property.{ObjectProperty, Property, ReadOnlyObjectWrapper}
-import scalafx.scene.paint.{Color, Paint}
-import scalafx.scene.shape.{Line, Rectangle}
 import javafx.geometry.Bounds
 
-import misc.GetterSetterProperty
+import cmathml._
+import ui.mathview.MathViewFX.CursorSide
 
+import scala.collection.mutable
+import scala.util.control.Breaks._
 import scalafx.Includes._
+import scalafx.beans.property.{ObjectProperty, Property}
+import scalafx.scene.layout._
+import scalafx.scene.{Group, Node}
 
-object MathText {
-  if (Font.loadFont(getClass.getResource("mathquill/font/Symbola.otf").toString,0)==null)
-    throw new IOException("Cannot load Symbola font")
-
-  val fontSize = 28.8 : Double
-//  for (f <- Font.fontNames) println(f)
-  val VariableFont = Font("FreeSerif",FontPosture.Italic,fontSize)
-//  println(VariableFont)
-  val SymbolFont = symbolFont(fontSize)
-  def symbolFont(size:Double) = new Font("Symbola",size)
-  println(SymbolFont)
-  def text(txt:String, font:Font) = { val t = new Text(txt); t.font = font; t }
-  def variableText(txt:String) = text(txt,VariableFont)
-  def symbolText(txt:String) = text(txt,SymbolFont)
-}
-
-class BinOp(op:String, a:Node, b:Node) extends HBox {
-  import MathText._
-  id = Integer.toHexString(hashCode()) // TODO: remove
-  alignment = Pos.Center
-  val open = symbolText("(")
-  val close = symbolText(")")
-  val opTxt = symbolText(op)
-
-  val innerHeight = Bindings.createDoubleBinding(
-    () => math.max(opTxt.layoutBounds.get.getHeight, math.max(a.layoutBounds.get.getHeight,b.layoutBounds.get.getHeight)),
-    opTxt.layoutBounds, a.layoutBounds, b.layoutBounds)
-
-  def updateParens() = {
-    val h = innerHeight.get
-    val font = symbolFont(h)
-    open.font = font
-    close.font = font
-    println("height",h)
-  }
-
-  innerHeight.onChange(updateParens())
-  updateParens()
-
-  children.addAll(open,a,opTxt,b,close)
-}
-
-class Fraction(a:Node, b:Node) extends VBox {
-  id = Integer.toHexString(hashCode()) // TODO: remove
-  alignment = Pos.Center
-  val line = new Line()
-  children.addAll(a, line, b)
-
-  line.startX = 0
-  line.endX <== Bindings.createDoubleBinding(
-    () => math.max(a.layoutBounds.get.getWidth, b.layoutBounds.get.getWidth) + 6,
-    a.layoutBounds, b.layoutBounds)
-  line.strokeWidth = 2
-}
-
-class GenericApply(head:Node, args:Seq[Node])
-  extends HBox {
-  import MathText._
-  alignment = Pos.Center
-  children.addAll(head,symbolText("("))
-  var first = true
-  for (a <- args) {
-    if (!first) children.add(symbolText(","))
-    children.add(a)
-    first = false
-  }
-  children.add(symbolText(")"))
-}
-
-class Var(math:MCI) extends Text(math.name) {
-  id = Integer.toHexString(hashCode()) // TODO: remove
-  font = MathText.VariableFont
-}
-
-class GenericSymbol(cd:String, name:String) extends Text(s"$cd.$name") {
-//  font = MathText.VariableFont
-}
-
-class Missing() extends Text("\u2603") {
-  id = Integer.toHexString(hashCode()) // TODO: remove
-  font = MathText.SymbolFont
-}
 
 private class MathCursor(val size : Property[Bounds,Bounds], val cursorSide: CursorSide) extends Region {
   import MathViewFX._
@@ -134,7 +41,6 @@ private class MathCursor(val size : Property[Bounds,Bounds], val cursorSide: Cur
 }
 
 private class MathSelection(val size : Property[Bounds,Bounds]) extends Region {
-  import MathViewFX._
   id = Integer.toHexString(hashCode) // TODO: remove
   styleClass += "mathSelection"
   def updateSize(): Unit = {
@@ -180,15 +86,9 @@ private class MathSelection(val size : Property[Bounds,Bounds]) extends Region {
   */
 class MathViewFX extends Pane {
   mathView =>
-
   import MathViewFX._
 
-  def setMath(m: CMathML) = {
-    mathDoc.setRoot(m)
-    //    cursorNode.value = mathDoc.root; cursorSide.value = CursorLeft
-    cursorPos.value = CursorPos(mathDoc.root, CursorLeft)
-  }
-
+  private val mathRendererFactory : MathRendererFactory = DefaultMathRendererFactory
   val mathDoc = new MutableCMathMLDocument(CNone())
   val cursorPos = ObjectProperty[CursorPos](CursorPos(mathDoc.root, CursorLeft))
   cursorPos.onChange { (_, oldPos, newPos) =>
@@ -207,20 +107,18 @@ class MathViewFX extends Pane {
         getNode(newSel.get).get.setSelection(true)
     }
   }
+  /*TODO private */val infos = new mutable.WeakHashMap[MutableCMathML,Info] // Relies on the fact that MutableCMathML.equals is reference-equality
+  styleClass += "mathview"
 
 
-//  @deprecated val cursorNode = ObjectProperty[MutableCMathML](mathDoc.root)
-//  cursorNode.onChange { (_,oldNode,newNode) =>
-//    println("cursor set",newNode)
-//    assert(oldNode ne newNode); getInfoWithNewNode(oldNode).node.setCursor(None); getInfoWithNewNode(newNode).node.setCursor(Some(cursorSide.value)) }
-//  @deprecated val cursorSide = ObjectProperty[CursorSide](CursorLeft)
-//  cursorSide.onChange { (_,_,newValue) =>
-//    getInfoWithNewNode(cursorNode.value).node.setCursor(Some(newValue)) }
+  def setMath(m: CMathML) = {
+    mathDoc.setRoot(m)
+    //    cursorNode.value = mathDoc.root; cursorSide.value = CursorLeft
+    cursorPos.value = CursorPos(mathDoc.root, CursorLeft)
+  }
+
 
   /*TODO private */case class Info(val node : MathNode, var ownedBy : MathNode = null, var embeddedIn : MathNode = null)
-  /*TODO private */val infos = new mutable.WeakHashMap[MutableCMathML,Info] // Relies on the fact that MutableCMathML.equals is reference-equality
-
-  styleClass += "mathview"
 
   private def cmmlChanged(info: Info): Unit = {
     if (info.ownedBy!=null)
@@ -381,7 +279,7 @@ class MathViewFX extends Pane {
   setRootNode()
   mathDoc.addChangeListener(() => setRootNode())
 
-  /*TODO private*/ class MathNode(val math : MutableCMathML) extends Group {
+  /*TODO private*/ class MathNode(val math : MutableCMathML) extends Group with MathRendererContext {
     def rightmostChild: Option[MutableCMathML] = embedded.lastOption
     def leftmostChild: Option[MutableCMathML] = embedded.headOption
 
@@ -439,7 +337,7 @@ class MathViewFX extends Pane {
       * - [[own]] must be called for all [[MutableCMathML]]'s that this node logically depends on (except for children that are simply embedded as subnodes)
       * - 'this' must not register itself as a listener for [[math]] or any of its descendants
       */
-    protected def own(mathChild: MutableCMathML) = {
+    override def own(mathChild: MutableCMathML) = {
       owned += mathChild
       mathView.own(this, mathChild)
     }
@@ -450,7 +348,7 @@ class MathViewFX extends Pane {
     /** Gets a [[Node]] containing the rendering of 'mathChild'.
       * These nodes can be added as children to 'this' (or its descendants) but must not otherwise be touched.
       */
-    private def getNodeForEmbedding(mathChild: MutableCMathML): Node = {
+    override def getNodeForEmbedding(mathChild: MutableCMathML): Node = {
       val node = mathView.getNodeForEmbedding(this, mathChild)
       embedded += mathChild
       node
@@ -484,34 +382,30 @@ class MathViewFX extends Pane {
     }
 
     def update() = {
-      println("update",this,math.toCMathML)
+      println("update",this)
       disownAll()
       disembedAll()
       invalid = false
-      def binop(hd:MutableCMathML,op:String,x:MutableCMathML,y:MutableCMathML) = {
-        own(hd)
-        setChild(new BinOp(op, getNodeForEmbedding(x), getNodeForEmbedding(y)))
-      }
-      math match {
-        case m: MCI => setChild(new Var(m))
-        case MApply(hd@MCSymbol("arith1", "plus"), x, y) => binop(hd,"+",x,y)
-        case MApply(hd@MCSymbol("arith1", "minus"), x, y) => binop(hd,"-",x,y)
-        case MApply(hd@MCSymbol("arith1", "times"), x, y) => binop(hd,"\u22c5",x,y)
-        case MApply(hd@MCSymbol("arith1", "divide"), x, y) => { own(hd); setChild(new Fraction(getNodeForEmbedding(x),getNodeForEmbedding(y))) }
-        case MCNone() => setChild(new Missing())
-        case MApply(hd, args @ _*) => setChild(new GenericApply(getNodeForEmbedding(hd),args.map(getNodeForEmbedding(_))))
-        case MCSymbol(cd,name) => setChild(new GenericSymbol(cd,name))
-      }
+      val child = mathRendererFactory.renderer(this,math)
       assert(child!=null)
+      setChild(child)
     }
   }
-
 }
 
 object MathViewFX {
   sealed trait CursorSide
   final object CursorLeft extends CursorSide
   final object CursorRight extends CursorSide
-//  final object CursorSelect extends CursorSide
   case class CursorPos(node:MutableCMathML, side:CursorSide)
 }
+
+trait MathRendererContext {
+  def own(math: MutableCMathML) : Unit
+  def getNodeForEmbedding(math: MutableCMathML) : Node
+}
+
+trait MathRendererFactory {
+  def renderer(context:MathRendererContext, math:MutableCMathML) : Node
+}
+

@@ -6,6 +6,8 @@ import ui.mathview.MathViewFX.CursorSide
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
+
+
 sealed abstract class MutableCMathMLParent {
   def replace(a: MutableCMathML, b: MutableCMathML): Unit
 
@@ -74,7 +76,11 @@ sealed abstract class MutableCMathML(attribs : AttributesRO) extends MutableCMat
   def replaceWith(m: MutableCMathML): Unit =
     parent.replace(this,m)
 
-  def replaceInAttributes(a: MutableCMathML, b: MutableCMathML): Unit = ???
+  def replaceInAttributes(a: MutableCMathML, b: MutableCMathML): Unit = {
+    assert(a!=null)
+    assert(b!=null)
+    ???
+  }
 
   val _attributes : Attributes = new mutable.HashMap
   for ((k,a) <- _attributes)
@@ -152,8 +158,10 @@ object MutableCMathML {
 object MApply {
   def unapplySeq(arg: MApply): Some[(MutableCMathML,Seq[MutableCMathML])] = Some((arg._head,arg._args))
 }
+
 final class MApply(attributes:AttributesRO) extends MutableCMathML(attributes) {
   def setHead(head: MutableCMathML) = {
+    assert(head!=null)
     assert(!head.isAttached)
     _removeHead()
     head.setParent(this)
@@ -259,11 +267,13 @@ final class MCSymbol(attributes: AttributesRO, private var _cd:String, private v
   override def toCMathML: CMathML = CSymbol(attributesToCMathML,_cd,_name)
   def cd = _cd
   def cd_=(cd:String) = {
+    assert(cd!=null)
     _cd = cd
     fireChange()
   }
   def name = _name
   def name_=(name:String) = {
+    assert(name!=null)
     _name = name
     fireChange()
   }
