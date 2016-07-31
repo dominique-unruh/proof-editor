@@ -1,21 +1,17 @@
 package ui.mathview
 
-import javafx.collections.ObservableList
 import javafx.geometry.Bounds
 
 import cmathml._
-import ui.mathview.MathViewFX.CursorSide
+import misc.Utils.ImplicitConversions._
 
 import scala.collection.mutable
 import scala.util.control.Breaks._
-import scalafx.Includes._
-import scalafx.beans.property.{ObjectProperty, Property}
+import scalafx.beans.property.ObjectProperty
 import scalafx.collections.ObservableBuffer
 import scalafx.collections.ObservableBuffer.{Add, Remove, Reorder, Update}
 import scalafx.scene.layout._
 import scalafx.scene.{Group, Node}
-
-import misc.Utils.ImplicitConversions._
 
 trait MathHighlight extends Node {
   def setSize(size:Bounds) : Unit
@@ -25,7 +21,7 @@ trait MathHighlight extends Node {
 
 /** Invariants:
   *
-  * For every [[MutableCMathML]] (short 'math') (not necessarily descendant of [[MathViewFX!.mathDoc mathDoc]].root) there is:
+  * For every [[cmathml.MutableCMathML]] (short 'math') (not necessarily descendant of [[MathViewFX!.mathDoc mathDoc]].root) there is:
   * - potentially an rendering [[MathNode]]
   * - potentially an owning [[MathNode]]
   * - potentially an embedding [[MathNode]]
