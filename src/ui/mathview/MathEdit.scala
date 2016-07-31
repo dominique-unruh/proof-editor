@@ -6,9 +6,9 @@ import cmathml.{CMathML, CNone, MCNone, MutableCMathML}
 
 import scalafx.Includes._
 import scalafx.beans.property.ObjectProperty
-import scalafx.event.ActionEvent
+import scalafx.event.{ActionEvent, EventType}
 import scalafx.scene.control.{ContextMenu, MenuItem, Separator, SeparatorMenuItem}
-import scalafx.scene.input.{ContextMenuEvent, KeyCode, KeyEvent}
+import scalafx.scene.input.{ContextMenuEvent, KeyCode, KeyEvent, MouseEvent}
 import misc.Utils.ImplicitConversions._
 import ui.mathview.MathViewFX.{CursorLeft, CursorPos, CursorRight, CursorSide}
 
@@ -19,17 +19,31 @@ class MathEdit extends MathViewFX {
 
   override def setMath(m : CMathML): Unit = {
     super.setMath(m)
-    cursorPos.value = CursorPos(mathDoc.root, CursorLeft)
+    cursorPos.value = CursorPos(mathDoc.root, CursorRight)
   }
 
   private var selectingFrom : Option[CursorPos] = None
   val cursorPos = ObjectProperty[CursorPos](CursorPos(mathDoc.root, CursorLeft))
   cursorPos.onChange { (_, oldPos, newPos) =>
-    val oldHighlights = getHighlights(oldPos.node)
-    oldHighlights.removeIf((_: MathHighlight).isInstanceOf[MathCursor])
-    val newHighlights = getHighlights(newPos.node)
-    newHighlights += new MathCursor(newPos.side)
+//    val oldHighlights = getHighlights(oldPos.node)
+//    oldHighlights.removeIf((_: MathHighlight).isInstanceOf[MathCursor])
+//    val newHighlights = getHighlights(newPos.node)
+//    newHighlights += new MathCursor(newPos.side)
+    removeCursor(oldPos)
+    if (focused.value)
+      showCursor(newPos)
   }
+  focused.onChange { (_, _, focus) =>
+    if (focus)
+      showCursor(cursorPos.value)
+    else
+      removeCursor(cursorPos.value)
+  }
+
+  private def removeCursor(pos:CursorPos) =
+    getHighlights(pos.node).removeIf((_: MathHighlight).isInstanceOf[MathCursor])
+  private def showCursor(pos:CursorPos) =
+    getHighlights(pos.node) += new MathCursor(pos.side)
 
   val selection = ObjectProperty[Option[MutableCMathML]](None)
   selection.onChange { (_, oldSel, newSel) =>
@@ -86,8 +100,14 @@ class MathEdit extends MathViewFX {
     case _ => throw new IllegalArgumentException(side.toString)
   }
 
-  onKeyPressed = { e:KeyEvent =>
+  onMouseClicked = { e:MouseEvent => requestFocus() }
+
+//  addEventHandler[javafx.scene.input.KeyEvent](KeyEvent.KeyPressed, handleKeyPress(_:KeyEvent))
+  onKeyPressed = handleKeyPress(_:KeyEvent)
+
+  private def handleKeyPress(e:KeyEvent) = {
     import scalafx.scene.input.KeyCode._
+    var processed = true
     e.code match {
       case Right|Left =>
         val newPos = atSideOf(e.code, cursorPos.value, jump=e.controlDown)
@@ -102,8 +122,10 @@ class MathEdit extends MathViewFX {
             clearSelection()
           cursorPos.value = newPos.get
         }
-      case _ => println("Key pressed: "+e)
+      case _ => println("Key pressed: "+e); processed = false
     }
+    if (processed)
+      e.consume()
   }
 }
 

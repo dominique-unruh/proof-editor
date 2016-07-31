@@ -260,6 +260,9 @@ final class MCN(attributes: AttributesRO, val n:BigDecimal) extends MutableCMath
   override def replace(a: MutableCMathML, b: MutableCMathML): Unit =
     replaceInAttributes(a,b)
 }
+object MCN {
+  def unapply(that:MCN) = Some(that.n)
+}
 object MCSymbol {
   def unapply(that:MCSymbol) = Some((that._cd,that._name))
 }

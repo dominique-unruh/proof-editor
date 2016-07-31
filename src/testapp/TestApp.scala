@@ -23,7 +23,7 @@ import testapp.TestApp.TrafoChoice
 import theory.Formula
 import trafo._
 import ui.Interactor.{Editor, EditorFactory}
-import ui.mathview.MathView
+import ui.mathview.{MathEdit, MathView}
 import ui.{ConnectingLine, Interactor, TheoryView}
 import z3.Z3
 
@@ -63,14 +63,6 @@ class TestApp extends Application {
   private def errorPopup(msg: String): Unit =
     new Alert(Alert.AlertType.ERROR, msg).showAndWait()
 
-//  @FXML private def idTrafo(event: ActionEvent): Unit = {
-//    interactor.setInteraction(new CheckEqualTrafo().createInteractive)
-//  }
-//
-//  @FXML private def copyTrafo(event: ActionEvent): Unit = {
-//    interactor.setInteraction(new CopyTrafo().createInteractive)
-//  }
-
   @FXML private def useButtonClicked(event: ActionEvent) = {
     theoryView.addTrafoInstance(interactor.result.get.get)
   }
@@ -80,30 +72,30 @@ class TestApp extends Application {
     Platform.exit()
   }
 
-  @FXML
-  private def editSelection(event: ActionEvent): Unit = {
-    val math = theoryView.selectedMathView
-    if (math == null) {
-      log("No selected ui.mathview"); return
-    }
-    val sel = math.getSelection
-    if (sel.isEmpty) {
-      log("No selection"); return
-    }
-    math.setMath(math.getMath, Some(sel.get))
-  }
+//  @FXML
+//  private def editSelection(event: ActionEvent): Unit = {
+//    val math = theoryView.selectedMathEdit
+//    if (math == null) {
+//      log("No selected ui.mathview"); return
+//    }
+//    val sel = math.selection.value
+//    if (sel.isEmpty) {
+//      log("No selection"); return
+//    }
+//    math.setMath(math.mathDoc.toCMathML, Some(sel.get))
+//  }
 
   @FXML
   private def newFromSelection(event: ActionEvent): Unit = {
-    val math = theoryView.selectedMathView
+    val math = theoryView.selectedMathEdit
     if (math == null) {
       log("No selected ui.mathview"); return
     }
-    val sel = math.getSelection
+    val sel = math.selection.value
     if (sel.isEmpty) {
       log("No selection"); return
     }
-    val m = math.getMath.subterm(sel.get)
+    val m = math.selection.value.get.toCMathML
     theoryView.addFormula(Formula(m))
   }
 
@@ -112,11 +104,11 @@ class TestApp extends Application {
 
   @FXML
   private def simplify(event: ActionEvent): Unit = {
-    val math = theoryView.selectedMathView
+    val math = theoryView.selectedMathEdit
     if (math == null) {
       log("No selected ui.mathview"); return
     }
-    val expr = z3.fromCMathML(math.getMath)
+    val expr = z3.fromCMathML(math.mathDoc.toCMathML)
     val simp = expr.simplify
     val simp2 = simp.toCMathML
     theoryView.addFormula(Formula(simp2))
@@ -199,40 +191,40 @@ class TestApp extends Application {
     pickButton.setPadding(Insets.EMPTY)
     val clearButton = new Button("Clear")
     clearButton.setPadding(Insets.EMPTY)
-    val mathview = new MathView()
+    val mathedit = new MathEdit()
     var formula : Option[Formula] = None
     val line = new ConnectingLine(this, overlay)
-    line.setLeft(mathview)
+    line.setLeft(mathedit)
 
     override val valueProperty: GetterSetterProperty[Option[Formula]] = new GetterSetterProperty[Option[Formula]] {
       override protected def getter: Option[Formula] = formula
       override protected def setter(value: Option[Formula]): Unit = {
         formula = value
-        if (formula.isEmpty) mathview.setVisible(false)
-        else { mathview.setVisible(true); mathview.setMath(formula.get.math) }
+        if (formula.isEmpty) mathedit.setVisible(false)
+        else { mathedit.setVisible(true); mathedit.setMath(formula.get.math) }
       }
     }
 
-    mathview.setMath(CN(0)) // Otherwise the ui.mathview will not be resized to something small
-    mathview.setVisible(false)
-    getChildren.addAll(new VBox(1,pickButton,clearButton),mathview)
+//    mathedit.setMath(CN(0)) // Otherwise the ui.mathview will not be resized to something small
+    mathedit.setVisible(false)
+    getChildren.addAll(new VBox(1,pickButton,clearButton),mathedit)
     clearButton.addEventHandler(ActionEvent.ACTION, {
       (_:ActionEvent) =>
         formula = None
-        mathview.setVisible(false)
+        mathedit.setVisible(false)
         line.rightProperty.set(null)
         valueProperty.fireValueChangedEvent()
     })
     pickButton.addEventHandler(ActionEvent.ACTION, { (_:ActionEvent) =>
       if (theoryView.selectedFormula==null) {
         formula = None
-        mathview.setVisible(false)
+        mathedit.setVisible(false)
       } else {
         formula = Some(theoryView.selectedFormula)
-        mathview.setVisible(true)
-        mathview.setMath(formula.get.math)
+        mathedit.setVisible(true)
+        mathedit.setMath(formula.get.math)
       }
-      line.setRight(theoryView.selectedMathView)
+      line.setRight(theoryView.selectedMathEdit)
       valueProperty.fireValueChangedEvent()
     })
   }
@@ -240,11 +232,11 @@ class TestApp extends Application {
   class ShowFormula(q:ShowFormulaQ) extends HBox with Editor[BoxedUnit] {
     override val editedType: TypeTag[BoxedUnit] = typeTag[BoxedUnit]
     override val questionType = typeTag[ShowFormulaQ]
-    val mathview = new MathView()
+    val mathedit = new MathEdit()
     var formula : Option[Formula] = None
     override val valueProperty = new SimpleObjectProperty[BoxedUnit](BoxedUnit.UNIT)
-    mathview.setMath(q.formula.math)
-    getChildren.add(mathview)
+    mathedit.setMath(q.formula.math)
+    getChildren.add(mathedit)
   }
 
 

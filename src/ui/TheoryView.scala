@@ -6,21 +6,22 @@ import javafx.beans.value.{ChangeListener, ObservableValue}
 import javafx.scene.layout.VBox
 
 import theory.{Formula, MutableTheory, Theory}
-import ui.mathview.MathView
+import ui.mathview.{MathEdit, MathView}
 import misc.Utils.ImplicitConversions._
 import trafo.TrafoInstance
 
 import scala.collection.mutable
+import scalafx.scene.control.{TextField, TextInputControl}
 
 class TheoryView extends javafx.scene.layout.VBox {
 
   setSpacing(10)
   val theory = new MutableTheory()
-  private var _selectedMathView = null : MathView
+  private var _selectedMathEdit = null : MathEdit
   private var _selectedFormula = null : Formula
 
   // TODO deprecate -> replace by getNodeForFormula
-  def selectedMathView = _selectedMathView
+  def selectedMathEdit = _selectedMathEdit
 
   def selectedFormula = _selectedFormula : Formula
 
@@ -36,15 +37,18 @@ class TheoryView extends javafx.scene.layout.VBox {
   }
 
   private def addFormulaToGUI(form:Formula) = {
-    val mathview = new MathView()
-    mathview.setMath(form.math)
-    // TODO use ScalaFX
-    mathview.selectedProperty.onChange { (_, _, newValue) =>
-        if (newValue) {
-          _selectedMathView = mathview
-          _selectedFormula = form // TODO: the formula might get updated! lookup current one
-        }}
-    getChildren.add(mathview)
+    val mathedit = new MathEdit()
+    mathedit.setMath(form.math)
+    mathedit.focused.onChange {
+      _selectedMathEdit = mathedit
+      _selectedFormula = form // TODO: the formula might get updated! lookup current one
+    }
+//    mathedit.selection.onChange { (_, _, newValue) =>
+//        if (newValue.isDefined) {
+//          _selectedMathEdit = mathedit
+//          _selectedFormula = form // TODO: the formula might get updated! lookup current one
+//        }}
+    getChildren.add(mathedit)
   }
 
   def addTrafoInstance(trafo: TrafoInstance) = {
