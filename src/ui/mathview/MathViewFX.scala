@@ -89,22 +89,22 @@ class MathViewFX extends Pane {
   })
 
   def own(node: MathNode, mathChild: MutableCMathML) : Unit = {
-//    println(s"own($node,$mathChild)")
-    assert(node != null)
-    assert(node.math ne mathChild)
-    val info = getInfoWithNewNode(mathChild)
-    assert(info.embeddedIn ne node)
-//    assert(info.ownedBy ne node)
-//    if (info.ownedBy != null) info.ownedBy.invalid = true
-    if (info.embeddedIn != null) info.embeddedIn.invalid = true
-//    info.ownedBy = node
-    info.embeddedIn = null
+////    println(s"own($node,$mathChild)")
+//    assert(node != null)
+//    assert(node.math ne mathChild)
+//    val info = getInfoWithNewNode(mathChild)
+//    assert(info.embeddedIn ne node)
+////    assert(info.ownedBy ne node)
+////    if (info.ownedBy != null) info.ownedBy.invalid = true
+//    if (info.embeddedIn != null) info.embeddedIn.invalid = true
+////    info.ownedBy = node
+//    info.embeddedIn = null
   }
   /** It is permissible to call [[disown]] if you 'node' is not the owner. In this case, nothing happens. */
-  def disown(node : MathNode, mathChild : MutableCMathML) : Unit = {
-//    val info = getInfoWithNewNode(mathChild)
-//    if (info.ownedBy==node) info.ownedBy = null
-  }
+//  def disown(node : MathNode, mathChild : MutableCMathML) : Unit = {
+////    val info = getInfoWithNewNode(mathChild)
+////    if (info.ownedBy==node) info.ownedBy = null
+//  }
 
   def getNode(node : MutableCMathML) = {
     infos.get(node) match {
@@ -269,7 +269,7 @@ class MathViewFX extends Pane {
     }
 
     private def disownAll() = {
-      for (n <- owned) mathView.disown(this,n)
+//      for (n <- owned) mathView.disown(this,n)
       owned.clear()
     }
 

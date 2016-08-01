@@ -15,28 +15,20 @@ import scalafx.application.Platform
 
 object DefaultMathRendererFactory extends MathRendererFactory {
   override def renderer(context: MathRendererContext, math: MutableCMathML): Node = {
-    def own(math:MutableCMathML) = context.own(math)
+//    def own(math:MutableCMathML) = /*context.own(math)*/ ()
     def get(math:MutableCMathML) = context.getNodeForEmbedding(math)
     def binop(hd: MutableCMathML, op: String, x: MutableCMathML, y: MutableCMathML) = {
-      own(hd)
+//      own(hd)
       val x$ = get(x)
       val y$ = get(y)
       new BinOp(op, x$, y$)
     }
-//    def prefixop(hd: MutableCMathML, op: String, x: MutableCMathML) = {
-//      own(hd)
-//      new PrefixOp(op, get(x))
-//    }
 
     math match {
       case m: MCI => new Var(m)
-      case MApply(hd@MCSymbol("relation1", "eq"), x, y) => binop(hd, "=", x, y)
-//      case MApply(hd@MCSymbo?l("arith1", "unary_minus"), x) => prefixop(hd, "\u2212", x)
-      case MApply(hd@MCSymbol("arith1", "plus"), x, y) => binop(hd, "+", x, y)
-      case MApply(hd@MCSymbol("arith1", "minus"), x, y) => binop(hd, "\u2212", x, y)
       case MApply(hd@MCSymbol("arith1", "times"), x, y) => binop(hd, "\u22c5", x, y)
       case MApply(hd@MCSymbol("arith1", "divide"), x, y) => {
-        own(hd); (new Fraction(get(x), get(y)))
+        /*own(hd);*/ (new Fraction(get(x), get(y)))
       }
       case MCNone() => new Missing()
 //      case MApply(hd, args@_*) => (new GenericApply(get(hd), args.map(get(_))))
@@ -80,7 +72,6 @@ class BinOp(op:String, a:Node, b:Node) extends HBox {
     val font = symbolFont(h)
     open.font = font
     close.font = font
-//    println("height",h)
   }
 
   innerHeight.onChange((updateParens())) // Delayed action. I think otherwise we end up changing bounds within a recomputation of bounds, leading to spurious errors?
@@ -88,33 +79,6 @@ class BinOp(op:String, a:Node, b:Node) extends HBox {
 
   children.addAll(open,a,opTxt,b,close)
 }
-
-//class PrefixOp(op:String, a:Node) extends HBox {
-//  import MathText._
-//  id = Integer.toHexString(hashCode()) // TODO: remove
-//  alignment = Pos.Center
-//  val open = symbolText("(")
-//  val close = symbolText(")")
-//  val opTxt = symbolText(op)
-//
-//  val innerHeight = Bindings.createDoubleBinding(
-//    () => math.max(opTxt.layoutBounds.get.getHeight, a.layoutBounds.get.getHeight),
-//    opTxt.layoutBounds, a.layoutBounds)
-//
-//  def updateParens() = {
-//    val h = innerHeight.get
-//    val font = symbolFont(h)
-//    open.font = font
-//    close.font = font
-//    println("height",h)
-//  }
-//
-//  innerHeight.onChange(updateParens())
-//  updateParens()
-//
-//  children.addAll(open,opTxt,a,close)
-//}
-//
 
 class Fraction(a:Node, b:Node) extends VBox {
   id = Integer.toHexString(hashCode()) // TODO: remove
