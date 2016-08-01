@@ -2,7 +2,8 @@ package ui.mathview
 
 import javafx.geometry.Bounds
 
-import cmathml.CMathML.plus
+import cmathml.CMathML.{plus, times}
+import cmathml.MutableCMathML.fromCMathML
 import cmathml._
 import misc.Utils.ImplicitConversions._
 import ui.mathview.MathViewFX.{CursorLeft, CursorPos, CursorRight, CursorSide}
@@ -14,12 +15,23 @@ import scalafx.scene.control.{ContextMenu, MenuItem}
 import scalafx.scene.input.{ContextMenuEvent, KeyCode, KeyEvent, MouseEvent}
 import scalafx.scene.layout.Region
 
+object MathEdit {
+  val AlphaChar = "([a-zA-Z])".r
+}
+
 class MathEdit extends MathViewFX {
+  import MathEdit._
+
   focusTraversable = true
 
   val editable = ObjectProperty(None : Option[MutableCMathML])
 
   override def setMath(m : CMathML): Unit = {
+    super.setMath(m)
+    cursorPos.value = CursorPos(mathDoc.root, CursorRight)
+  }
+
+  override def setMath(m : MutableCMathML): Unit = {
     super.setMath(m)
     cursorPos.value = CursorPos(mathDoc.root, CursorRight)
   }
@@ -124,15 +136,16 @@ class MathEdit extends MathViewFX {
     e.character match {
       case "+" => insertBinaryOp(plus)
       case "-" => insertBinaryOp(CMathML.minus)
-      case "*" => insertBinaryOp(CMathML.times)
+      case "*" => insertBinaryOp(times)
       case "/" => insertBinaryOp(CMathML.divide)
       case "=" => insertBinaryOp(CMathML.equal)
+      case AlphaChar(c) => insertVariable(c)
       case _ => processed = false
     }
     if (processed) e.consume()
   }
 
-  def replaceWith(a: MutableCMathML, b: MApply) = {
+  def replaceWith(a: MutableCMathML, b: MutableCMathML) = {
     a.replaceWith(b)
     if (editable.value.contains(a))
       editable.value = Some(b)
@@ -142,10 +155,31 @@ class MathEdit extends MathViewFX {
       cursorPos.value = cursorPos.value.copy(node=b)
   }
 
+  private def insertVariable(name:String) : Unit = {
+    val variable = new MCI(name)
+    selection.value match {
+      case Some(sel) =>
+        if (!inEditableRange(sel)) return
+        replaceWith(sel,variable)
+        clearSelection()
+      case None =>
+        val target = cursorPos.value.node
+        if (!inEditableRange(target)) return
+        target match {
+          case hole : MCNone =>
+            replaceWith(hole,variable)
+          case _ =>
+            val hole = new MCNone
+            cursorPos.value.side match {
+              case CursorLeft => replaceWith(target, new MApply(fromCMathML(times), variable, hole))
+              case CursorRight => replaceWith(target, new MApply(fromCMathML(times), hole, variable)) }
+            hole.replaceWith(target)
+          }
+        }
+    cursorPos.value = CursorPos(variable,CursorRight)
+  }
 
   private def insertBinaryOp(op:CMathML) : Unit = {
-    println("insertBinaryOp",op)
-
     val (target,toLeft) = selection.value match {
       case None => (cursorPos.value.node, cursorPos.value.side==CursorRight)
       case Some(sel) => (sel,true) }
@@ -154,7 +188,7 @@ class MathEdit extends MathViewFX {
 
     val left = new MCNone()
     val right = new MCNone()
-    val binop = new MApply(MutableCMathML.fromCMathML(op), left, right)
+    val binop = new MApply(fromCMathML(op), left, right)
 
     replaceWith(target,binop)
 

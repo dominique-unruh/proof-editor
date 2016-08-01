@@ -11,6 +11,7 @@ import scalafx.scene.layout.{HBox, VBox}
 import scalafx.scene.shape.Line
 import scalafx.scene.text.{Font, FontPosture, Text}
 import scalafx.Includes._
+import scalafx.application.Platform
 
 object DefaultMathRendererFactory extends MathRendererFactory {
   override def renderer(context: MathRendererContext, math: MutableCMathML): Node = {
@@ -18,7 +19,9 @@ object DefaultMathRendererFactory extends MathRendererFactory {
     def get(math:MutableCMathML) = context.getNodeForEmbedding(math)
     def binop(hd: MutableCMathML, op: String, x: MutableCMathML, y: MutableCMathML) = {
       own(hd)
-      new BinOp(op, get(x), get(y))
+      val x$ = get(x)
+      val y$ = get(y)
+      new BinOp(op, x$, y$)
     }
     def prefixop(hd: MutableCMathML, op: String, x: MutableCMathML) = {
       own(hd)
@@ -80,7 +83,7 @@ class BinOp(op:String, a:Node, b:Node) extends HBox {
     println("height",h)
   }
 
-  innerHeight.onChange(updateParens())
+  innerHeight.onChange((updateParens())) // Delayed action. I think otherwise we end up changing bounds within a recomputation of bounds, leading to spurious errors?
   updateParens()
 
   children.addAll(open,a,opTxt,b,close)

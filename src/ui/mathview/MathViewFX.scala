@@ -1,12 +1,15 @@
 package ui.mathview
 
 import javafx.geometry.Bounds
+import javafx.scene.layout
 
 import cmathml._
 import misc.Utils.ImplicitConversions._
 
 import scala.collection.mutable
 import scala.util.control.Breaks._
+import scalafx.application.Platform
+import scalafx.application.Platform.runLater
 import scalafx.beans.property.ObjectProperty
 import scalafx.collections.ObservableBuffer
 import scalafx.collections.ObservableBuffer.{Add, Remove, Reorder, Update}
@@ -63,6 +66,9 @@ class MathViewFX extends Pane {
   def setMath(m: CMathML) =
     mathDoc.setRoot(m)
 
+  def setMath(m: MutableCMathML) =
+    mathDoc.setRoot(m)
+
   private case class Info(node : MathNode, var ownedBy : MathNode = null, var embeddedIn : MathNode = null)
 
   private def cmmlChanged(info: Info): Unit = {
@@ -109,14 +115,22 @@ class MathViewFX extends Pane {
     }
   }
 
-  private def getNodeForEmbedding(node: MathNode, mathChild: MutableCMathML): Node = {
+  private def deattachJFXNode(node:Node) = {
+    val parent = node.parent.value
+    if (parent!=null)
+      parent.asInstanceOf[layout.Pane].getChildren.remove(node) // TODO: is there a better way?
+  }
+
+
+  private def getNodeForEmbedding(requestingNode: MathNode, mathChild: MutableCMathML): Node = {
     val info = getInfoWithNewNode(mathChild)
-    assert(info.embeddedIn ne node)
-    assert(info.ownedBy ne node)
+    assert(info.embeddedIn ne requestingNode)
+    assert(info.ownedBy ne requestingNode)
     if (info.ownedBy != null) info.ownedBy.invalid = true
     if (info.embeddedIn != null) info.embeddedIn.invalid = true
+    deattachJFXNode(info.node) // TODO: is this needed?
     info.ownedBy = null
-    info.embeddedIn = node
+    info.embeddedIn = requestingNode
     if (info.node.invalid) info.node.update()
     info.node
   }
