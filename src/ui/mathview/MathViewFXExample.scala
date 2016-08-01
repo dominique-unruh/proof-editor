@@ -15,12 +15,12 @@ import scalafx.Includes._
 
 class MathViewFXExample extends Application {
   override def start(primaryStage: Stage): Unit = {
-    val nz = new Text("x")
-    val nh1 = new Text("x")
     val nh2 = new Text("x")
-
     val nbinop = new Group()
-    val nbinopc = new BinOp(nh1,nh2)
+    val nbinopc = new HBox(nh2)
+//    nbinopc.getChildren.addAll(nh2)
+
+
     nbinop.getChildren.setAll(nbinopc)
 
     val nw = new Group()
@@ -28,9 +28,9 @@ class MathViewFXExample extends Application {
     nwc.boundsInLocalProperty().onChange({})
     nw.getChildren.setAll(nwc)
 
-    new BinOp(nz, nw)
+    new BinOp(nw)
 
-    val parent = nbinopc
+//    val parent = nbinopc
     nbinopc.getChildren.remove(nh2)
 
     sys.exit()
@@ -44,10 +44,10 @@ object MathViewFXExample {
 }
 
 
-class BinOp(a:Node, b:Node) extends HBox {
-  a.layoutBounds.onChange({})
+class BinOp(b:Node) extends HBox {
+//  a.layoutBounds.onChange({})
   b.layoutBounds.onChange({})
-  getChildren.addAll(a,b)
+  getChildren.addAll(b)
 }
 
 class Fraction(b:Node) extends VBox {
