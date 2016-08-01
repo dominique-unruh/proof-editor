@@ -7,12 +7,18 @@ import javafx.scene.layout.Pane
 import javafx.scene.text.Text
 import javafx.stage.Stage
 
+import scalafx.Includes._
+
 import cmathml.CMathML.{divide, times}
 import cmathml._
 
 import scala.collection.mutable
+import scalafx.beans.binding.Bindings
 import scalafx.beans.property.ObjectProperty
-import scalafx.scene.{Group, Node}
+import scalafx.geometry.Pos
+import javafx.scene.layout.{HBox, VBox}
+import javafx.scene.shape.Line
+import javafx.scene.{Group, Node}
 
 
 class MathViewFXExample extends Application {
@@ -76,7 +82,7 @@ class MathViewFXExample extends Application {
           child = new Text("x")
       }
       size <== child.boundsInLocalProperty()
-      children.setAll(child)
+      getChildren.setAll(child)
     }
   }
 
@@ -108,4 +114,26 @@ object MathViewFXExample {
   def main(args: Array[String]): Unit = {
     Application.launch(classOf[MathViewFXExample])
   }
+}
+
+
+class BinOp(op:String, a:Node, b:Node) extends HBox {
+  a.layoutBounds.onChange({})
+  b.layoutBounds.onChange({})
+  getChildren.addAll(a,b)
+}
+
+class Fraction(a:Node, b:Node) extends VBox {
+//  id = Integer.toHexString(hashCode()) // TODO: remove
+  alignmentProperty.set(Pos.Center)
+  val line = new Line()
+  getChildren.addAll(a, line, b)
+
+  val innerWidth = Bindings.createDoubleBinding(
+    () => b.layoutBounds.get.getWidth,
+    b.layoutBounds)
+
+  line.startX = 0
+  line.endX <== innerWidth
+  line.strokeWidth = 2
 }
