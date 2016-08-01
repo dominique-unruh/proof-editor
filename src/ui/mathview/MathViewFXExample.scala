@@ -23,13 +23,13 @@ import javafx.scene.shape.Line
 import javafx.scene.{Group, Node}
 
 
-class MathNode(mathView : MathViewFXExample, val math : MutableCMathML) extends Group {
+class MathNode(val math : MutableCMathML) extends Group {
 
-  val size = ObjectProperty[Bounds](null : Bounds)
-  size.onChange { (_, _, s) => }
-
-  def getNodeForEmbedding(mathChild: MutableCMathML): Node =
-    mathView.getNodeForEmbedding(this, mathChild)
+//  val size = ObjectProperty[Bounds](null : Bounds)
+//  size.onChange { (_, _, s) => }
+//
+//  def getNodeForEmbedding(mathChild: MutableCMathML): Node =
+//    mathView.getNodeForEmbedding(this, mathChild)
 
   var child: javafx.scene.Node = null
   var invalid = true
@@ -39,10 +39,10 @@ class MathNode(mathView : MathViewFXExample, val math : MutableCMathML) extends 
 class MathViewFXExample extends Application {
   mathView =>
 
-  val mathDoc = new MutableCMathMLDocument(CNone())
+//  val mathDoc = new MutableCMathMLDocument(CNone())
 
   def getInfoWithNewNode(cmml: MutableCMathML) = {
-    if (cmml.node==null) cmml.node = new MathNode(this,cmml)
+    if (cmml.node==null) cmml.node = new MathNode(cmml)
     cmml.addChangeListener{() => updateMe = cmml.node; update()} // TODO: only do conditionally????
     cmml
   }
@@ -56,7 +56,7 @@ class MathViewFXExample extends Application {
 
   def getNodeForEmbedding(requestingNode: MathNode, mathChild: MutableCMathML): Node = {
 
-    if (mathChild.node==null) mathChild.node = new MathNode(this,mathChild)
+    if (mathChild.node==null) mathChild.node = new MathNode(mathChild)
     deattachJFXNode(mathChild.node) // TODO: is this needed?
     if (mathChild.node.invalid) { updateMe  = mathChild.node; update() }
     mathChild.node
@@ -70,13 +70,13 @@ class MathViewFXExample extends Application {
     t.invalid = false
     t.math match {
       case MApply(hd@MCSymbol("arith1", "times"), x, y) =>
-          t.child = new BinOp(t.getNodeForEmbedding(x),t.getNodeForEmbedding(y))
+          t.child = new BinOp(getNodeForEmbedding(t,x),getNodeForEmbedding(t,y))
       case MApply(hd@MCSymbol("arith1", "divide"), x, y) =>
-        t.child = new Fraction(t.getNodeForEmbedding(x), t.getNodeForEmbedding(y))
+        t.child = new Fraction(getNodeForEmbedding(t,x), getNodeForEmbedding(t,y))
       case MCNone() =>
         t.child = new Text("x")
     }
-    t.size <== t.child.boundsInLocalProperty()
+    t.child.boundsInLocalProperty().onChange({})
     t.getChildren.setAll(t.child)
   }
 
@@ -89,9 +89,9 @@ class MathViewFXExample extends Application {
     var w = new MApply(divide,new MCNone(),binop)
     var a2 = new MApply(times,z,w)
 
-    mathDoc.setRoot(a2)
-    val root = new MathNode(this,mathDoc.root)
-    mathDoc.root.node = root
+//    mathDoc.setRoot(a2)
+    val root = new MathNode(a2)
+    a2.node = root
     val nz = getNodeForEmbedding(root,z)
     val nw = getNodeForEmbedding(root,w)
     new BinOp(nz, nw)
