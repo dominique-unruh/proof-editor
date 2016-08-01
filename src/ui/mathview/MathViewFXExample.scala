@@ -1,6 +1,9 @@
 package ui.mathview
 
+import java.lang.Double
+import java.util.concurrent.Callable
 import javafx.application.Application
+import javafx.beans.value.{ChangeListener, ObservableValue}
 import javafx.geometry.Bounds
 import javafx.scene.layout
 import javafx.scene.layout.Pane
@@ -8,18 +11,35 @@ import javafx.scene.text.Text
 import javafx.stage.Stage
 
 import scalafx.Includes._
-
 import cmathml.CMathML.{divide, times}
 import cmathml._
 
 import scala.collection.mutable
 import scalafx.beans.binding.Bindings
 import scalafx.beans.property.ObjectProperty
-import scalafx.geometry.Pos
+import javafx.geometry.Pos
 import javafx.scene.layout.{HBox, VBox}
 import javafx.scene.shape.Line
 import javafx.scene.{Group, Node}
 
+
+class MathNode(mathView : MathViewFXExample, val math : MutableCMathML) extends Group {
+
+  val size = ObjectProperty[Bounds](null : Bounds)
+  size.onChange { (_, _, s) => }
+
+  val embedded = new mutable.MutableList[MutableCMathML]
+
+  def getNodeForEmbedding(mathChild: MutableCMathML): Node = {
+    val node = mathView.getNodeForEmbedding(this, mathChild)
+    embedded += mathChild
+    node
+  }
+
+  var child: javafx.scene.Node = null
+  var invalid = true
+
+}
 
 class MathViewFXExample extends Application {
   mathView =>
@@ -27,8 +47,8 @@ class MathViewFXExample extends Application {
   val mathDoc = new MutableCMathMLDocument(CNone())
 
   def getInfoWithNewNode(cmml: MutableCMathML) = {
-    if (cmml.node==null) cmml.node = new MathNode(cmml)
-    cmml.addChangeListener(() => cmml.node.update())
+    if (cmml.node==null) cmml.node = new MathNode(this,cmml)
+    cmml.addChangeListener{() => updateMe = cmml.node; update()}
     cmml
   }
 
@@ -44,7 +64,7 @@ class MathViewFXExample extends Application {
     if (info.embeddedIn != null) info.embeddedIn.invalid = true
     deattachJFXNode(info.node) // TODO: is this needed?
     info.embeddedIn = requestingNode
-    if (info.node.invalid) info.node.update()
+    if (info.node.invalid) { updateMe  = info.node; update() }
     info.node
   }
 
@@ -53,38 +73,24 @@ class MathViewFXExample extends Application {
     if (info.embeddedIn==node) info.embeddedIn = null
   }
 
-  class MathNode(val math : MutableCMathML) extends Group {
-
-    val size = ObjectProperty[Bounds](null : Bounds)
-    size.onChange { (_, _, s) => }
-
-    val embedded = new mutable.MutableList[MutableCMathML]
-
-    def getNodeForEmbedding(mathChild: MutableCMathML): Node = {
-      val node = mathView.getNodeForEmbedding(this, mathChild)
-      embedded += mathChild
-      node
+  var updateMe : MathNode = null
+  def update() = {
+    val t = updateMe
+    for (n <- t.embedded) disembed(t, n)
+    t.embedded.clear()
+    t.invalid = false
+    t.math match {
+      case MApply(hd@MCSymbol("arith1", "times"), x, y) =>
+          t.child = new BinOp("*",t.getNodeForEmbedding(x),t.getNodeForEmbedding(y))
+      case MApply(hd@MCSymbol("arith1", "divide"), x, y) =>
+        t.child = new Fraction(t.getNodeForEmbedding(x), t.getNodeForEmbedding(y))
+      case MCNone() =>
+        t.child = new Text("x")
     }
-
-    var child: javafx.scene.Node = null
-    var invalid = true
-
-    def update() = {
-      for (n <- embedded) mathView.disembed(this, n)
-      embedded.clear()
-      invalid = false
-      math match {
-        case MApply(hd@MCSymbol("arith1", "times"), x, y) =>
-          child = new BinOp("*",getNodeForEmbedding(x),getNodeForEmbedding(y))
-        case MApply(hd@MCSymbol("arith1", "divide"), x, y) =>
-          child = new Fraction(getNodeForEmbedding(x), getNodeForEmbedding(y))
-        case MCNone() =>
-          child = new Text("x")
-      }
-      size <== child.boundsInLocalProperty()
-      getChildren.setAll(child)
-    }
+    t.size <== t.child.boundsInLocalProperty()
+    t.getChildren.setAll(t.child)
   }
+
 
   override def start(primaryStage: Stage): Unit = {
     var s3 : MCSymbol = new MCSymbol(times)
@@ -96,14 +102,9 @@ class MathViewFXExample extends Application {
     var a2 = new MApply(s3,z,w)
 
     mathDoc.setRoot(a2)
-      if (mathDoc.root.node == null) mathDoc.root.node = new MathNode(mathDoc.root)
-      mathDoc.root.addChangeListener(() => mathDoc.root.node.update())
-      if (mathDoc.root.embeddedIn != null) mathDoc.root.embeddedIn.invalid = true
-      mathDoc.root.embeddedIn = null
-      if (mathDoc.root.node.invalid) mathDoc.root.node.update()
-      //    children.setAll(mathDoc.root.node)
-
-//    binop._args.update(0,u)
+    mathDoc.root.node = new MathNode(this,mathDoc.root)
+    updateMe = mathDoc.root.node
+    update()
 
     binop.node.getNodeForEmbedding(h2)
 
@@ -125,12 +126,14 @@ class BinOp(op:String, a:Node, b:Node) extends HBox {
 
 class Fraction(a:Node, b:Node) extends VBox {
 //  id = Integer.toHexString(hashCode()) // TODO: remove
-  alignmentProperty.set(Pos.Center)
+  alignmentProperty.set(Pos.CENTER)
   val line = new Line()
   getChildren.addAll(a, line, b)
 
-  val innerWidth = Bindings.createDoubleBinding(
-    () => b.layoutBounds.get.getWidth,
+  val innerWidth = javafx.beans.binding.Bindings.createDoubleBinding(
+    new Callable[Double] {
+      override def call(): Double = b.layoutBounds.get.getWidth
+    },
     b.layoutBounds)
 
   line.startX = 0
