@@ -74,7 +74,7 @@ object MathViewFXExample {
       val root = a2
 
       if (root.isAttached) root.replaceWith(new MCNone)
-      mw.setMath(root)
+      mw.setMath(new MCNone)
 
 
       //      mw.mathDoc.root match {
@@ -90,7 +90,7 @@ object MathViewFXExample {
       val u = new MCI("u")
       h1.replaceWith(u) // TODO why does this throw an exception?
 
-      sys.exit()
+//      sys.exit()
 
       val box = new VBox(new Label("X"),new Label("I"),mw)
 

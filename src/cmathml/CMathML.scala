@@ -2,7 +2,7 @@ package cmathml
 
 import java.math.MathContext
 
-import cmathml.CMathML.{Attributes, NoAttr}
+import cmathml.CMathML._
 import misc.Pure
 
 import scala.math.BigDecimal.RoundingMode
@@ -27,6 +27,22 @@ sealed trait CMathML {
   @Pure def negate() : CMathML = Apply(CMathML.uminus,this)
   /** Only immutable objects may be inserted into this map */
   val attributes : Attributes
+
+  /** Terms with priority `priority` or lower need to be parenthesised */
+  @Pure def toPopcorn(sb:StringBuilder, priority:Int) : Unit =
+  if (attributes.isEmpty)
+    toPopcorn$(sb,priority)
+  else
+    ???
+
+  /** Same as [[toPopcorn]] but without the outermost attributes */
+  @Pure protected def toPopcorn$(sb:StringBuilder, priority:Int) : Unit
+
+  @Pure def toPopcorn : String = {
+    val sb = new StringBuilder
+    toPopcorn(sb,0)
+    sb.toString
+  }
 }
 
 object CMathML {
@@ -57,6 +73,7 @@ sealed protected trait Leaf extends CMathML {
 /** <apply>-Content MathML element
   * @see [[https://www.w3.org/TR/MathML3/chapter4.html#contm.apply]] */
 final case class Apply(val attributes : Attributes, hd: CMathML, args: CMathML*) extends CMathML {
+  override def toString = toPopcorn
   override def mapAt(p: Path, f: (CMathML) => CMathML): CMathML = {
     if (p.isEmpty) return f(this)
     val idx = p.head; val tl = p.tail
@@ -75,8 +92,34 @@ final case class Apply(val attributes : Attributes, hd: CMathML, args: CMathML*)
     return args(idx-1).subterm(tl)
   }
 
-  override def toString : String = {
-    "Apply("+hd+","+args.mkString(",")+")"
+//  override def toString : String = {
+//    "Apply("+hd+","+args.mkString(",")+")"
+//  }
+
+  private def popcornBinop(sb: StringBuilder,priority:Int,opPriority:Int,op:String,x:CMathML,y:CMathML): Unit = {
+    if (opPriority <= priority) sb += '('
+    x.toPopcorn(sb,opPriority)
+    sb ++= op
+    y.toPopcorn(sb,opPriority)
+    if (opPriority <= priority) sb += ')'
+  }
+
+  override protected def toPopcorn$(sb: StringBuilder, priority: Int): Unit = this match {
+    case Apply(_,`equal`,x,y) => popcornBinop(sb,priority,10,"=",x,y)
+    case Apply(_,`plus`,x,y) => popcornBinop(sb,priority,15,"+",x,y)
+    case Apply(_,`minus`,x,y) => popcornBinop(sb,priority,16,"-",x,y)
+    case Apply(_,`times`,x,y) => popcornBinop(sb,priority,17,"*",x,y)
+    case Apply(_,`divide`,x,y) => popcornBinop(sb,priority,18,"/",x,y)
+    case _ =>
+      hd.toPopcorn(sb,1000)
+      sb += '('
+      var first = true
+      for (a <- args) {
+        if (!first) sb += ','
+        a.toPopcorn(sb,0)
+        first = false
+      }
+      sb += ')'
   }
 }
 object Apply {
@@ -87,6 +130,11 @@ object Apply {
   * @see [[https://www.w3.org/TR/MathML3/chapter4.html#contm.ci]] */
 final case class CI(val attributes : Attributes = NoAttr, name : String) extends CMathML with Leaf {
   def this(name:String) = this(NoAttr,name)
+  override def toString = toPopcorn
+
+  /** Terms with priority `priority` or lower need to be parenthesised */
+  override protected def toPopcorn$(sb: StringBuilder, priority: Int): Unit = {
+    sb += '$'; sb ++= name }
 }
 object CI {
   def apply(name:String) = new CI(NoAttr,name)
@@ -100,6 +148,11 @@ final case class CN(val attributes : Attributes = NoAttr, n: BigDecimal) extends
   assert(n.mc.getRoundingMode==java.math.RoundingMode.UNNECESSARY)
   @Pure final def isNegative = (n < 0)
   override def negate() = CN(-n)
+  override def toString = toPopcorn
+
+  /** Same as [[toPopcorn]] but without the outermost attributes */
+  override protected def toPopcorn$(sb: StringBuilder, priority: Int): Unit =
+    sb ++= n.toString
 }
 object CN {
   def apply(d:BigDecimal) = new CN(NoAttr,d)
@@ -115,7 +168,12 @@ object CN {
 /** <csymbol>-Content MathML element
  *
   * @see [[https://www.w3.org/TR/MathML3/chapter4.html#contm.csymbol]] */
-final case class CSymbol(val attributes : Attributes = NoAttr, cd: String, name: String) extends CMathML with Leaf
+final case class CSymbol(val attributes : Attributes = NoAttr, cd: String, name: String) extends CMathML with Leaf {
+  /** Same as [[toPopcorn]] but without the outermost attributes */
+  override protected def toPopcorn$(sb: StringBuilder, priority: Int): Unit = {
+    sb ++= cd; sb += '.'; sb ++= name }
+  override def toString = toPopcorn
+}
 object CSymbol {
   def apply(cd: String, name: String) = new CSymbol(NoAttr,cd,name)
 }
@@ -123,12 +181,21 @@ object CSymbol {
 /** <cerror>-Content MathML element
   * We are more flexible than the standard here, we allow arbitrary elements as error arguments (not just MathML)
   * @see [[https://www.w3.org/TR/MathML3/chapter4.html#contm.cerror]] */
-final case class CError(val attributes : Attributes, cd: String, name: String, args: Any*) extends CMathML with Leaf
+final case class CError(val attributes : Attributes, cd: String, name: String, args: Any*) extends CMathML with Leaf {
+  /** Same as [[toPopcorn]] but without the outermost attributes */
+  override protected def toPopcorn$(sb: StringBuilder, priority: Int): Unit = ???
+  override def toString = toPopcorn
+}
 
 /** An addition to the Content MathML standard. Represents a missing node.
   * Not valid Content MathML, cannot be exported to valid XML
   */
-final case class CNone(val attributes : Attributes = NoAttr) extends CMathML with Leaf
+final case class CNone(val attributes : Attributes = NoAttr) extends CMathML with Leaf {
+  /** Same as [[toPopcorn]] but without the outermost attributes */
+  override protected def toPopcorn$(sb: StringBuilder, priority: Int): Unit =
+    sb += '\u25a2'
+  override def toString = toPopcorn
+}
 
 object Path {
   def fromString(str: String): Path = if (str=="") Path.empty else Path(str.split('-').map{_.toInt}.toList)
