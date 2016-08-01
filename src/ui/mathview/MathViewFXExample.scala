@@ -13,9 +13,6 @@ import javafx.stage.Stage
 import scalafx.Includes._
 
 
-class MathNode() extends Group {
-  var child: javafx.scene.Node = null
-}
 
 class MathViewFXExample extends Application {
   def deattachJFXNode(node:Node) = {
@@ -26,31 +23,25 @@ class MathViewFXExample extends Application {
 
 
   override def start(primaryStage: Stage): Unit = {
-    val root = new MathNode()
-    val nz = new Group()
-
-
-
+//    val root = new MathNode()
+    val nz = new Text("x")
     val nh1 = new Text("x")
     val nh2 = new Text("x")
-    val nh3 = new Text("x")
-    nh2.boundsInLocalProperty().onChange({})
+//    val nh3 = new Text("x")
 
+    val nbinop = new Group()
+    val nbinopc = new BinOp(nh1,nh2)
+    nbinop.getChildren.setAll(nbinopc)
 
-    val nbinop = new MathNode()
-    nbinop.child = new BinOp(nh1,nh2)
-    nbinop.child.boundsInLocalProperty().onChange({})
-    nbinop.getChildren.setAll(nbinop.child)
-
-    val nw = new MathNode()
-    nw.child = new Fraction(nh3, nbinop)
-    nw.child.boundsInLocalProperty().onChange({})
-    nw.getChildren.setAll(nw.child)
-
+    val nw = new Group()
+    val nwc = new Fraction(nbinop)
+    nwc.boundsInLocalProperty().onChange({})
+    nw.getChildren.setAll(nwc)
 
     new BinOp(nz, nw)
 
-    deattachJFXNode(nh2)
+    val parent = nbinopc
+    nbinopc.getChildren.remove(nh2)
 
     sys.exit()
   }
@@ -69,11 +60,11 @@ class BinOp(a:Node, b:Node) extends HBox {
   getChildren.addAll(a,b)
 }
 
-class Fraction(a:Node, b:Node) extends VBox {
+class Fraction(b:Node) extends VBox {
 //  id = Integer.toHexString(hashCode()) // TODO: remove
   alignmentProperty.set(Pos.CENTER)
   val line = new Line()
-  getChildren.addAll(a, line, b)
+  getChildren.addAll(line, b)
 
   val innerWidth = javafx.beans.binding.Bindings.createDoubleBinding(
     new Callable[Double] {
