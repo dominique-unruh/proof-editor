@@ -3,7 +3,6 @@ package cmathml
 import java.math.MathContext
 
 import cmathml.CMathML.{Attributes, NoAttr}
-import misc.Pure
 
 import scala.math.BigDecimal.RoundingMode
 
@@ -13,18 +12,18 @@ case class InvalidPath() extends Exception
 sealed trait CMathML {
   def subterm(p: Path) : CMathML
   /** Replaces the subterm x at path p by f(x) */
-  @Pure def mapAt(p:Path, f:CMathML=>CMathML) : CMathML
+  def mapAt(p:Path, f:CMathML=>CMathML) : CMathML
   /** Replaces the subterm x at path p by y */
-  @Pure def replace(p:Path, y:CMathML) = mapAt(p,{_ => y})
-  @Pure final def +(b:CMathML) = CMathML.plus(this,b)
-  @Pure final def -(b:CMathML) = CMathML.minus(this,b)
-  @Pure final def *(b:CMathML) = CMathML.times(this,b)
-  @Pure final def /(b:CMathML) = CMathML.divide(this,b)
+  def replace(p:Path, y:CMathML) = mapAt(p,{_ => y})
+  final def +(b:CMathML) = CMathML.plus(this,b)
+  final def -(b:CMathML) = CMathML.minus(this,b)
+  final def *(b:CMathML) = CMathML.times(this,b)
+  final def /(b:CMathML) = CMathML.divide(this,b)
 
   /** Negates this expression. If it is a CN, then the number itself is negated.
     * Otherwise arith1.unary_minus is applied.
     */
-  @Pure def negate() : CMathML = Apply(CMathML.uminus,this)
+  def negate() : CMathML = Apply(CMathML.uminus,this)
   /** Only immutable objects may be inserted into this map */
   val attributes : Attributes
 }
@@ -98,7 +97,7 @@ object CI {
 final case class CN(val attributes : Attributes = NoAttr, n: BigDecimal) extends CMathML with Leaf {
   assert(n.mc.getPrecision==0)
   assert(n.mc.getRoundingMode==java.math.RoundingMode.UNNECESSARY)
-  @Pure final def isNegative = (n < 0)
+  final def isNegative = (n < 0)
   override def negate() = CN(-n)
 }
 object CN {
