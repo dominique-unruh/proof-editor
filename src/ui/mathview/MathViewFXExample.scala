@@ -57,20 +57,10 @@ class MathViewFXExample extends Application {
   def getNodeForEmbedding(requestingNode: MathNode, mathChild: MutableCMathML): Node = {
 
     if (mathChild.node==null) mathChild.node = new MathNode(this,mathChild)
-    mathChild.addChangeListener{() => updateMe = mathChild.node; update()}
-
-    val info = mathChild
-    if (info.embeddedIn != null) info.embeddedIn.invalid = true
-    deattachJFXNode(info.node) // TODO: is this needed?
-    info.embeddedIn = requestingNode
-    if (info.node.invalid) { updateMe  = info.node; update() }
-    info.node
+    deattachJFXNode(mathChild.node) // TODO: is this needed?
+    if (mathChild.node.invalid) { updateMe  = mathChild.node; update() }
+    mathChild.node
   }
-
-//  def disembed(node : MathNode, mathChild : MutableCMathML) : Unit = {
-//    val info = mathChild // getInfoWithNewNode(mathChild)
-//    if (info.embeddedIn==node) info.embeddedIn = null
-//  }
 
   var updateMe : MathNode = null
   def update() = {
