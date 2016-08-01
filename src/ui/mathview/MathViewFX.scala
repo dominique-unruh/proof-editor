@@ -25,56 +25,14 @@ class MathViewFX extends Pane {
   mathView =>
   import MathViewFX._
 
-  private val mathRendererFactory : MathRendererFactory = DefaultMathRendererFactory
-
-//  def getHighlights(math:MutableCMathML) =
-//    getNode(math).get.highlights
-
   val mathDoc = new MutableCMathMLDocument(CNone())
 
-//  val infos = new mutable.WeakHashMap[MutableCMathML,Info] // Relies on the fact that MutableCMathML.equals is reference-equality
-
-  def setMath(m: CMathML) =
-    mathDoc.setRoot(m)
-
-  def setMath(m: MutableCMathML) =
-    mathDoc.setRoot(m)
-
-//  case class Info(node : MathNode, /*var ownedBy : MathNode = null, */var embeddedIn : MathNode = null)
-
-  def cmmlChanged(info: MutableCMathML): Unit = {
-//    if (info.ownedBy!=null)
-//      info.ownedBy.update() // TODO: why does this preserve invariants?
-    if (info.node.invalid) ()
-    else if (info.embeddedIn!=null)
-      info.node.update() // TODO: why does this preserve invariants?
-    else if (info.node.math == mathDoc.root)
-      info.node.update() // TODO: why does this preserve invariants?
-    else
-      info.node.invalid = true // TODO: why does this preserve invariants?
-  }
-
-  /** This will create a node (which will then own and embed other nodes)! */
   def getInfoWithNewNode(cmml: MutableCMathML) = {
     if (cmml.node==null) cmml.node = new MathNode(cmml)
-    cmml.addChangeListener(() => cmmlChanged(cmml))
+    cmml.addChangeListener(() => cmml.node.update())
     cmml
   }
-//  infos.getOrElseUpdate(cmml, {
-//      val info = Info(node = new MathNode(cmml))
-//      cmml.addChangeListener(() => cmmlChanged(info))
-//      info
-//    })
-//  }
 
-
-  def getNode(node : MutableCMathML) = {
-    node
-//    infos.get(node) match {
-//      case None => None
-//      case Some(info) => assert(info.node!=null); Some(info.node)
-//    }
-  }
 
   def deattachJFXNode(node:Node) = {
     val parent = node.parent.value
@@ -86,16 +44,13 @@ class MathViewFX extends Pane {
   def getNodeForEmbedding(requestingNode: MathNode, mathChild: MutableCMathML): Node = {
     val info = getInfoWithNewNode(mathChild)
     assert(info.embeddedIn ne requestingNode)
-//    assert(info.ownedBy ne requestingNode)
-//    if (info.ownedBy != null) info.ownedBy.invalid = true
     if (info.embeddedIn != null) info.embeddedIn.invalid = true
     deattachJFXNode(info.node) // TODO: is this needed?
-//    info.ownedBy = null
     info.embeddedIn = requestingNode
     if (info.node.invalid) info.node.update()
     info.node
   }
-  /** It is permissible to call [[disembed]] if you 'node' is not the embedder. In this case, nothing happens. */
+
   def disembed(node : MathNode, mathChild : MutableCMathML) : Unit = {
     val info = getInfoWithNewNode(mathChild)
     if (info.embeddedIn==node) info.embeddedIn = null
@@ -109,26 +64,20 @@ class MathViewFX extends Pane {
       if (info.node.invalid) info.node.update()
       info.node
     }
-//    rootNode.printInfo()
     children.setAll(rootNode)
   }
 
   setRootNode()
   mathDoc.addChangeListener(() => setRootNode())
 
-  class MathNode(val math : MutableCMathML) extends Group with MathRendererContext {
-//    def rightmostChild: Option[MutableCMathML] = embedded.lastOption
-//    def leftmostChild: Option[MutableCMathML] = embedded.headOption
+  class MathNode(val math : MutableCMathML) extends Group {
 
     val size = ObjectProperty[Bounds](null : Bounds)
     size.onChange { (_, _, s) => }
 
-    override def toString(): String = s"[MathNode: ${math}]"
-
-
     val embedded = new mutable.MutableList[MutableCMathML]
 
-    override def getNodeForEmbedding(mathChild: MutableCMathML): Node = {
+    def getNodeForEmbedding(mathChild: MutableCMathML): Node = {
       val node = mathView.getNodeForEmbedding(this, mathChild)
       embedded += mathChild
       node
@@ -162,11 +111,11 @@ object MathViewFX {
   case class CursorPos(node:MutableCMathML, side:CursorSide)
 }
 
-trait MathRendererContext {
-  def getNodeForEmbedding(math: MutableCMathML) : Node
-}
+//trait MathRendererContext {
+//  def getNodeForEmbedding(math: MutableCMathML) : Node
+//}
 
-trait MathRendererFactory {
-  def renderer(context:MathViewFX#MathNode, math:MutableCMathML) : Node
-}
+//trait MathRendererFactory {
+//  def renderer(context:MathViewFX#MathNode, math:MutableCMathML) : Node
+//}
 

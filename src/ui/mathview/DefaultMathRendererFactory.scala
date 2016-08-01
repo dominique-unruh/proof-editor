@@ -13,20 +13,20 @@ import scalafx.scene.text.{Font, FontPosture, Text}
 import scalafx.Includes._
 import scalafx.application.Platform
 
-object DefaultMathRendererFactory extends MathRendererFactory {
-  override def renderer(context: MathViewFX#MathNode, math: MutableCMathML): Node = {
-//    def own(math:MutableCMathML) = /*context.own(math)*/ ()
-    def get(math:MutableCMathML) = context.getNodeForEmbedding(math)
-    math match {
-//      case m: MCI => new Var(m)
-      case MApply(hd@MCSymbol("arith1", "times"), x, y) => new BinOp("*",get(x),get(y))
-      case MApply(hd@MCSymbol("arith1", "divide"), x, y) => {
-        (new Fraction(get(x), get(y)))
-      }
-      case MCNone() => new Missing()
-    }
-  }
-}
+//object DefaultMathRendererFactory {
+//  def renderer(context: MathViewFX#MathNode, math: MutableCMathML): Node = {
+////    def own(math:MutableCMathML) = /*context.own(math)*/ ()
+//    def get(math:MutableCMathML) = context.getNodeForEmbedding(math)
+//    math match {
+////      case m: MCI => new Var(m)
+//      case MApply(hd@MCSymbol("arith1", "times"), x, y) => new BinOp("*",get(x),get(y))
+//      case MApply(hd@MCSymbol("arith1", "divide"), x, y) => {
+//        (new Fraction(get(x), get(y)))
+//      }
+//      case MCNone() => new Missing()
+//    }
+//  }
+//}
 
 
 object MathText {
