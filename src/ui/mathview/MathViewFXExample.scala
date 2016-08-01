@@ -88,7 +88,6 @@ class MathViewFXExample extends Application {
 
 
   override def start(primaryStage: Stage): Unit = {
-//    var s3 : MCSymbol = new MCSymbol(times)
     var z = new MCNone()
     val h1 = new MCNone()
     val h2 = new MCNone()
@@ -99,11 +98,11 @@ class MathViewFXExample extends Application {
     mathDoc.setRoot(a2)
     val root = new MathNode(this,mathDoc.root)
     mathDoc.root.node = root
-    val nz = root.getNodeForEmbedding(z)
-    val nw = root.getNodeForEmbedding(w)
+    val nz = getNodeForEmbedding(root,z)
+    val nw = getNodeForEmbedding(root,w)
     new BinOp(nz, nw)
 
-    binop.node.getNodeForEmbedding(h2)
+    getNodeForEmbedding(binop.node,h2)
 
     sys.exit()
   }
