@@ -1,7 +1,7 @@
 package cmathml
 
 import cmathml.MutableCMathML.{Attributes, AttributesRO, NoAttr, fromCMathML}
-import ui.mathview.MathViewFX
+import ui.mathview.{MathViewFX, MathViewFXExample}
 
 import scala.annotation.tailrec
 import scala.collection.mutable
@@ -74,8 +74,8 @@ final class MutableCMathMLDocument private () extends MutableCMathMLParent {
 }
 
 sealed abstract class MutableCMathML(attribs : AttributesRO) extends MutableCMathMLParent {
-  var node : MathViewFX#MathNode = null
-  var embeddedIn : MathViewFX#MathNode = null
+  var node : MathViewFXExample#MathNode = null
+  var embeddedIn : MathViewFXExample#MathNode = null
 
   /** Returns true is `this` is equal to or a descendant of `ancestor`
     */
