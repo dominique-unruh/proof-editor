@@ -41,11 +41,11 @@ class MathViewFXExample extends Application {
 
 //  val mathDoc = new MutableCMathMLDocument(CNone())
 
-  def getInfoWithNewNode(cmml: MutableCMathML) = {
-    if (cmml.node==null) cmml.node = new MathNode(cmml)
-    cmml.addChangeListener{() => updateMe = cmml.node; update()}
-    cmml
-  }
+//  def getInfoWithNewNode(cmml: MutableCMathML) = {
+//    if (cmml.node==null) cmml.node = new MathNode(cmml)
+//    cmml.addChangeListener{() => updateMe = cmml.node; update()}
+//    cmml
+//  }
 
   def deattachJFXNode(node:Node) = {
     val parent = node.parent.value
@@ -69,8 +69,6 @@ class MathViewFXExample extends Application {
     t.math match {
       case MApply(hd@MCSymbol("arith1", "times"), x, y) =>
           t.child = new BinOp(getNodeForEmbedding(x),getNodeForEmbedding(y))
-      case MApply(hd@MCSymbol("arith1", "divide"), x, y) =>
-        t.child = new Fraction(getNodeForEmbedding(x), getNodeForEmbedding(y))
       case MCNone() =>
         t.child = new Text("x")
     }
@@ -80,20 +78,18 @@ class MathViewFXExample extends Application {
 
 
   override def start(primaryStage: Stage): Unit = {
-    var z = new MCNone()
+//    var z = new MCNone()
     val h1 = new MCNone()
     val h2 = new MCNone()
     val binop = new MApply(times,h1,h2)
     val h3 = new MCNone()
-    var w = new MApply(divide,h3,binop)
-    var a2 = new MApply(times,z,w)
+//    var w = new MApply(divide,h3,binop)
+//    var a2 = new MApply(times,z,w)
 
     val root = new MathNode(null)
-//    a2.node = root
     val nz = new MathNode(null)
 
     val nw = new MathNode(null)
-//    w.node = nw
     deattachJFXNode(nw)
 
     nw.invalid = false
