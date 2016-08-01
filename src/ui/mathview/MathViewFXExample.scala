@@ -37,13 +37,13 @@ class MathNode(val math : MutableCMathML) extends Group {
 }
 
 class MathViewFXExample extends Application {
-  mathView =>
+//  mathView =>
 
 //  val mathDoc = new MutableCMathMLDocument(CNone())
 
   def getInfoWithNewNode(cmml: MutableCMathML) = {
     if (cmml.node==null) cmml.node = new MathNode(cmml)
-    cmml.addChangeListener{() => updateMe = cmml.node; update()} // TODO: only do conditionally????
+    cmml.addChangeListener{() => updateMe = cmml.node; update()}
     cmml
   }
 
@@ -54,10 +54,10 @@ class MathViewFXExample extends Application {
   }
 
 
-  def getNodeForEmbedding(requestingNode: MathNode, mathChild: MutableCMathML): Node = {
+  def getNodeForEmbedding(mathChild: MutableCMathML): Node = {
 
     if (mathChild.node==null) mathChild.node = new MathNode(mathChild)
-    deattachJFXNode(mathChild.node) // TODO: is this needed?
+    deattachJFXNode(mathChild.node)
     if (mathChild.node.invalid) { updateMe  = mathChild.node; update() }
     mathChild.node
   }
@@ -70,9 +70,9 @@ class MathViewFXExample extends Application {
     t.invalid = false
     t.math match {
       case MApply(hd@MCSymbol("arith1", "times"), x, y) =>
-          t.child = new BinOp(getNodeForEmbedding(t,x),getNodeForEmbedding(t,y))
+          t.child = new BinOp(getNodeForEmbedding(x),getNodeForEmbedding(y))
       case MApply(hd@MCSymbol("arith1", "divide"), x, y) =>
-        t.child = new Fraction(getNodeForEmbedding(t,x), getNodeForEmbedding(t,y))
+        t.child = new Fraction(getNodeForEmbedding(x), getNodeForEmbedding(y))
       case MCNone() =>
         t.child = new Text("x")
     }
@@ -89,14 +89,26 @@ class MathViewFXExample extends Application {
     var w = new MApply(divide,new MCNone(),binop)
     var a2 = new MApply(times,z,w)
 
-//    mathDoc.setRoot(a2)
     val root = new MathNode(a2)
     a2.node = root
-    val nz = getNodeForEmbedding(root,z)
-    val nw = getNodeForEmbedding(root,w)
+    if (z.node==null) z.node = new MathNode(z)
+    deattachJFXNode(z.node)
+    if (z.node.invalid) { updateMe  = z.node; update() }
+    val nz = z.node
+
+
+//    val nz = getNodeForEmbedding(z)
+
+    if (w.node==null) w.node = new MathNode(w)
+    deattachJFXNode(w.node)
+    if (w.node.invalid) { updateMe  = w.node; update() }
+    val nw = w.node
+
+
+//    val nw = getNodeForEmbedding(w)
     new BinOp(nz, nw)
 
-    getNodeForEmbedding(binop.node,h2)
+    getNodeForEmbedding(h2)
 
     sys.exit()
   }
