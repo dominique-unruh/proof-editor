@@ -14,16 +14,7 @@ import scalafx.Includes._
 
 
 class MathNode() extends Group {
-
-//  val size = ObjectProperty[Bounds](null : Bounds)
-//  size.onChange { (_, _, s) => }
-//
-//  def getNodeForEmbedding(mathChild: MutableCMathML): Node =
-//    mathView.getNodeForEmbedding(this, mathChild)
-
   var child: javafx.scene.Node = null
-  var invalid = true
-
 }
 
 class MathViewFXExample extends Application {
@@ -34,60 +25,24 @@ class MathViewFXExample extends Application {
   }
 
 
-//  def getNodeForEmbedding(mathChild: MutableCMathML): Node = {
-//
-//    if (mathChild.node==null) mathChild.node = new MathNode(mathChild)
-//    deattachJFXNode(mathChild.node)
-//    if (mathChild.node.invalid) { updateMe  = mathChild.node; update() }
-//    mathChild.node
-//  }
-
-  var updateMe : MathNode = null
-//  def update() = {
-//    val t = updateMe
-//    t.invalid = false
-//    t.math match {
-//      case MApply(hd@MCSymbol("arith1", "times"), x, y) =>
-//          t.child = new BinOp(getNodeForEmbedding(x),getNodeForEmbedding(y))
-//      case MCNone() =>
-//        t.child = new Text("x")
-//    }
-//    t.child.boundsInLocalProperty().onChange({})
-//    t.getChildren.setAll(t.child)
-//  }
-
-
   override def start(primaryStage: Stage): Unit = {
-//    val h1 = new MCNone()
-//    val h2 = new MCNone()
-//    val binop = new MApply(times,h1,h2)
-//    val h3 = new MCNone()
-
     val root = new MathNode()
-    val nz = new MathNode()
+    val nz = new Group()
 
-    val nw = new MathNode()
-//    deattachJFXNode(nw)
 
-//    nw.invalid = false
-    val nh3 = new Text("x") // getNodeForEmbedding(h3)
+
+    val nh1 = new Text("x")
+    val nh2 = new Text("x")
+    val nh3 = new Text("x")
+    nh2.boundsInLocalProperty().onChange({})
+
 
     val nbinop = new MathNode()
-
-    val nh1 = new Text("x") // getNodeForEmbedding(h1)
-
-    val nh2 = new MathNode()
-//    h2.node = nh2
-    deattachJFXNode(nh2)
-    nh2.child = new Text("x")
-    nh2.child.boundsInLocalProperty().onChange({})
-    nh2.getChildren.setAll(nh2.child)
-
-
     nbinop.child = new BinOp(nh1,nh2)
     nbinop.child.boundsInLocalProperty().onChange({})
     nbinop.getChildren.setAll(nbinop.child)
 
+    val nw = new MathNode()
     nw.child = new Fraction(nh3, nbinop)
     nw.child.boundsInLocalProperty().onChange({})
     nw.getChildren.setAll(nw.child)
