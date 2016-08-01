@@ -88,7 +88,7 @@ class MathViewFXExample extends Application {
   }
 
   override def start(primaryStage: Stage): Unit = {
-    val mw = new MathViewFX()
+//    val mw = new MathViewFX()
 
     var s3 : MCSymbol = new MCSymbol(times)
     var z = new MCNone()
@@ -98,12 +98,11 @@ class MathViewFXExample extends Application {
     var w = new MApply(divide,new MCNone(),binop)
     var a2 = new MApply(s3,z,w)
 
-//    mw.setMath(a2)
     mathDoc.setRoot(a2)
     setRootNode()
 
     val u = new MCNone()
-    h1.replaceWith(u) // TODO why does this throw an exception?
+    binop.setArg(0,u)
 
     sys.exit()
   }

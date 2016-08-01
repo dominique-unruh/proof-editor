@@ -1,7 +1,7 @@
 package cmathml
 
 import cmathml.MutableCMathML.{Attributes, AttributesRO, NoAttr, fromCMathML}
-import ui.mathview.{MathViewFX, MathViewFXExample}
+import ui.mathview.MathViewFXExample
 
 import scala.annotation.tailrec
 import scala.collection.mutable
