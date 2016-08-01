@@ -21,6 +21,7 @@ class MathViewFXExample extends Application {
 
 //    mw.setMath(a2)
     mw.mathDoc.setRoot(a2)
+    mw.setRootNode()
 
     val u = new MCNone()
     h1.replaceWith(u) // TODO why does this throw an exception?

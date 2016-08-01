@@ -33,7 +33,6 @@ class MathViewFX extends Pane {
     cmml
   }
 
-
   def deattachJFXNode(node:Node) = {
     val parent = node.parent.value
     if (parent!=null)
@@ -43,7 +42,6 @@ class MathViewFX extends Pane {
 
   def getNodeForEmbedding(requestingNode: MathNode, mathChild: MutableCMathML): Node = {
     val info = getInfoWithNewNode(mathChild)
-    assert(info.embeddedIn ne requestingNode)
     if (info.embeddedIn != null) info.embeddedIn.invalid = true
     deattachJFXNode(info.node) // TODO: is this needed?
     info.embeddedIn = requestingNode
@@ -52,23 +50,18 @@ class MathViewFX extends Pane {
   }
 
   def disembed(node : MathNode, mathChild : MutableCMathML) : Unit = {
-    val info = getInfoWithNewNode(mathChild)
+    val info = mathChild // getInfoWithNewNode(mathChild)
     if (info.embeddedIn==node) info.embeddedIn = null
   }
 
   def setRootNode(): Unit = {
-    val rootNode = {
-      val info = getInfoWithNewNode(mathDoc.root)
-      if (info.embeddedIn != null) info.embeddedIn.invalid = true
-      info.embeddedIn = null
-      if (info.node.invalid) info.node.update()
-      info.node
-    }
-    children.setAll(rootNode)
+    if (mathDoc.root.node==null) mathDoc.root.node = new MathNode(mathDoc.root)
+    mathDoc.root.addChangeListener(() => mathDoc.root.node.update())
+    if (mathDoc.root.embeddedIn != null) mathDoc.root.embeddedIn.invalid = true
+    mathDoc.root.embeddedIn = null
+    if (mathDoc.root.node.invalid) mathDoc.root.node.update()
+//    children.setAll(mathDoc.root.node)
   }
-
-  setRootNode()
-  mathDoc.addChangeListener(() => setRootNode())
 
   class MathNode(val math : MutableCMathML) extends Group {
 
@@ -105,10 +98,10 @@ class MathViewFX extends Pane {
 }
 
 object MathViewFX {
-  sealed trait CursorSide
-  final object CursorLeft extends CursorSide
-  final object CursorRight extends CursorSide
-  case class CursorPos(node:MutableCMathML, side:CursorSide)
+//  sealed trait CursorSide
+//  final object CursorLeft extends CursorSide
+//  final object CursorRight extends CursorSide
+//  case class CursorPos(node:MutableCMathML, side:CursorSide)
 }
 
 //trait MathRendererContext {
