@@ -69,7 +69,7 @@ class MathViewFX extends Pane {
 
   case class Info(node : MathNode, /*var ownedBy : MathNode = null, */var embeddedIn : MathNode = null)
 
-  private def cmmlChanged(info: Info): Unit = {
+  def cmmlChanged(info: Info): Unit = {
 //    if (info.ownedBy!=null)
 //      info.ownedBy.update() // TODO: why does this preserve invariants?
     if (info.node.invalid) ()
@@ -82,13 +82,13 @@ class MathViewFX extends Pane {
   }
 
   /** This will create a node (which will then own and embed other nodes)! */
-  private def getInfoWithNewNode(cmml: MutableCMathML) = infos.getOrElseUpdate(cmml, {
+  def getInfoWithNewNode(cmml: MutableCMathML) = infos.getOrElseUpdate(cmml, {
     val info = Info(node = new MathNode(cmml))
     cmml.addChangeListener(() => cmmlChanged(info))
     info
   })
 
-  private def own(node: MathNode, mathChild: MutableCMathML) : Unit = {
+  def own(node: MathNode, mathChild: MutableCMathML) : Unit = {
 //    println(s"own($node,$mathChild)")
     assert(node != null)
     assert(node.math ne mathChild)
@@ -101,26 +101,26 @@ class MathViewFX extends Pane {
     info.embeddedIn = null
   }
   /** It is permissible to call [[disown]] if you 'node' is not the owner. In this case, nothing happens. */
-  private def disown(node : MathNode, mathChild : MutableCMathML) : Unit = {
+  def disown(node : MathNode, mathChild : MutableCMathML) : Unit = {
 //    val info = getInfoWithNewNode(mathChild)
 //    if (info.ownedBy==node) info.ownedBy = null
   }
 
-  private def getNode(node : MutableCMathML) = {
+  def getNode(node : MutableCMathML) = {
     infos.get(node) match {
       case None => None
       case Some(info) => assert(info.node!=null); Some(info.node)
     }
   }
 
-  private def deattachJFXNode(node:Node) = {
+  def deattachJFXNode(node:Node) = {
     val parent = node.parent.value
     if (parent!=null)
       parent.asInstanceOf[layout.Pane].getChildren.remove(node) // TODO: is there a better way?
   }
 
 
-  private def getNodeForEmbedding(requestingNode: MathNode, mathChild: MutableCMathML): Node = {
+  def getNodeForEmbedding(requestingNode: MathNode, mathChild: MutableCMathML): Node = {
     val info = getInfoWithNewNode(mathChild)
     assert(info.embeddedIn ne requestingNode)
 //    assert(info.ownedBy ne requestingNode)
@@ -132,23 +132,22 @@ class MathViewFX extends Pane {
     if (info.node.invalid) info.node.update()
     info.node
   }
-  private def getNodeForRoot() : MathNode = {
-    val info = getInfoWithNewNode(mathDoc.root)
-//    if (info.ownedBy != null) info.ownedBy.invalid = true
-    if (info.embeddedIn != null) info.embeddedIn.invalid = true
-//    info.ownedBy = null
-    info.embeddedIn = null
-    if (info.node.invalid) info.node.update()
-    info.node
-  }
   /** It is permissible to call [[disembed]] if you 'node' is not the embedder. In this case, nothing happens. */
-  private def disembed(node : MathNode, mathChild : MutableCMathML) : Unit = {
+  def disembed(node : MathNode, mathChild : MutableCMathML) : Unit = {
     val info = getInfoWithNewNode(mathChild)
     if (info.embeddedIn==node) info.embeddedIn = null
   }
 
-  private def setRootNode(): Unit = {
-    val rootNode = getNodeForRoot()
+  def setRootNode(): Unit = {
+    val rootNode = {
+      val info = getInfoWithNewNode(mathDoc.root)
+      //    if (info.ownedBy != null) info.ownedBy.invalid = true
+      if (info.embeddedIn != null) info.embeddedIn.invalid = true
+      //    info.ownedBy = null
+      info.embeddedIn = null
+      if (info.node.invalid) info.node.update()
+      info.node
+    }
     rootNode.printInfo()
     children.setAll(rootNode)
   }
