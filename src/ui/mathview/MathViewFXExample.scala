@@ -3,6 +3,8 @@ package ui.mathview
 import javafx.application.Application
 import javafx.geometry.Bounds
 import javafx.scene.layout
+import javafx.scene.layout.Pane
+import javafx.scene.text.Text
 import javafx.stage.Stage
 
 import cmathml.CMathML.{divide, times}
@@ -45,15 +47,6 @@ class MathViewFXExample extends Application {
     if (info.embeddedIn==node) info.embeddedIn = null
   }
 
-  def setRootNode(): Unit = {
-    if (mathDoc.root.node==null) mathDoc.root.node = new MathNode(mathDoc.root)
-    mathDoc.root.addChangeListener(() => mathDoc.root.node.update())
-    if (mathDoc.root.embeddedIn != null) mathDoc.root.embeddedIn.invalid = true
-    mathDoc.root.embeddedIn = null
-    if (mathDoc.root.node.invalid) mathDoc.root.node.update()
-    //    children.setAll(mathDoc.root.node)
-  }
-
   class MathNode(val math : MutableCMathML) extends Group {
 
     val size = ObjectProperty[Bounds](null : Bounds)
@@ -67,7 +60,7 @@ class MathViewFXExample extends Application {
       node
     }
 
-    var child: Node = null
+    var child: javafx.scene.Node = null
     var invalid = true
 
     def update() = {
@@ -80,9 +73,9 @@ class MathViewFXExample extends Application {
         case MApply(hd@MCSymbol("arith1", "divide"), x, y) =>
           child = new Fraction(getNodeForEmbedding(x), getNodeForEmbedding(y))
         case MCNone() =>
-          child = new Missing()
+          child = new Text("x")
       }
-      size <== child.boundsInLocal
+      size <== child.boundsInLocalProperty()
       children.setAll(child)
     }
   }
@@ -97,25 +90,16 @@ class MathViewFXExample extends Application {
     var a2 = new MApply(s3,z,w)
 
     mathDoc.setRoot(a2)
-    setRootNode()
+      if (mathDoc.root.node == null) mathDoc.root.node = new MathNode(mathDoc.root)
+      mathDoc.root.addChangeListener(() => mathDoc.root.node.update())
+      if (mathDoc.root.embeddedIn != null) mathDoc.root.embeddedIn.invalid = true
+      mathDoc.root.embeddedIn = null
+      if (mathDoc.root.node.invalid) mathDoc.root.node.update()
+      //    children.setAll(mathDoc.root.node)
 
-    val u = new MCNone()
+//    binop._args.update(0,u)
 
-    binop._args.update(0,u)
-
-    //    for (n <- xx.embedded) disembed(xx, n)
-    binop.node.embedded.clear()
-    binop.node.invalid = false
-    binop.node.math match {
-      case MApply(hd@MCSymbol("arith1", "times"), x, y) =>
-        binop.node.child = new BinOp("*", binop.node.getNodeForEmbedding(x), binop.node.getNodeForEmbedding(y))
-    }
-    binop.node.size <== binop.node.child.boundsInLocal
-    binop.node.children.setAll(binop.node.child)
-
-
-//    binop.node.update()
-//    for (l <- binop.changeListeners) l()
+    binop.node.getNodeForEmbedding(h2)
 
     sys.exit()
   }
