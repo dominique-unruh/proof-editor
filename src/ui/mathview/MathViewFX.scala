@@ -54,8 +54,8 @@ class MathViewFX extends Pane {
 
   private val mathRendererFactory : MathRendererFactory = DefaultMathRendererFactory
 
-  def getHighlights(math:MutableCMathML) =
-    getNode(math).get.highlights
+//  def getHighlights(math:MutableCMathML) =
+//    getNode(math).get.highlights
 
   val mathDoc = new MutableCMathMLDocument(CNone())
 

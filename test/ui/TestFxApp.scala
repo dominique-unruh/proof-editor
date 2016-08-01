@@ -41,9 +41,9 @@ object TestFxApp {
   var pane : Pane = null
   var callMe : () => Unit = null
   var name : String = "TestFxApp"
-  val testAppCss = getClass().getResource("/testapp/testapp.css").toExternalForm()
+//  val testAppCss = getClass().getResource("/testapp/testapp.css").toExternalForm()
   var stage : Stage = null
-  def useTestAppCss() = stage.getScene.getStylesheets.add(testAppCss)
+//  def useTestAppCss() = stage.getScene.getStylesheets.add(testAppCss)
 
 
   def run(init: =>Node) = {
