@@ -86,10 +86,22 @@ class MathViewFXExample extends Application {
 
     val nh1 = new Text("x") // getNodeForEmbedding(h1)
 
-    if (h2.node==null) h2.node = new MathNode(h2)
-    deattachJFXNode(h2.node)
-    if (h2.node.invalid) { updateMe  = h2.node; update() }
-    val nh2 = h2.node
+    val nh2 = new MathNode(h2)
+    h2.node = nh2
+    deattachJFXNode(nh2)
+    updateMe  = h2.node
+//    update()
+
+//    nh2.invalid = false
+//    nh2.math match {
+//      case MApply(hd@MCSymbol("arith1", "times"), x, y) =>
+//        nh2.child = new BinOp(getNodeForEmbedding(x),getNodeForEmbedding(y))
+//      case MCNone() =>
+        nh2.child = new Text("x")
+//    }
+    nh2.child.boundsInLocalProperty().onChange({})
+    nh2.getChildren.setAll(nh2.child)
+
 
 //    val nh2 = getNodeForEmbedding(h2)
 
