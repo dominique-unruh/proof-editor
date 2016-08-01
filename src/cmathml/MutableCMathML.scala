@@ -13,7 +13,7 @@ sealed abstract class MutableCMathMLParent {
   def replace(a: MutableCMathML, b: MutableCMathML): Unit
 
   val changeListeners = new ListBuffer[() => Unit]
-  protected def fireChange() : Unit =
+  def fireChange() : Unit =
     for (l <- changeListeners) l()
   def addChangeListener(listener: () => Unit) =
     changeListeners += listener
@@ -122,7 +122,7 @@ sealed abstract class MutableCMathML(attribs : AttributesRO) extends MutableCMat
       _attributes.iterator
   }
 
-  private[cmathml] def setParent(parent: MutableCMathMLParent) = {
+  def setParent(parent: MutableCMathMLParent) = {
     assert(_parent==null)
     assert(parent!=null)
     _parent = parent
@@ -221,7 +221,7 @@ final class MApply(attributes:AttributesRO) extends MutableCMathML(attributes) {
 
 
   private var _head : MutableCMathML = null
-  private val _args : mutable.ArrayBuffer[MutableCMathML] = new mutable.ArrayBuffer()
+  val _args : mutable.ArrayBuffer[MutableCMathML] = new mutable.ArrayBuffer()
   def head = _head
   def arg(i:Int) = _args(i)
   def argNum = _args.length
@@ -245,7 +245,7 @@ final class MApply(attributes:AttributesRO) extends MutableCMathML(attributes) {
     if (a!=null) fireChange()
     a
   }
-  private def _removeArg(i:Int) : MutableCMathML = {
+  def _removeArg(i:Int) : MutableCMathML = {
     if (i<0 || i>=_args.length) throw new IllegalArgumentException
     val a = _args(i)
     if (a!=null) {

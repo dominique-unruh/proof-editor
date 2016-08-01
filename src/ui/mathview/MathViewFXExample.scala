@@ -88,8 +88,6 @@ class MathViewFXExample extends Application {
   }
 
   override def start(primaryStage: Stage): Unit = {
-//    val mw = new MathViewFX()
-
     var s3 : MCSymbol = new MCSymbol(times)
     var z = new MCNone()
     val h1 = new MCNone()
@@ -102,7 +100,9 @@ class MathViewFXExample extends Application {
     setRootNode()
 
     val u = new MCNone()
-    binop.setArg(0,u)
+
+    binop._args.update(0,u)
+    for (l <- binop.changeListeners) l()
 
     sys.exit()
   }
