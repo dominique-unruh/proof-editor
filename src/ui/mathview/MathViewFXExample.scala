@@ -88,13 +88,13 @@ class MathViewFXExample extends Application {
     var w = new MApply(divide,h3,binop)
     var a2 = new MApply(times,z,w)
 
-    val root = new MathNode(a2)
-    a2.node = root
-    val nz = new MathNode(z)
+    val root = new MathNode(null)
+//    a2.node = root
+    val nz = new MathNode(null)
 
-    val nw = new MathNode(w)
-    w.node = nw
-    deattachJFXNode(w.node)
+    val nw = new MathNode(null)
+//    w.node = nw
+    deattachJFXNode(nw)
 
     nw.invalid = false
     nw.child = new Fraction(getNodeForEmbedding(h3), getNodeForEmbedding(binop))
