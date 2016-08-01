@@ -3,11 +3,10 @@ package ui.mathview
 import java.lang.Double
 import java.util.concurrent.Callable
 import javafx.application.Application
-import javafx.geometry.Pos
 import javafx.scene.layout.{HBox, VBox}
 import javafx.scene.shape.Line
 import javafx.scene.text.Text
-import javafx.scene.{Group, Node, layout}
+import javafx.scene.{Group, Node}
 import javafx.stage.Stage
 
 import scalafx.Includes._
@@ -15,19 +14,10 @@ import scalafx.Includes._
 
 
 class MathViewFXExample extends Application {
-  def deattachJFXNode(node:Node) = {
-    val parent = node.parent.value
-    if (parent!=null)
-      parent.asInstanceOf[layout.Pane].getChildren.remove(node)
-  }
-
-
   override def start(primaryStage: Stage): Unit = {
-//    val root = new MathNode()
     val nz = new Text("x")
     val nh1 = new Text("x")
     val nh2 = new Text("x")
-//    val nh3 = new Text("x")
 
     val nbinop = new Group()
     val nbinopc = new BinOp(nh1,nh2)
@@ -61,8 +51,6 @@ class BinOp(a:Node, b:Node) extends HBox {
 }
 
 class Fraction(b:Node) extends VBox {
-//  id = Integer.toHexString(hashCode()) // TODO: remove
-  alignmentProperty.set(Pos.CENTER)
   val line = new Line()
   getChildren.addAll(line, b)
 
@@ -74,5 +62,4 @@ class Fraction(b:Node) extends VBox {
 
   line.startX = 0
   line.endX <== innerWidth
-  line.strokeWidth = 2
 }
