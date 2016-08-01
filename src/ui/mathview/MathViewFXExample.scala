@@ -28,13 +28,8 @@ class MathNode(mathView : MathViewFXExample, val math : MutableCMathML) extends 
   val size = ObjectProperty[Bounds](null : Bounds)
   size.onChange { (_, _, s) => }
 
-  val embedded = new mutable.MutableList[MutableCMathML]
-
-  def getNodeForEmbedding(mathChild: MutableCMathML): Node = {
-    val node = mathView.getNodeForEmbedding(this, mathChild)
-    embedded += mathChild
-    node
-  }
+  def getNodeForEmbedding(mathChild: MutableCMathML): Node =
+    mathView.getNodeForEmbedding(this, mathChild)
 
   var child: javafx.scene.Node = null
   var invalid = true
@@ -68,20 +63,20 @@ class MathViewFXExample extends Application {
     info.node
   }
 
-  def disembed(node : MathNode, mathChild : MutableCMathML) : Unit = {
-    val info = mathChild // getInfoWithNewNode(mathChild)
-    if (info.embeddedIn==node) info.embeddedIn = null
-  }
+//  def disembed(node : MathNode, mathChild : MutableCMathML) : Unit = {
+//    val info = mathChild // getInfoWithNewNode(mathChild)
+//    if (info.embeddedIn==node) info.embeddedIn = null
+//  }
 
   var updateMe : MathNode = null
   def update() = {
     val t = updateMe
-    for (n <- t.embedded) disembed(t, n)
-    t.embedded.clear()
+//    for (n <- t.embedded) disembed(t, n)
+//    t.embedded.clear()
     t.invalid = false
     t.math match {
       case MApply(hd@MCSymbol("arith1", "times"), x, y) =>
-          t.child = new BinOp("*",t.getNodeForEmbedding(x),t.getNodeForEmbedding(y))
+          t.child = new BinOp(t.getNodeForEmbedding(x),t.getNodeForEmbedding(y))
       case MApply(hd@MCSymbol("arith1", "divide"), x, y) =>
         t.child = new Fraction(t.getNodeForEmbedding(x), t.getNodeForEmbedding(y))
       case MCNone() =>
@@ -104,15 +99,16 @@ class MathViewFXExample extends Application {
     mathDoc.setRoot(a2)
     val root = new MathNode(this,mathDoc.root)
     mathDoc.root.node = root
-    /*root.child =*/ new BinOp("*", root.getNodeForEmbedding(z), root.getNodeForEmbedding(w))
-//    root.size <== root.child.boundsInLocalProperty()
-//    root.getChildren.setAll(root.child)
+    val nz = root.getNodeForEmbedding(z)
+    val nw = root.getNodeForEmbedding(w)
+    new BinOp(nz, nw)
 
     binop.node.getNodeForEmbedding(h2)
 
     sys.exit()
   }
 }
+
 object MathViewFXExample {
   def main(args: Array[String]): Unit = {
     Application.launch(classOf[MathViewFXExample])
@@ -120,7 +116,7 @@ object MathViewFXExample {
 }
 
 
-class BinOp(op:String, a:Node, b:Node) extends HBox {
+class BinOp(a:Node, b:Node) extends HBox {
   a.layoutBounds.onChange({})
   b.layoutBounds.onChange({})
   getChildren.addAll(a,b)
