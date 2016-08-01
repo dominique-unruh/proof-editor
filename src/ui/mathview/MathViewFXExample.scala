@@ -65,8 +65,6 @@ class MathViewFXExample extends Application {
   var updateMe : MathNode = null
   def update() = {
     val t = updateMe
-//    for (n <- t.embedded) disembed(t, n)
-//    t.embedded.clear()
     t.invalid = false
     t.math match {
       case MApply(hd@MCSymbol("arith1", "times"), x, y) =>
@@ -86,26 +84,24 @@ class MathViewFXExample extends Application {
     val h1 = new MCNone()
     val h2 = new MCNone()
     val binop = new MApply(times,h1,h2)
-    var w = new MApply(divide,new MCNone(),binop)
+    val h3 = new MCNone()
+    var w = new MApply(divide,h3,binop)
     var a2 = new MApply(times,z,w)
 
     val root = new MathNode(a2)
     a2.node = root
-    if (z.node==null) z.node = new MathNode(z)
-    deattachJFXNode(z.node)
-    if (z.node.invalid) { updateMe  = z.node; update() }
-    val nz = z.node
+    val nz = new MathNode(z)
 
-
-//    val nz = getNodeForEmbedding(z)
-
-    if (w.node==null) w.node = new MathNode(w)
+    val nw = new MathNode(w)
+    w.node = nw
     deattachJFXNode(w.node)
-    if (w.node.invalid) { updateMe  = w.node; update() }
-    val nw = w.node
+
+    nw.invalid = false
+    nw.child = new Fraction(getNodeForEmbedding(h3), getNodeForEmbedding(binop))
+    nw.child.boundsInLocalProperty().onChange({})
+    nw.getChildren.setAll(nw.child)
 
 
-//    val nw = getNodeForEmbedding(w)
     new BinOp(nz, nw)
 
     getNodeForEmbedding(h2)
