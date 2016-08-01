@@ -69,7 +69,7 @@ class MathViewFXExample extends Application {
 
   override def start(primaryStage: Stage): Unit = {
 //    val h1 = new MCNone()
-    val h2 = new MCNone()
+//    val h2 = new MCNone()
 //    val binop = new MApply(times,h1,h2)
 //    val h3 = new MCNone()
 
@@ -77,7 +77,7 @@ class MathViewFXExample extends Application {
     val nz = new MathNode(null)
 
     val nw = new MathNode(null)
-    deattachJFXNode(nw)
+//    deattachJFXNode(nw)
 
 //    nw.invalid = false
     val nh3 = new Text("x") // getNodeForEmbedding(h3)
@@ -86,24 +86,13 @@ class MathViewFXExample extends Application {
 
     val nh1 = new Text("x") // getNodeForEmbedding(h1)
 
-    val nh2 = new MathNode(h2)
+    val nh2 = new MathNode(null)
     h2.node = nh2
     deattachJFXNode(nh2)
-    updateMe  = h2.node
-//    update()
-
-//    nh2.invalid = false
-//    nh2.math match {
-//      case MApply(hd@MCSymbol("arith1", "times"), x, y) =>
-//        nh2.child = new BinOp(getNodeForEmbedding(x),getNodeForEmbedding(y))
-//      case MCNone() =>
-        nh2.child = new Text("x")
-//    }
+    nh2.child = new Text("x")
     nh2.child.boundsInLocalProperty().onChange({})
     nh2.getChildren.setAll(nh2.child)
 
-
-//    val nh2 = getNodeForEmbedding(h2)
 
     nbinop.child = new BinOp(nh1,nh2)
     nbinop.child.boundsInLocalProperty().onChange({})
@@ -116,10 +105,7 @@ class MathViewFXExample extends Application {
 
     new BinOp(nz, nw)
 
-    if (h2.node==null) h2.node = new MathNode(h2)
     deattachJFXNode(h2.node)
-    if (h2.node.invalid) { updateMe  = h2.node; update() }
-    h2.node
 
     sys.exit()
   }
