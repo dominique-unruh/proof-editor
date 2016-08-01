@@ -3,27 +3,17 @@ package ui.mathview
 import java.lang.Double
 import java.util.concurrent.Callable
 import javafx.application.Application
-import javafx.beans.value.{ChangeListener, ObservableValue}
-import javafx.geometry.Bounds
-import javafx.scene.layout
-import javafx.scene.layout.Pane
-import javafx.scene.text.Text
-import javafx.stage.Stage
-
-import scalafx.Includes._
-import cmathml.CMathML.{divide, times}
-import cmathml._
-
-import scala.collection.mutable
-import scalafx.beans.binding.Bindings
-import scalafx.beans.property.ObjectProperty
 import javafx.geometry.Pos
 import javafx.scene.layout.{HBox, VBox}
 import javafx.scene.shape.Line
-import javafx.scene.{Group, Node}
+import javafx.scene.text.Text
+import javafx.scene.{Group, Node, layout}
+import javafx.stage.Stage
+
+import scalafx.Includes._
 
 
-class MathNode(val math : MutableCMathML) extends Group {
+class MathNode() extends Group {
 
 //  val size = ObjectProperty[Bounds](null : Bounds)
 //  size.onChange { (_, _, s) => }
@@ -44,27 +34,27 @@ class MathViewFXExample extends Application {
   }
 
 
-  def getNodeForEmbedding(mathChild: MutableCMathML): Node = {
-
-    if (mathChild.node==null) mathChild.node = new MathNode(mathChild)
-    deattachJFXNode(mathChild.node)
-    if (mathChild.node.invalid) { updateMe  = mathChild.node; update() }
-    mathChild.node
-  }
+//  def getNodeForEmbedding(mathChild: MutableCMathML): Node = {
+//
+//    if (mathChild.node==null) mathChild.node = new MathNode(mathChild)
+//    deattachJFXNode(mathChild.node)
+//    if (mathChild.node.invalid) { updateMe  = mathChild.node; update() }
+//    mathChild.node
+//  }
 
   var updateMe : MathNode = null
-  def update() = {
-    val t = updateMe
-    t.invalid = false
-    t.math match {
-      case MApply(hd@MCSymbol("arith1", "times"), x, y) =>
-          t.child = new BinOp(getNodeForEmbedding(x),getNodeForEmbedding(y))
-      case MCNone() =>
-        t.child = new Text("x")
-    }
-    t.child.boundsInLocalProperty().onChange({})
-    t.getChildren.setAll(t.child)
-  }
+//  def update() = {
+//    val t = updateMe
+//    t.invalid = false
+//    t.math match {
+//      case MApply(hd@MCSymbol("arith1", "times"), x, y) =>
+//          t.child = new BinOp(getNodeForEmbedding(x),getNodeForEmbedding(y))
+//      case MCNone() =>
+//        t.child = new Text("x")
+//    }
+//    t.child.boundsInLocalProperty().onChange({})
+//    t.getChildren.setAll(t.child)
+//  }
 
 
   override def start(primaryStage: Stage): Unit = {
@@ -73,21 +63,21 @@ class MathViewFXExample extends Application {
 //    val binop = new MApply(times,h1,h2)
 //    val h3 = new MCNone()
 
-    val root = new MathNode(null)
-    val nz = new MathNode(null)
+    val root = new MathNode()
+    val nz = new MathNode()
 
-    val nw = new MathNode(null)
+    val nw = new MathNode()
 //    deattachJFXNode(nw)
 
 //    nw.invalid = false
     val nh3 = new Text("x") // getNodeForEmbedding(h3)
 
-    val nbinop = new MathNode(null)
+    val nbinop = new MathNode()
 
     val nh1 = new Text("x") // getNodeForEmbedding(h1)
 
-    val nh2 = new MathNode(null)
-    h2.node = nh2
+    val nh2 = new MathNode()
+//    h2.node = nh2
     deattachJFXNode(nh2)
     nh2.child = new Text("x")
     nh2.child.boundsInLocalProperty().onChange({})
@@ -105,7 +95,7 @@ class MathViewFXExample extends Application {
 
     new BinOp(nz, nw)
 
-    deattachJFXNode(h2.node)
+    deattachJFXNode(nh2)
 
     sys.exit()
   }
