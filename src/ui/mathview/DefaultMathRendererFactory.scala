@@ -18,7 +18,7 @@ object DefaultMathRendererFactory extends MathRendererFactory {
 //    def own(math:MutableCMathML) = /*context.own(math)*/ ()
     def get(math:MutableCMathML) = context.getNodeForEmbedding(math)
     math match {
-      case m: MCI => new Var(m)
+//      case m: MCI => new Var(m)
       case MApply(hd@MCSymbol("arith1", "times"), x, y) => new BinOp("*",get(x),get(y))
       case MApply(hd@MCSymbol("arith1", "divide"), x, y) => {
         (new Fraction(get(x), get(y)))
@@ -83,11 +83,6 @@ class Fraction(a:Node, b:Node) extends VBox {
   line.strokeWidth = 2
 }
 
-
-class Var(math:MCI) extends Text(math.name) {
-  id = Integer.toHexString(hashCode()) // TODO: remove
-  font = MathText.VariableFont
-}
 
 class Missing() extends Text("\u2603") {
   id = Integer.toHexString(hashCode()) // TODO: remove

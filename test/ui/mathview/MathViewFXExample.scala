@@ -28,3 +28,8 @@ class MathViewFXExample extends Application {
     sys.exit()
   }
 }
+object MathViewFXExample {
+  def main(args: Array[String]): Unit = {
+    Application.launch(classOf[MathViewFXExample])
+  }
+}

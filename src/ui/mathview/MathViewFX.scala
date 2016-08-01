@@ -16,9 +16,9 @@ import scalafx.collections.ObservableBuffer.{Add, Remove, Reorder, Update}
 import scalafx.scene.layout._
 import scalafx.scene.{Group, Node}
 
-trait MathHighlight extends Node {
-  def setSize(size:Bounds) : Unit
-}
+//trait MathHighlight extends Node {
+//  def setSize(size:Bounds) : Unit
+//}
 
 
 class MathViewFX extends Pane {
@@ -61,23 +61,6 @@ class MathViewFX extends Pane {
     info
   })
 
-  def own(node: MathNode, mathChild: MutableCMathML) : Unit = {
-////    println(s"own($node,$mathChild)")
-//    assert(node != null)
-//    assert(node.math ne mathChild)
-//    val info = getInfoWithNewNode(mathChild)
-//    assert(info.embeddedIn ne node)
-////    assert(info.ownedBy ne node)
-////    if (info.ownedBy != null) info.ownedBy.invalid = true
-//    if (info.embeddedIn != null) info.embeddedIn.invalid = true
-////    info.ownedBy = node
-//    info.embeddedIn = null
-  }
-  /** It is permissible to call [[disown]] if you 'node' is not the owner. In this case, nothing happens. */
-//  def disown(node : MathNode, mathChild : MutableCMathML) : Unit = {
-////    val info = getInfoWithNewNode(mathChild)
-////    if (info.ownedBy==node) info.ownedBy = null
-//  }
 
   def getNode(node : MutableCMathML) = {
     infos.get(node) match {
@@ -114,14 +97,12 @@ class MathViewFX extends Pane {
   def setRootNode(): Unit = {
     val rootNode = {
       val info = getInfoWithNewNode(mathDoc.root)
-      //    if (info.ownedBy != null) info.ownedBy.invalid = true
       if (info.embeddedIn != null) info.embeddedIn.invalid = true
-      //    info.ownedBy = null
       info.embeddedIn = null
       if (info.node.invalid) info.node.update()
       info.node
     }
-    rootNode.printInfo()
+//    rootNode.printInfo()
     children.setAll(rootNode)
   }
 
@@ -129,96 +110,17 @@ class MathViewFX extends Pane {
   mathDoc.addChangeListener(() => setRootNode())
 
   class MathNode(val math : MutableCMathML) extends Group with MathRendererContext {
-    def rightmostChild: Option[MutableCMathML] = embedded.lastOption
-    def leftmostChild: Option[MutableCMathML] = embedded.headOption
-
-    def leftOf(node: MathNode): Option[MutableCMathML] =
-      embedded.indexOf(node.math) match {
-        case -1 => throw new IllegalArgumentException("node is not embedded")
-        case 0 => None
-        case i if i>=1 => Some(embedded(i-1))
-        //        case _ => sys.error("unreachable")
-      }
-    def rightOf(node: MathNode): Option[MutableCMathML] = {
-      val lastIdx = embedded.length-1
-      embedded.indexOf(node.math) match {
-        case -1 => throw new IllegalArgumentException("node is not embedded")
-        case `lastIdx` => None
-        case i => Some(embedded(i + 1))
-      }
-    }
-
-    id = Integer.toHexString(hashCode) // TODO: remove
-
-    val highlights = new ObservableBuffer[MathHighlight]
-    highlights.onChange { (_,changes) =>
-      var needsUpdate = false
-      for (c <- changes) c match {
-        case Add(_,added) =>
-          for (h <- added) h.setSize(size.value)
-          needsUpdate = true
-        case Remove(_,_) =>
-          needsUpdate = true
-        case Reorder(_,_,_) =>
-        case Update(from,to) =>
-          for (i <- from until to)
-            highlights(i).setSize(size.value)
-          needsUpdate = true
-      }
-      if (needsUpdate)
-        updateChildren()
-    }
-
-
-    /*
-//    @deprecated(null,null) private var _cursor : MathHighlight = null
-    @deprecated("Access highlights directly",null) def setCursor(state:Option[CursorSide]) : Unit = {
-      highlights.removeIf { (_:MathHighlight).isInstanceOf[MathCursor] }
-//      state match {
-//        case None => _cursor = null
-//        case Some(side) => _cursor = new MathCursor(side); highlights += _cursor //; _cursor.setSize(size.value)
-//      }
-      for (side <- state) highlights += new MathCursor(side)
-//      updateChildren()
-    }
-    */
-
+//    def rightmostChild: Option[MutableCMathML] = embedded.lastOption
+//    def leftmostChild: Option[MutableCMathML] = embedded.headOption
 
     val size = ObjectProperty[Bounds](null : Bounds)
-    size.onChange { (_, _, s) =>
-      for (h <- highlights) h.setSize(s)
-    }
-
-    def printInfo() = {
-//      println(this)
-//      println("CMML: "+math.toCMathML.toString)
-//      println("Child: "+child)
-//      println("Invalid: "+invalid)
-//      println("Owned: "+owned)
-//      println("Embedded: "+embedded)
-//      println("Info: "+getInfoWithNewNode(math))
-    }
+    size.onChange { (_, _, s) => }
 
     override def toString(): String = s"[MathNode: ${math}]"
 
-    /** Rules:
-      * - If [[getNodeForEmbedding]] is called for some proper descendent x of [[math]], then [[own]](x) must be called before.
-      * - If [[own]] is called for some proper descendent x of [[math]], then [[own]](x) must be called before.
-      * - [[own]] must not be called for [[math]], and must only be called for descendents of [[math]]
-      * - [[own]] must be called for all [[MutableCMathML]]'s that this node logically depends on (except for children that are simply embedded as subnodes)
-      * - 'this' must not register itself as a listener for [[math]] or any of its descendants
-      */
-//    def own(mathChild: MutableCMathML) = {
-//      owned += mathChild
-//      mathView.own(this, mathChild)
-//    }
 
-    val owned = new mutable.MutableList[MutableCMathML]
     val embedded = new mutable.MutableList[MutableCMathML]
 
-    /** Gets a [[Node]] containing the rendering of 'mathChild'.
-      * These nodes can be added as children to 'this' (or its descendants) but must not otherwise be touched.
-      */
     override def getNodeForEmbedding(mathChild: MutableCMathML): Node = {
       val node = mathView.getNodeForEmbedding(this, mathChild)
       embedded += mathChild
@@ -228,39 +130,20 @@ class MathViewFX extends Pane {
     var child: Node = null
     var invalid = true
 
-    def setChild(n: Node) =
-      if (child != n) {
-        child = n
-        size <== child.boundsInLocal
-        updateChildren()
-      }
-
-    def updateChildren() : Unit = {
-      var cs = List(child : javafx.scene.Node)
-      for (h <- highlights) cs = h::cs
-      children.setAll(cs : _*)
-    }
-
-    def disembedAll() = {
-      for (n <- embedded) mathView.disembed(this,n)
-      embedded.clear()
-    }
-
     def update() = {
-      disembedAll()
+        for (n <- embedded) mathView.disembed(this, n)
+        embedded.clear()
       invalid = false
-      child  =     math match {
+      math match {
         case MApply(hd@MCSymbol("arith1", "times"), x, y) =>
-          new BinOp("*",getNodeForEmbedding(x),getNodeForEmbedding(y))
+          child = new BinOp("*",getNodeForEmbedding(x),getNodeForEmbedding(y))
         case MApply(hd@MCSymbol("arith1", "divide"), x, y) =>
-          new Fraction(getNodeForEmbedding(x), getNodeForEmbedding(y))
-        case MCNone() => new Missing()
+          child = new Fraction(getNodeForEmbedding(x), getNodeForEmbedding(y))
+        case MCNone() =>
+          child = new Missing()
       }
-//      if (child != n) {
-//        child = n
-        size <== child.boundsInLocal
-        updateChildren()
-//      }
+      size <== child.boundsInLocal
+      children.setAll(child)
     }
   }
 }
