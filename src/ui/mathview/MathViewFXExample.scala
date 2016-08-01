@@ -102,7 +102,20 @@ class MathViewFXExample extends Application {
     val u = new MCNone()
 
     binop._args.update(0,u)
-    for (l <- binop.changeListeners) l()
+
+    //    for (n <- xx.embedded) disembed(xx, n)
+    binop.node.embedded.clear()
+    binop.node.invalid = false
+    binop.node.math match {
+      case MApply(hd@MCSymbol("arith1", "times"), x, y) =>
+        binop.node.child = new BinOp("*", binop.node.getNodeForEmbedding(x), binop.node.getNodeForEmbedding(y))
+    }
+    binop.node.size <== binop.node.child.boundsInLocal
+    binop.node.children.setAll(binop.node.child)
+
+
+//    binop.node.update()
+//    for (l <- binop.changeListeners) l()
 
     sys.exit()
   }
