@@ -12,17 +12,17 @@ class MathViewFXExample extends Application {
     val mw = new MathViewFX()
 
     var s3 : MCSymbol = new MCSymbol(times)
-    var z = new MCI("z")
-    val h1 = new MCI("h1")
-    val h2 = new MCI("h2")
+    var z = new MCNone()
+    val h1 = new MCNone()
+    val h2 = new MCNone()
     val binop = new MApply(times,h1,h2)
-    var w = new MApply(divide,new MCI("q"),binop)
+    var w = new MApply(divide,new MCNone(),binop)
     var a2 = new MApply(s3,z,w)
 
 //    mw.setMath(a2)
     mw.mathDoc.setRoot(a2)
 
-    val u = new MCI("u")
+    val u = new MCNone()
     h1.replaceWith(u) // TODO why does this throw an exception?
 
     sys.exit()

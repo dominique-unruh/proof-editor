@@ -14,7 +14,7 @@ import scalafx.Includes._
 import scalafx.application.Platform
 
 object DefaultMathRendererFactory extends MathRendererFactory {
-  override def renderer(context: MathRendererContext, math: MutableCMathML): Node = {
+  override def renderer(context: MathViewFX#MathNode, math: MutableCMathML): Node = {
 //    def own(math:MutableCMathML) = /*context.own(math)*/ ()
     def get(math:MutableCMathML) = context.getNodeForEmbedding(math)
     def binop(hd: MutableCMathML, op: String, x: MutableCMathML, y: MutableCMathML) = {

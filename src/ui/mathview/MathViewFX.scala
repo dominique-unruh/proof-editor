@@ -21,33 +21,6 @@ trait MathHighlight extends Node {
 }
 
 
-/** Invariants:
-  *
-  * For every [[cmathml.MutableCMathML]] (short 'math') (not necessarily descendant of [[MathViewFX!.mathDoc mathDoc]].root) there is:
-  * - potentially an rendering [[MathNode]]
-  * - potentially an owning [[MathNode]]
-  * - potentially an embedding [[MathNode]]
-  *
-  * No math can have both an owning and embedding [[MathNode]].
-  *
-  * A math with an embedding [[MathNode]] has an rendering [[MathNode]].
-  *
-  * An owning or embedding [[MathNode]] of math m is rendering an ancestor of m.
-  *
-  * If m is embedded or owned by n, then m is a child of a math owned or rendered by n.
-  *
-  * Every valid [[MathNode]] renders exactly one math. No [[MathNode]] renders more than one math.
-  *
-  * If a valid [[MathNode]] n1 contains [[MathNode]] n2 as a scene-graph descendant (not passing through other [[MathNode]]s),
-  * then n2 is valid and n1 embeds the math rendered by n2.
-  *
-  * If a valid [[MathNode]]'s n rendering (excluding the rendering of its descendant [[MathNode]]s) depends on a math m, then
-  * n renders or owns m.
-  *
-  * [[MathViewFX!.mathDoc mathDoc]].root is valid.
-  *
-  * (there's more...)
-  */
 class MathViewFX extends Pane {
   mathView =>
   import MathViewFX._
@@ -235,13 +208,13 @@ class MathViewFX extends Pane {
       * - [[own]] must be called for all [[MutableCMathML]]'s that this node logically depends on (except for children that are simply embedded as subnodes)
       * - 'this' must not register itself as a listener for [[math]] or any of its descendants
       */
-    override def own(mathChild: MutableCMathML) = {
-      owned += mathChild
-      mathView.own(this, mathChild)
-    }
+//    def own(mathChild: MutableCMathML) = {
+//      owned += mathChild
+//      mathView.own(this, mathChild)
+//    }
 
-    private val owned = new mutable.MutableList[MutableCMathML]
-    private val embedded = new mutable.MutableList[MutableCMathML]
+    val owned = new mutable.MutableList[MutableCMathML]
+    val embedded = new mutable.MutableList[MutableCMathML]
 
     /** Gets a [[Node]] containing the rendering of 'mathChild'.
       * These nodes can be added as children to 'this' (or its descendants) but must not otherwise be touched.
@@ -252,35 +225,33 @@ class MathViewFX extends Pane {
       node
     }
 
-    private var child: Node = null
+    var child: Node = null
     var invalid = true
 
-    private def setChild(n: Node) =
+    def setChild(n: Node) =
       if (child != n) {
         child = n
         size <== child.boundsInLocal
         updateChildren()
       }
 
-    private def updateChildren() : Unit = {
+    def updateChildren() : Unit = {
       var cs = List(child : javafx.scene.Node)
       for (h <- highlights) cs = h::cs
       children.setAll(cs : _*)
     }
 
-    private def disownAll() = {
+    def disownAllX() = {
 //      for (n <- owned) mathView.disown(this,n)
       owned.clear()
     }
 
-    private def disembedAll() = {
+    def disembedAll() = {
       for (n <- embedded) mathView.disembed(this,n)
       embedded.clear()
     }
 
     def update() = {
-//      println("update",this)
-      disownAll()
       disembedAll()
       invalid = false
       val child = mathRendererFactory.renderer(this,math)
@@ -298,11 +269,10 @@ object MathViewFX {
 }
 
 trait MathRendererContext {
-  def own(math: MutableCMathML) : Unit
   def getNodeForEmbedding(math: MutableCMathML) : Node
 }
 
 trait MathRendererFactory {
-  def renderer(context:MathRendererContext, math:MutableCMathML) : Node
+  def renderer(context:MathViewFX#MathNode, math:MutableCMathML) : Node
 }
 
