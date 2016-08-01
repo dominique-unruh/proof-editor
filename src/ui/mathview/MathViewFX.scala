@@ -91,7 +91,7 @@ class MathViewFX extends Pane {
   })
 
   private def own(node: MathNode, mathChild: MutableCMathML) : Unit = {
-    println(s"own($node,$mathChild)")
+//    println(s"own($node,$mathChild)")
     assert(node != null)
     assert(node.math ne mathChild)
     val info = getInfoWithNewNode(mathChild)
@@ -154,85 +154,6 @@ class MathViewFX extends Pane {
     rootNode.printInfo()
     children.setAll(rootNode)
   }
-
-//  def leftOf(cursor:CursorPos, jump:Boolean=false) : Option[CursorPos] = {
-//    val node = getNode(cursor.node).getOrElse(throw new IllegalArgumentException("cursor points to a non-visual subterm"))
-//    cursor.side match {
-//      case CursorLeft /*| CursorSelect*/ => leftOf(node) match {
-//        case None => embedderOf(node) match {
-//          case None => None
-//          case Some(embedder) => Some(CursorPos(embedder.math, CursorLeft))
-//        }
-//        case Some(left) => Some(CursorPos(left,CursorRight))
-//      }
-//      case CursorRight =>
-//        if (jump)
-//          Some(CursorPos(node.math,CursorLeft))
-//        else
-//          node.rightmostChild match {
-//            case None => Some(CursorPos(node.math,CursorLeft))
-//            case Some(child) => Some(CursorPos(child,CursorRight))
-//      }
-//    }
-//  }
-//  def rightOf(cursor:CursorPos, jump:Boolean=false) : Option[CursorPos] = {
-//    val node = getNode(cursor.node).getOrElse(throw new IllegalArgumentException("cursor points to a non-visual subterm"))
-//    cursor.side match {
-//      case CursorRight /*| CursorSelect */ => rightOf(node) match {
-//        case None => embedderOf(node) match {
-//          case None => None
-//          case Some(embedder) => Some(CursorPos(embedder.math, CursorRight))
-//        }
-//        case Some(right) => Some(CursorPos(right,CursorLeft))
-//      }
-//      case CursorLeft =>
-//        if (jump)
-//          Some(CursorPos(node.math,CursorRight))
-//        else
-//          node.leftmostChild match {
-//            case None => Some(CursorPos(node.math,CursorRight))
-//            case Some(child) => Some(CursorPos(child,CursorLeft))
-//          }
-//    }
-//  }
-
-  private def embeddingPath(m:MutableCMathML) : List[MutableCMathML] = {
-    var tmp = getNode(m)
-    assert(tmp.isDefined)
-    var path = Nil : List[MutableCMathML]
-    while (tmp.isDefined) {
-      path = tmp.get.math::path
-      tmp = embedderOf(tmp.get)
-    }
-    path
-  }
-
-  /** Returns the smallest rendered math that contains a and b */
-  def encompassingNode(a:MutableCMathML, b:MutableCMathML) : MutableCMathML = {
-    var result : MutableCMathML = null
-    val itA = embeddingPath(a).iterator
-    val itB = embeddingPath(b).iterator
-    breakable {
-      while (itA.hasNext && itB.hasNext) {
-        val a$ = itA.next()
-        val b$ = itB.next()
-        if (a$ eq b$)
-          result = a$
-        else
-          break
-      }
-    }
-    assert(result!=null)
-    result
-  }
-
-  private def embedderOf(node:MathNode) : Option[MathNode] =
-    infos.get(node.math).flatMap(x => Option(x.embeddedIn))
-  /** Left sibling according to visual representation */
-  private def leftOf(node:MathNode) : Option[MutableCMathML] =
-  embedderOf(node).flatMap(_.leftOf(node))
-  private def rightOf(node:MathNode) : Option[MutableCMathML] =
-    embedderOf(node).flatMap(_.rightOf(node))
 
   setRootNode()
   mathDoc.addChangeListener(() => setRootNode())
@@ -299,13 +220,13 @@ class MathViewFX extends Pane {
     }
 
     def printInfo() = {
-      println(this)
-      println("CMML: "+math.toCMathML.toString)
-      println("Child: "+child)
-      println("Invalid: "+invalid)
-      println("Owned: "+owned)
-      println("Embedded: "+embedded)
-      println("Info: "+getInfoWithNewNode(math))
+//      println(this)
+//      println("CMML: "+math.toCMathML.toString)
+//      println("Child: "+child)
+//      println("Invalid: "+invalid)
+//      println("Owned: "+owned)
+//      println("Embedded: "+embedded)
+//      println("Info: "+getInfoWithNewNode(math))
     }
 
     override def toString(): String = s"[MathNode: ${math}]"
@@ -361,7 +282,7 @@ class MathViewFX extends Pane {
     }
 
     def update() = {
-      println("update",this)
+//      println("update",this)
       disownAll()
       disembedAll()
       invalid = false

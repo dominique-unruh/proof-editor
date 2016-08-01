@@ -80,7 +80,7 @@ class BinOp(op:String, a:Node, b:Node) extends HBox {
     val font = symbolFont(h)
     open.font = font
     close.font = font
-    println("height",h)
+//    println("height",h)
   }
 
   innerHeight.onChange((updateParens())) // Delayed action. I think otherwise we end up changing bounds within a recomputation of bounds, leading to spurious errors?
