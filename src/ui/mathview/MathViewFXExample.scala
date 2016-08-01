@@ -79,9 +79,16 @@ class MathViewFXExample extends Application {
     val nw = new MathNode(null)
     deattachJFXNode(nw)
 
-    nw.invalid = false
+//    nw.invalid = false
     val nh3 = new Text("x") // getNodeForEmbedding(h3)
-    val nbinop = getNodeForEmbedding(binop)
+
+    binop.node = new MathNode(binop)
+//    deattachJFXNode(binop.node)
+    updateMe  = binop.node; update()
+    val nbinop = binop.node
+
+//    val nbinop = getNodeForEmbedding(binop)
+
     nw.child = new Fraction(nh3, nbinop)
     nw.child.boundsInLocalProperty().onChange({})
     nw.getChildren.setAll(nw.child)
