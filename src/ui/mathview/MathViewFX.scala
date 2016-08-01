@@ -86,7 +86,7 @@ class MathViewFX extends Pane {
   /** This will create a node (which will then own and embed other nodes)! */
   private def getInfoWithNewNode(cmml: MutableCMathML) = infos.getOrElseUpdate(cmml, {
     val info = Info(node = new MathNode(cmml))
-    cmml.addChangeListener(() => cmmlChanged(info))
+    cmml.addChangeListener(() => cmmlChanged(info)) // XXX TODO: do this only once!!!
     info
   })
 
