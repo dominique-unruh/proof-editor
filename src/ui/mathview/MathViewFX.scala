@@ -60,8 +60,6 @@ class MathViewFX extends Pane {
   val mathDoc = new MutableCMathMLDocument(CNone())
 
   val infos = new mutable.WeakHashMap[MutableCMathML,Info] // Relies on the fact that MutableCMathML.equals is reference-equality
-  styleClass += "mathview"
-
 
   def setMath(m: CMathML) =
     mathDoc.setRoot(m)
@@ -69,12 +67,12 @@ class MathViewFX extends Pane {
   def setMath(m: MutableCMathML) =
     mathDoc.setRoot(m)
 
-  case class Info(node : MathNode, var ownedBy : MathNode = null, var embeddedIn : MathNode = null)
+  case class Info(node : MathNode, /*var ownedBy : MathNode = null, */var embeddedIn : MathNode = null)
 
   private def cmmlChanged(info: Info): Unit = {
-    if (info.ownedBy!=null)
-      info.ownedBy.update() // TODO: why does this preserve invariants?
-    else if (info.node.invalid) ()
+//    if (info.ownedBy!=null)
+//      info.ownedBy.update() // TODO: why does this preserve invariants?
+    if (info.node.invalid) ()
     else if (info.embeddedIn!=null)
       info.node.update() // TODO: why does this preserve invariants?
     else if (info.node.math == mathDoc.root)
@@ -96,16 +94,16 @@ class MathViewFX extends Pane {
     assert(node.math ne mathChild)
     val info = getInfoWithNewNode(mathChild)
     assert(info.embeddedIn ne node)
-    assert(info.ownedBy ne node)
-    if (info.ownedBy != null) info.ownedBy.invalid = true
+//    assert(info.ownedBy ne node)
+//    if (info.ownedBy != null) info.ownedBy.invalid = true
     if (info.embeddedIn != null) info.embeddedIn.invalid = true
-    info.ownedBy = node
+//    info.ownedBy = node
     info.embeddedIn = null
   }
   /** It is permissible to call [[disown]] if you 'node' is not the owner. In this case, nothing happens. */
   private def disown(node : MathNode, mathChild : MutableCMathML) : Unit = {
-    val info = getInfoWithNewNode(mathChild)
-    if (info.ownedBy==node) info.ownedBy = null
+//    val info = getInfoWithNewNode(mathChild)
+//    if (info.ownedBy==node) info.ownedBy = null
   }
 
   private def getNode(node : MutableCMathML) = {
@@ -125,20 +123,20 @@ class MathViewFX extends Pane {
   private def getNodeForEmbedding(requestingNode: MathNode, mathChild: MutableCMathML): Node = {
     val info = getInfoWithNewNode(mathChild)
     assert(info.embeddedIn ne requestingNode)
-    assert(info.ownedBy ne requestingNode)
-    if (info.ownedBy != null) info.ownedBy.invalid = true
+//    assert(info.ownedBy ne requestingNode)
+//    if (info.ownedBy != null) info.ownedBy.invalid = true
     if (info.embeddedIn != null) info.embeddedIn.invalid = true
     deattachJFXNode(info.node) // TODO: is this needed?
-    info.ownedBy = null
+//    info.ownedBy = null
     info.embeddedIn = requestingNode
     if (info.node.invalid) info.node.update()
     info.node
   }
   private def getNodeForRoot() : MathNode = {
     val info = getInfoWithNewNode(mathDoc.root)
-    if (info.ownedBy != null) info.ownedBy.invalid = true
+//    if (info.ownedBy != null) info.ownedBy.invalid = true
     if (info.embeddedIn != null) info.embeddedIn.invalid = true
-    info.ownedBy = null
+//    info.ownedBy = null
     info.embeddedIn = null
     if (info.node.invalid) info.node.update()
     info.node
