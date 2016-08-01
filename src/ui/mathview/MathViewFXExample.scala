@@ -104,7 +104,10 @@ class MathViewFXExample extends Application {
 
     new BinOp(nz, nw)
 
-    getNodeForEmbedding(h2)
+    if (h2.node==null) h2.node = new MathNode(h2)
+    deattachJFXNode(h2.node)
+    if (h2.node.invalid) { updateMe  = h2.node; update() }
+    h2.node
 
     sys.exit()
   }
