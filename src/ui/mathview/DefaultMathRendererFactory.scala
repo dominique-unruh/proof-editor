@@ -39,9 +39,9 @@ object DefaultMathRendererFactory extends MathRendererFactory {
         own(hd); (new Fraction(get(x), get(y)))
       }
       case MCNone() => new Missing()
-      case MApply(hd, args@_*) => (new GenericApply(get(hd), args.map(get(_))))
-      case MCSymbol(cd, name) => (new GenericSymbol(cd, name))
-      case m @ MCN(num) => new Num(m)
+//      case MApply(hd, args@_*) => (new GenericApply(get(hd), args.map(get(_))))
+//      case MCSymbol(cd, name) => (new GenericSymbol(cd, name))
+//      case m @ MCN(num) => new Num(m)
     }
   }
 }
@@ -129,32 +129,10 @@ class Fraction(a:Node, b:Node) extends VBox {
   line.strokeWidth = 2
 }
 
-class GenericApply(head:Node, args:Seq[Node])
-  extends HBox {
-  import MathText._
-  alignment = Pos.Center
-  children.addAll(head,symbolText("("))
-  var first = true
-  for (a <- args) {
-    if (!first) children.add(symbolText(","))
-    children.add(a)
-    first = false
-  }
-  children.add(symbolText(")"))
-}
 
 class Var(math:MCI) extends Text(math.name) {
   id = Integer.toHexString(hashCode()) // TODO: remove
   font = MathText.VariableFont
-}
-
-class Num(math:MCN) extends Text(math.n.toString) {
-  id = Integer.toHexString(hashCode()) // TODO: remove
-  font = MathText.NumberFont
-}
-
-class GenericSymbol(cd:String, name:String) extends Text(s"$cd.$name") {
-  //  font = MathText.VariableFont
 }
 
 class Missing() extends Text("\u2603") {
