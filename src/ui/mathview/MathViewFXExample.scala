@@ -37,16 +37,6 @@ class MathNode(val math : MutableCMathML) extends Group {
 }
 
 class MathViewFXExample extends Application {
-//  mathView =>
-
-//  val mathDoc = new MutableCMathMLDocument(CNone())
-
-//  def getInfoWithNewNode(cmml: MutableCMathML) = {
-//    if (cmml.node==null) cmml.node = new MathNode(cmml)
-//    cmml.addChangeListener{() => updateMe = cmml.node; update()}
-//    cmml
-//  }
-
   def deattachJFXNode(node:Node) = {
     val parent = node.parent.value
     if (parent!=null)
@@ -78,13 +68,10 @@ class MathViewFXExample extends Application {
 
 
   override def start(primaryStage: Stage): Unit = {
-//    var z = new MCNone()
     val h1 = new MCNone()
     val h2 = new MCNone()
     val binop = new MApply(times,h1,h2)
     val h3 = new MCNone()
-//    var w = new MApply(divide,h3,binop)
-//    var a2 = new MApply(times,z,w)
 
     val root = new MathNode(null)
     val nz = new MathNode(null)
@@ -93,7 +80,9 @@ class MathViewFXExample extends Application {
     deattachJFXNode(nw)
 
     nw.invalid = false
-    nw.child = new Fraction(getNodeForEmbedding(h3), getNodeForEmbedding(binop))
+    val nh3 = new Text("x") // getNodeForEmbedding(h3)
+    val nbinop = getNodeForEmbedding(binop)
+    nw.child = new Fraction(nh3, nbinop)
     nw.child.boundsInLocalProperty().onChange({})
     nw.getChildren.setAll(nw.child)
 
