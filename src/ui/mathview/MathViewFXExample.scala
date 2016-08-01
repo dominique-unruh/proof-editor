@@ -68,10 +68,10 @@ class MathViewFXExample extends Application {
 
 
   override def start(primaryStage: Stage): Unit = {
-    val h1 = new MCNone()
+//    val h1 = new MCNone()
     val h2 = new MCNone()
-    val binop = new MApply(times,h1,h2)
-    val h3 = new MCNone()
+//    val binop = new MApply(times,h1,h2)
+//    val h3 = new MCNone()
 
     val root = new MathNode(null)
     val nz = new MathNode(null)
@@ -82,12 +82,20 @@ class MathViewFXExample extends Application {
 //    nw.invalid = false
     val nh3 = new Text("x") // getNodeForEmbedding(h3)
 
-    binop.node = new MathNode(binop)
-//    deattachJFXNode(binop.node)
-    updateMe  = binop.node; update()
-    val nbinop = binop.node
+    val nbinop = new MathNode(null)
 
-//    val nbinop = getNodeForEmbedding(binop)
+    val nh1 = new Text("x") // getNodeForEmbedding(h1)
+
+    if (h2.node==null) h2.node = new MathNode(h2)
+    deattachJFXNode(h2.node)
+    if (h2.node.invalid) { updateMe  = h2.node; update() }
+    val nh2 = h2.node
+
+//    val nh2 = getNodeForEmbedding(h2)
+
+    nbinop.child = new BinOp(nh1,nh2)
+    nbinop.child.boundsInLocalProperty().onChange({})
+    nbinop.getChildren.setAll(nbinop.child)
 
     nw.child = new Fraction(nh3, nbinop)
     nw.child.boundsInLocalProperty().onChange({})
