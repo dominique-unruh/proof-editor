@@ -17,23 +17,13 @@ object DefaultMathRendererFactory extends MathRendererFactory {
   override def renderer(context: MathViewFX#MathNode, math: MutableCMathML): Node = {
 //    def own(math:MutableCMathML) = /*context.own(math)*/ ()
     def get(math:MutableCMathML) = context.getNodeForEmbedding(math)
-    def binop(hd: MutableCMathML, op: String, x: MutableCMathML, y: MutableCMathML) = {
-//      own(hd)
-      val x$ = get(x)
-      val y$ = get(y)
-      new BinOp(op, x$, y$)
-    }
-
     math match {
       case m: MCI => new Var(m)
-      case MApply(hd@MCSymbol("arith1", "times"), x, y) => binop(hd, "\u22c5", x, y)
+      case MApply(hd@MCSymbol("arith1", "times"), x, y) => new BinOp("*",get(x),get(y))
       case MApply(hd@MCSymbol("arith1", "divide"), x, y) => {
-        /*own(hd);*/ (new Fraction(get(x), get(y)))
+        (new Fraction(get(x), get(y)))
       }
       case MCNone() => new Missing()
-//      case MApply(hd, args@_*) => (new GenericApply(get(hd), args.map(get(_))))
-//      case MCSymbol(cd, name) => (new GenericSymbol(cd, name))
-//      case m @ MCN(num) => new Num(m)
     }
   }
 }

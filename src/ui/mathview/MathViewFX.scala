@@ -241,11 +241,6 @@ class MathViewFX extends Pane {
       children.setAll(cs : _*)
     }
 
-    def disownAllX() = {
-//      for (n <- owned) mathView.disown(this,n)
-      owned.clear()
-    }
-
     def disembedAll() = {
       for (n <- embedded) mathView.disembed(this,n)
       embedded.clear()
@@ -254,9 +249,18 @@ class MathViewFX extends Pane {
     def update() = {
       disembedAll()
       invalid = false
-      val child = mathRendererFactory.renderer(this,math)
-      assert(child!=null)
-      setChild(child)
+      child  =     math match {
+        case MApply(hd@MCSymbol("arith1", "times"), x, y) =>
+          new BinOp("*",getNodeForEmbedding(x),getNodeForEmbedding(y))
+        case MApply(hd@MCSymbol("arith1", "divide"), x, y) =>
+          new Fraction(getNodeForEmbedding(x), getNodeForEmbedding(y))
+        case MCNone() => new Missing()
+      }
+//      if (child != n) {
+//        child = n
+        size <== child.boundsInLocal
+        updateChildren()
+//      }
     }
   }
 }
