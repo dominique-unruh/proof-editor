@@ -70,24 +70,3 @@ object Utils {
     }
   }
 }
-
-/** A simple way of implementing properties. To implement a property, subclass [[GetterSetterProperty]]
-  * and override [[get]] (must return the current value of the property), [[setter]] (must set the value).
-  * When the value of the property changes (i.e., if [[getter]] would return a different value from now on),
-  * invoke [[fireValueChangedEvent]]. (Do not invoke [[fireValueChangedEvent]] if the value was changed via [[setter]].)
-  *
-  * @tparam T
-  */
-abstract class GetterSetterProperty[T] extends SimpleObjectProperty[T] {
-  override def set(value: T) : Unit = {
-    setter(value)
-    fireValueChangedEvent()
-  }
-  override def bind(obs : ObservableValue[_ <: T]) = sys.error("Binding not supported")
-  override def get() : T = getter
-  protected def getter : T
-  protected def setter(value:T): Unit
-  override def fireValueChangedEvent() = super.fireValueChangedEvent()
-}
-
-

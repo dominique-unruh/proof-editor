@@ -59,7 +59,7 @@ class MathViewFX extends Pane {
 
   val mathDoc = new MutableCMathMLDocument(CNone())
 
-  private val infos = new mutable.WeakHashMap[MutableCMathML,Info] // Relies on the fact that MutableCMathML.equals is reference-equality
+  val infos = new mutable.WeakHashMap[MutableCMathML,Info] // Relies on the fact that MutableCMathML.equals is reference-equality
   styleClass += "mathview"
 
 
@@ -69,7 +69,7 @@ class MathViewFX extends Pane {
   def setMath(m: MutableCMathML) =
     mathDoc.setRoot(m)
 
-  private case class Info(node : MathNode, var ownedBy : MathNode = null, var embeddedIn : MathNode = null)
+  case class Info(node : MathNode, var ownedBy : MathNode = null, var embeddedIn : MathNode = null)
 
   private def cmmlChanged(info: Info): Unit = {
     if (info.ownedBy!=null)
@@ -155,46 +155,46 @@ class MathViewFX extends Pane {
     children.setAll(rootNode)
   }
 
-  def leftOf(cursor:CursorPos, jump:Boolean=false) : Option[CursorPos] = {
-    val node = getNode(cursor.node).getOrElse(throw new IllegalArgumentException("cursor points to a non-visual subterm"))
-    cursor.side match {
-      case CursorLeft /*| CursorSelect*/ => leftOf(node) match {
-        case None => embedderOf(node) match {
-          case None => None
-          case Some(embedder) => Some(CursorPos(embedder.math, CursorLeft))
-        }
-        case Some(left) => Some(CursorPos(left,CursorRight))
-      }
-      case CursorRight =>
-        if (jump)
-          Some(CursorPos(node.math,CursorLeft))
-        else
-          node.rightmostChild match {
-            case None => Some(CursorPos(node.math,CursorLeft))
-            case Some(child) => Some(CursorPos(child,CursorRight))
-      }
-    }
-  }
-  def rightOf(cursor:CursorPos, jump:Boolean=false) : Option[CursorPos] = {
-    val node = getNode(cursor.node).getOrElse(throw new IllegalArgumentException("cursor points to a non-visual subterm"))
-    cursor.side match {
-      case CursorRight /*| CursorSelect */ => rightOf(node) match {
-        case None => embedderOf(node) match {
-          case None => None
-          case Some(embedder) => Some(CursorPos(embedder.math, CursorRight))
-        }
-        case Some(right) => Some(CursorPos(right,CursorLeft))
-      }
-      case CursorLeft =>
-        if (jump)
-          Some(CursorPos(node.math,CursorRight))
-        else
-          node.leftmostChild match {
-            case None => Some(CursorPos(node.math,CursorRight))
-            case Some(child) => Some(CursorPos(child,CursorLeft))
-          }
-    }
-  }
+//  def leftOf(cursor:CursorPos, jump:Boolean=false) : Option[CursorPos] = {
+//    val node = getNode(cursor.node).getOrElse(throw new IllegalArgumentException("cursor points to a non-visual subterm"))
+//    cursor.side match {
+//      case CursorLeft /*| CursorSelect*/ => leftOf(node) match {
+//        case None => embedderOf(node) match {
+//          case None => None
+//          case Some(embedder) => Some(CursorPos(embedder.math, CursorLeft))
+//        }
+//        case Some(left) => Some(CursorPos(left,CursorRight))
+//      }
+//      case CursorRight =>
+//        if (jump)
+//          Some(CursorPos(node.math,CursorLeft))
+//        else
+//          node.rightmostChild match {
+//            case None => Some(CursorPos(node.math,CursorLeft))
+//            case Some(child) => Some(CursorPos(child,CursorRight))
+//      }
+//    }
+//  }
+//  def rightOf(cursor:CursorPos, jump:Boolean=false) : Option[CursorPos] = {
+//    val node = getNode(cursor.node).getOrElse(throw new IllegalArgumentException("cursor points to a non-visual subterm"))
+//    cursor.side match {
+//      case CursorRight /*| CursorSelect */ => rightOf(node) match {
+//        case None => embedderOf(node) match {
+//          case None => None
+//          case Some(embedder) => Some(CursorPos(embedder.math, CursorRight))
+//        }
+//        case Some(right) => Some(CursorPos(right,CursorLeft))
+//      }
+//      case CursorLeft =>
+//        if (jump)
+//          Some(CursorPos(node.math,CursorRight))
+//        else
+//          node.leftmostChild match {
+//            case None => Some(CursorPos(node.math,CursorRight))
+//            case Some(child) => Some(CursorPos(child,CursorLeft))
+//          }
+//    }
+//  }
 
   private def embeddingPath(m:MutableCMathML) : List[MutableCMathML] = {
     var tmp = getNode(m)
@@ -237,7 +237,7 @@ class MathViewFX extends Pane {
   setRootNode()
   mathDoc.addChangeListener(() => setRootNode())
 
-  private class MathNode(val math : MutableCMathML) extends Group with MathRendererContext {
+  class MathNode(val math : MutableCMathML) extends Group with MathRendererContext {
     def rightmostChild: Option[MutableCMathML] = embedded.lastOption
     def leftmostChild: Option[MutableCMathML] = embedded.headOption
 
