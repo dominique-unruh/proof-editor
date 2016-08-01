@@ -32,7 +32,7 @@ class MathViewFX extends Pane {
 
   val mathDoc = new MutableCMathMLDocument(CNone())
 
-  val infos = new mutable.WeakHashMap[MutableCMathML,Info] // Relies on the fact that MutableCMathML.equals is reference-equality
+//  val infos = new mutable.WeakHashMap[MutableCMathML,Info] // Relies on the fact that MutableCMathML.equals is reference-equality
 
   def setMath(m: CMathML) =
     mathDoc.setRoot(m)
@@ -40,9 +40,9 @@ class MathViewFX extends Pane {
   def setMath(m: MutableCMathML) =
     mathDoc.setRoot(m)
 
-  case class Info(node : MathNode, /*var ownedBy : MathNode = null, */var embeddedIn : MathNode = null)
+//  case class Info(node : MathNode, /*var ownedBy : MathNode = null, */var embeddedIn : MathNode = null)
 
-  def cmmlChanged(info: Info): Unit = {
+  def cmmlChanged(info: MutableCMathML): Unit = {
 //    if (info.ownedBy!=null)
 //      info.ownedBy.update() // TODO: why does this preserve invariants?
     if (info.node.invalid) ()
@@ -55,18 +55,25 @@ class MathViewFX extends Pane {
   }
 
   /** This will create a node (which will then own and embed other nodes)! */
-  def getInfoWithNewNode(cmml: MutableCMathML) = infos.getOrElseUpdate(cmml, {
-    val info = Info(node = new MathNode(cmml))
-    cmml.addChangeListener(() => cmmlChanged(info))
-    info
-  })
+  def getInfoWithNewNode(cmml: MutableCMathML) = {
+    if (cmml.node==null) cmml.node = new MathNode(cmml)
+    cmml.addChangeListener(() => cmmlChanged(cmml))
+    cmml
+  }
+//  infos.getOrElseUpdate(cmml, {
+//      val info = Info(node = new MathNode(cmml))
+//      cmml.addChangeListener(() => cmmlChanged(info))
+//      info
+//    })
+//  }
 
 
   def getNode(node : MutableCMathML) = {
-    infos.get(node) match {
-      case None => None
-      case Some(info) => assert(info.node!=null); Some(info.node)
-    }
+    node
+//    infos.get(node) match {
+//      case None => None
+//      case Some(info) => assert(info.node!=null); Some(info.node)
+//    }
   }
 
   def deattachJFXNode(node:Node) = {
