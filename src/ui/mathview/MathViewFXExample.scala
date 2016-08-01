@@ -93,18 +93,20 @@ class MathViewFXExample extends Application {
 
 
   override def start(primaryStage: Stage): Unit = {
-    var s3 : MCSymbol = new MCSymbol(times)
+//    var s3 : MCSymbol = new MCSymbol(times)
     var z = new MCNone()
     val h1 = new MCNone()
     val h2 = new MCNone()
     val binop = new MApply(times,h1,h2)
     var w = new MApply(divide,new MCNone(),binop)
-    var a2 = new MApply(s3,z,w)
+    var a2 = new MApply(times,z,w)
 
     mathDoc.setRoot(a2)
-    mathDoc.root.node = new MathNode(this,mathDoc.root)
-    updateMe = mathDoc.root.node
-    update()
+    val root = new MathNode(this,mathDoc.root)
+    mathDoc.root.node = root
+    /*root.child =*/ new BinOp("*", root.getNodeForEmbedding(z), root.getNodeForEmbedding(w))
+//    root.size <== root.child.boundsInLocalProperty()
+//    root.getChildren.setAll(root.child)
 
     binop.node.getNodeForEmbedding(h2)
 
