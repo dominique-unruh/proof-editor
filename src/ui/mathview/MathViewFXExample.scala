@@ -43,19 +43,23 @@ class MathViewFXExample extends Application {
 
   def getInfoWithNewNode(cmml: MutableCMathML) = {
     if (cmml.node==null) cmml.node = new MathNode(this,cmml)
-    cmml.addChangeListener{() => updateMe = cmml.node; update()}
+    cmml.addChangeListener{() => updateMe = cmml.node; update()} // TODO: only do conditionally????
     cmml
   }
 
   def deattachJFXNode(node:Node) = {
     val parent = node.parent.value
     if (parent!=null)
-      parent.asInstanceOf[layout.Pane].getChildren.remove(node) // TODO: is there a better way?
+      parent.asInstanceOf[layout.Pane].getChildren.remove(node)
   }
 
 
   def getNodeForEmbedding(requestingNode: MathNode, mathChild: MutableCMathML): Node = {
-    val info = getInfoWithNewNode(mathChild)
+
+    if (mathChild.node==null) mathChild.node = new MathNode(this,mathChild)
+    mathChild.addChangeListener{() => updateMe = mathChild.node; update()}
+
+    val info = mathChild
     if (info.embeddedIn != null) info.embeddedIn.invalid = true
     deattachJFXNode(info.node) // TODO: is this needed?
     info.embeddedIn = requestingNode
