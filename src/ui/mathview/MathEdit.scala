@@ -1,6 +1,7 @@
 package ui.mathview
 
 import javafx.geometry.Bounds
+import javafx.scene.control.Alert
 import javafx.scene.input
 
 import cmathml.CMathML.{plus, times}
@@ -88,14 +89,27 @@ class MathEdit extends MathViewFX {
 
   private def createContextMenu = {
     val cm = new ContextMenu
+    if (selection.value.isDefined)
+      cm.items += menuItem("_Copy", clipboardCopy())
+    else
+      cm.items += menuItem("Copy")
     if (selection.value.exists(inEditableRange(_)))
-      cm.items += menuItem("_Clear", {
-        val none = new MCNone
-        selection.value.get.replaceWith(none)
-        cursorPos.value = CursorPos(none,CursorLeft)
-      })
-    if (cm.items.isEmpty)
-      cm.items += menuItem("No actions available")
+      cm.items += menuItem("C_ut", clipboardCut())
+    else
+      cm.items += menuItem("Cut")
+    if (selection.value.exists(inEditableRange(_))
+      || (selection.value.isEmpty && inEditableRange(cursorPos.value.node)))
+      cm.items += menuItem("_Paste", clipboardPaste())
+    else
+      cm.items += menuItem("Paste")
+//    if (selection.value.exists(inEditableRange(_)))
+//      cm.items += menuItem("_Clear", {
+//        val none = new MCNone
+//        selection.value.get.replaceWith(none)
+//        cursorPos.value = CursorPos(none,CursorLeft)
+//      })
+//    if (cm.items.isEmpty)
+//      cm.items += menuItem("No actions available")
     cm
   }
 
@@ -144,7 +158,7 @@ class MathEdit extends MathViewFX {
       case "*" => insertBinaryOp(times)
       case "/" => insertBinaryOp(CMathML.divide)
       case "=" => insertBinaryOp(CMathML.equal)
-      case AlphaChar(c) => insertVariable(c)
+      case AlphaChar(c) => insertMath(CI(c))
       case _ => processed = false
     }
     if (processed) e.consume()
@@ -160,28 +174,29 @@ class MathEdit extends MathViewFX {
       cursorPos.value = cursorPos.value.copy(node=b)
   }
 
-  private def insertVariable(name:String) : Unit = {
-    val variable = new MCI(name)
+  /** Inserts math at cursor or instead of selection. (Only if in the editable range.) */
+  def insertMath(math:CMathML) : Unit = {
+    val mmath = fromCMathML(math)
     selection.value match {
       case Some(sel) =>
         if (!inEditableRange(sel)) return
-        replaceWith(sel,variable)
+        replaceWith(sel,mmath)
         clearSelection()
       case None =>
         val target = cursorPos.value.node
         if (!inEditableRange(target)) return
         target match {
           case hole : MCNone =>
-            replaceWith(hole,variable)
+            replaceWith(hole,mmath)
           case _ =>
             val hole = new MCNone
             cursorPos.value.side match {
-              case CursorLeft => replaceWith(target, new MApply(fromCMathML(times), variable, hole))
-              case CursorRight => replaceWith(target, new MApply(fromCMathML(times), hole, variable)) }
+              case CursorLeft => replaceWith(target, new MApply(fromCMathML(times), mmath, hole))
+              case CursorRight => replaceWith(target, new MApply(fromCMathML(times), hole, mmath)) }
             hole.replaceWith(target)
           }
         }
-    cursorPos.value = CursorPos(variable,CursorRight)
+    cursorPos.value = CursorPos(mmath,CursorRight)
   }
 
   private def insertBinaryOp(op:CMathML) : Unit = {
@@ -226,6 +241,8 @@ class MathEdit extends MathViewFX {
           cursorPos.value = newPos.get
         }
       case X if e.shortcutDown => clipboardCut()
+      case C if e.shortcutDown => clipboardCopy()
+      case V if e.shortcutDown => clipboardPaste()
       case A if e.shortcutDown => selectAll()
       case _ => /*println("Key pressed: "+e);*/ processed = false
     }
@@ -233,34 +250,69 @@ class MathEdit extends MathViewFX {
       e.consume()
   }
 
+  override def getImageOfNode(math:MutableCMathML) = {
+    val sel = selection.value
+    selection.value = None
+    removeCursor()
+    val image = super.getImageOfNode(math)
+    showCursor(cursorPos.value)
+    selection.value = sel
+    image
+  }
+
+  private def toClipboard(math: MutableCMathML): Unit ={
+    val content = new ClipboardContent
+
+    val cmathml = math.toCMathML
+    content.put(dataformatCMathML,cmathml)
+
+    val xml = cmathml.toXMLDoc
+    content.put(dataformatCMathMLXML, xml)
+
+    val str = cmathml.toString
+    content.putString(str)
+
+    val image = getImageOfNode(math)
+    content.putImage(image)
+
+    val popcorn = cmathml.toPopcorn
+    content.put(dataformatPopcorn,popcorn)
+
+    Clipboard.systemClipboard.setContent(content)
+  }
+
+  /** Copies the current selection into the clipboard */
+  def clipboardCopy(): Unit = selection.value match {
+    case None =>
+    case Some(math) => toClipboard(math)
+  }
+
   /** Cuts the current selection into the clipboard */
   def clipboardCut(): Unit = selection.value match {
-    case None =>
     case Some(math) =>
-      val content = new ClipboardContent
+      toClipboard(math)
+      if (inEditableRange(math)) {
+        val none = new MCNone
+        replaceWith(math, none)
+        clearSelection()
+        cursorPos.value = CursorPos(none, CursorLeft)
+      }
+    case _ =>
+  }
+  private def errorPopup(msg: String): Unit =
+    new Alert(Alert.AlertType.ERROR, msg).showAndWait()
 
-      val cmathml = math.toCMathML
-      content.put(dataformatCMathML,cmathml)
-
-      val xml = cmathml.toXMLDoc
-      content.put(dataformatCMathMLXML, xml)
-
-      val str = cmathml.toString
-      content.putString(str)
-
-      clearSelection()
-      removeCursor()
-      val image = getImageOfNode(math)
-      content.putImage(image)
-
-      val popcorn = cmathml.toPopcorn
-      content.put(dataformatPopcorn,popcorn)
-
-      Clipboard.systemClipboard.setContent(content)
-      val none = new MCNone
-      replaceWith(math,none)
-      clearSelection()
-      cursorPos.value = CursorPos(none,CursorLeft)
+  def clipboardPaste(): Unit = {
+    val clip = Clipboard.systemClipboard
+    clip.content(dataformatCMathML) match {
+      case math : CMathML =>
+        insertMath(math)
+      case _ =>
+        clip.content(dataformatCMathMLXML) match {
+          case xml : Any => ???
+          case null => errorPopup("Selection does not contain Content MathML")
+        }
+    }
   }
 }
 

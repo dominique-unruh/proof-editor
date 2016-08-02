@@ -4,6 +4,7 @@ import java.io.IOException
 import javafx.beans.value.{ChangeListener, ObservableValue}
 import javafx.geometry
 import javafx.geometry.Bounds
+import javafx.scene.shape
 
 import cmathml._
 
@@ -11,10 +12,11 @@ import scalafx.beans.binding.Bindings
 import scalafx.geometry.Pos
 import scalafx.scene.Node
 import scalafx.scene.layout.{HBox, VBox}
-import scalafx.scene.shape.Line
+import scalafx.scene.shape.{Line, Rectangle}
 import scalafx.scene.text.{Font, FontPosture, Text}
 import scalafx.Includes._
 import scalafx.application.Platform
+import scalafx.scene.paint.Color
 
 object DefaultMathRendererFactory extends MathRendererFactory {
   override def renderer(context: MathRendererContext, math: MutableCMathML): Node = {
@@ -139,7 +141,7 @@ class Fraction(a:Node, b:Node) extends javafx.scene.layout.VBox {
   line.strokeWidth = 2
 
   override def layoutChildren(): Unit = {
-    line.endX = math.max(a.prefWidth(-1), b.prefHeight(-1)) + 6
+    line.endX = math.max(a.prefWidth(-1), b.prefWidth(-1)) + 6
     super.layoutChildren()
   }
 
@@ -189,7 +191,20 @@ class GenericSymbol(cd:String, name:String) extends Text(s"$cd.$name") {
   //  font = MathText.VariableFont
 }
 
-class Missing() extends Text("\u2603") {
-  id = Integer.toHexString(hashCode()) // TODO: remove
-  font = MathText.SymbolFont
+class Missing() extends Rectangle {
+//  id = Integer.toHexString(hashCode()) // TODO: remove
+//  font = MathText.SymbolFont
+  width = Missing.width
+  height = Missing.height
+//  stroke = Color.Blue
+  fill = Missing.color
+}
+object Missing {
+  private val color = Color.rgb(1,1,0,0.2)
+  private val (width,height) = {
+    val t = new Text("x")
+    t.font = MathText.SymbolFont
+    val bounds = t.layoutBounds.value
+    (bounds.width, bounds.height*0.8)
+  }
 }

@@ -3,6 +3,7 @@ package cmathml
 import java.math.MathContext
 
 import cmathml.CMathML._
+import com.sun.org.apache.xerces.internal.util.XMLChar
 import misc.Pure
 
 import scala.math.BigDecimal.RoundingMode
@@ -63,6 +64,10 @@ sealed trait CMathML {
 }
 
 object CMathML {
+  /** Is it an NCName in the sense of [[https://www.w3.org/TR/xmlschema-2/#NCName]]? */
+  private[cmathml] def isNCName(name: String): Boolean =
+    XMLChar.isValidNCName(name) // This is not public api, but should be easy to reimplement if needed
+
   type Attributes = Map[(String,String),Any]
   val NoAttr : Attributes = Map.empty
   val equal = CSymbol("relation1","eq")
@@ -196,6 +201,9 @@ object CN {
  *
   * @see [[https://www.w3.org/TR/MathML3/chapter4.html#contm.csymbol]] */
 final case class CSymbol(val attributes : Attributes = NoAttr, cd: String, name: String) extends CMathML with Leaf {
+  import CMathML._
+  assert(isNCName(cd))
+  assert(isNCName(name))
   /** Same as [[toPopcorn]] but without the outermost attributes */
   override protected def toPopcorn$(sb: StringBuilder, priority: Int): Unit = {
     sb ++= cd; sb += '.'; sb ++= name }
@@ -211,6 +219,8 @@ object CSymbol {
   * We are more flexible than the standard here, we allow arbitrary elements as error arguments (not just MathML)
   * @see [[https://www.w3.org/TR/MathML3/chapter4.html#contm.cerror]] */
 final case class CError(val attributes : Attributes, cd: String, name: String, args: Any*) extends CMathML with Leaf {
+  assert(isNCName(cd))
+  assert(isNCName(name))
   /** Same as [[toPopcorn]] but without the outermost attributes */
   override protected def toPopcorn$(sb: StringBuilder, priority: Int): Unit = ???
   override def toString = toPopcorn
