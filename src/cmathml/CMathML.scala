@@ -6,6 +6,7 @@ import cmathml.CMathML._
 import misc.Pure
 
 import scala.math.BigDecimal.RoundingMode
+import scala.xml.{Elem, Utility}
 
 case class InvalidPath() extends Exception
 
@@ -27,6 +28,22 @@ sealed trait CMathML {
   @Pure def negate() : CMathML = Apply(CMathML.uminus,this)
   /** Only immutable objects may be inserted into this map */
   val attributes : Attributes
+
+  @Pure def toXMLDoc : String = {
+    val xml = <math xmlns="http://www.w3.org/1998/Math/MathML">{toXML}</math>
+    val sb = new StringBuilder
+    sb ++= """<?xml version="1.0" encoding="UTF-8"?>"""
+    Utility.serialize(xml,sb=sb).toString
+  }
+
+  @Pure def toXML =
+    if (attributes.isEmpty)
+      toXML$
+    else
+      ???
+
+  /** Same as [[toXML]] but without the outermost attributes */
+  @Pure def toXML$ : scala.xml.Elem
 
   /** Terms with priority `priority` or lower need to be parenthesised */
   @Pure def toPopcorn(sb:StringBuilder, priority:Int) : Unit =
@@ -121,6 +138,8 @@ final case class Apply(val attributes : Attributes, hd: CMathML, args: CMathML*)
       }
       sb += ')'
   }
+
+  override def toXML$: Elem = <apply>{hd.toXML}{args.map(_.toXML)}</apply>
 }
 object Apply {
   def apply(hd: CMathML, args: CMathML*) = new Apply(NoAttr,hd,args:_*)
@@ -135,6 +154,9 @@ final case class CI(val attributes : Attributes = NoAttr, name : String) extends
   /** Terms with priority `priority` or lower need to be parenthesised */
   override protected def toPopcorn$(sb: StringBuilder, priority: Int): Unit = {
     sb += '$'; sb ++= name }
+
+  /** Same as [[toXML]] but without the outermost attributes */
+  override def toXML$: Elem = <ci>{name}</ci>
 }
 object CI {
   def apply(name:String) = new CI(NoAttr,name)
@@ -153,6 +175,11 @@ final case class CN(val attributes : Attributes = NoAttr, n: BigDecimal) extends
   /** Same as [[toPopcorn]] but without the outermost attributes */
   override protected def toPopcorn$(sb: StringBuilder, priority: Int): Unit =
     sb ++= n.toString
+
+  /** Same as [[toXML]] but without the outermost attributes */
+  override def toXML$: Elem =
+    if (n.isWhole) <cn type="integer">{n.toString}</cn>
+    else  <cn type="real">{n.toString}</cn>
 }
 object CN {
   def apply(d:BigDecimal) = new CN(NoAttr,d)
@@ -173,6 +200,8 @@ final case class CSymbol(val attributes : Attributes = NoAttr, cd: String, name:
   override protected def toPopcorn$(sb: StringBuilder, priority: Int): Unit = {
     sb ++= cd; sb += '.'; sb ++= name }
   override def toString = toPopcorn
+
+  override def toXML$: Elem = <csymbol cd={cd}>{name}</csymbol>
 }
 object CSymbol {
   def apply(cd: String, name: String) = new CSymbol(NoAttr,cd,name)
@@ -185,6 +214,14 @@ final case class CError(val attributes : Attributes, cd: String, name: String, a
   /** Same as [[toPopcorn]] but without the outermost attributes */
   override protected def toPopcorn$(sb: StringBuilder, priority: Int): Unit = ???
   override def toString = toPopcorn
+
+  private def anyToXML(o : Any) = o match {
+    case m : CMathML => m.toXML
+    case _ => ???
+  }
+
+  /** Same as [[toXML]] but without the outermost attributes */
+  override def toXML$: Elem = <cerror><csymbol cd={cd}>{name}</csymbol>{args.map(anyToXML)}</cerror>
 }
 
 /** An addition to the Content MathML standard. Represents a missing node.
@@ -193,8 +230,12 @@ final case class CError(val attributes : Attributes, cd: String, name: String, a
 final case class CNone(val attributes : Attributes = NoAttr) extends CMathML with Leaf {
   /** Same as [[toPopcorn]] but without the outermost attributes */
   override protected def toPopcorn$(sb: StringBuilder, priority: Int): Unit =
-    sb += '\u25a2'
+  sb += '\u25a2'
+
   override def toString = toPopcorn
+
+  /** Same as [[toXML]] but without the outermost attributes */
+  override def toXML$: Elem = <cerror><csymbol cd="moreerrors">encodingError</csymbol><cs>Cannot encode "hole" in formula</cs></cerror>
 }
 
 object Path {

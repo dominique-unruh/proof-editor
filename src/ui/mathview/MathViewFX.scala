@@ -13,6 +13,7 @@ import scalafx.application.Platform.runLater
 import scalafx.beans.property.ObjectProperty
 import scalafx.collections.ObservableBuffer
 import scalafx.collections.ObservableBuffer.{Add, Remove, Reorder, Update}
+import scalafx.scene.image.Image
 import scalafx.scene.layout._
 import scalafx.scene.{Group, Node}
 
@@ -236,6 +237,10 @@ class MathViewFX extends Pane {
 
   setRootNode()
   mathDoc.addChangeListener(() => setRootNode())
+
+  def getImageOfNode(math:MutableCMathML) : Image = {
+     getNode(math).get.snapshot(null,null)
+  }
 
   private class MathNode(val math : MutableCMathML) extends Group with MathRendererContext {
     def rightmostChild: Option[MutableCMathML] = embedded.lastOption

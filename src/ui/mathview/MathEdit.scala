@@ -1,6 +1,7 @@
 package ui.mathview
 
 import javafx.geometry.Bounds
+import javafx.scene.input
 
 import cmathml.CMathML.{plus, times}
 import cmathml.MutableCMathML.fromCMathML
@@ -12,7 +13,7 @@ import scalafx.Includes._
 import scalafx.beans.property.ObjectProperty
 import scalafx.event.ActionEvent
 import scalafx.scene.control.{ContextMenu, MenuItem}
-import scalafx.scene.input.{ContextMenuEvent, KeyCode, KeyEvent, MouseEvent}
+import scalafx.scene.input._
 import scalafx.scene.layout.Region
 
 object MathEdit {
@@ -50,7 +51,8 @@ class MathEdit extends MathViewFX {
       removeCursor(cursorPos.value)
   }
 
-  private def removeCursor(pos:CursorPos) =
+  private def removeCursor() : Unit = removeCursor(cursorPos.value)
+  private def removeCursor(pos:CursorPos) : Unit =
     getHighlights(pos.node).removeIf((_: MathHighlight).isInstanceOf[MathCursor])
   private def showCursor(pos:CursorPos) =
     getHighlights(pos.node) += new MathCursor(pos.side)
@@ -220,11 +222,46 @@ class MathEdit extends MathViewFX {
             clearSelection()
           cursorPos.value = newPos.get
         }
+      case X if e.shortcutDown => clipboardCut()
       case A if e.shortcutDown => selectAll()
       case _ => /*println("Key pressed: "+e);*/ processed = false
     }
     if (processed)
       e.consume()
+  }
+
+  private val dataformatCMathML = new DataFormat("-xxx-cmathml-internal-")
+  private val dataformatPopcorn = new DataFormat("text/x.openmath-popcorn")
+  private val dataformatCMathMLXML = new DataFormat("application/mathml-content+xml")
+
+  /** Cuts the current selection into the clipboard */
+  def clipboardCut(): Unit = selection.value match {
+    case None =>
+    case Some(math) =>
+      val content = new ClipboardContent
+
+      val cmathml = math.toCMathML
+      content.put(dataformatCMathML,cmathml)
+
+      val xml = cmathml.toXMLDoc
+      content.put(dataformatCMathMLXML, xml)
+
+      val str = cmathml.toString
+      content.putString(str)
+
+      clearSelection()
+      removeCursor()
+      val image = getImageOfNode(math)
+      content.putImage(image)
+
+      val popcorn = cmathml.toPopcorn
+      content.put(dataformatPopcorn,popcorn)
+
+      Clipboard.systemClipboard.setContent(content)
+      val none = new MCNone
+      replaceWith(math,none)
+      clearSelection()
+      cursorPos.value = CursorPos(none,CursorLeft)
   }
 }
 

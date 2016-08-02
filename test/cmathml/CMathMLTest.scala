@@ -31,4 +31,11 @@ class CMathMLTest extends UnitSpec {
     assert(CN(0).isNegative == false)
     assert(CN(-1).isNegative == true)
   }
+
+  test("XML") {
+    assertResult("<ci>x</ci>") { CI("x").toXML.toString }
+    assertResult("""<csymbol cd="arith1">times</csymbol>""") { times.toXML.toString }
+    assertResult("""<cn type="integer">123</cn>""") { CN(123).toXML.toString }
+    assertResult("""<cn type="real">0.5</cn>""") { CN(0.5).toXML.toString }
+  }
 }

@@ -73,7 +73,7 @@ object MathViewFXExample {
 
       val root = a2
 
-      if (root.isAttached) root.replaceWith(new MCNone)
+      if (root.isAttached) root.replaceWith(a2)
       mw.setMath(new MCNone)
 
 
