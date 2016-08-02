@@ -10,8 +10,6 @@ object Downloads extends AutoPlugin {
 //  lazy val installDependencies = taskKey[Unit]("Download and build dependencies - if needed")
   lazy val installMathQuill = TaskKey[File]("Download and build MathQuill")
   lazy val installJQuery = TaskKey[File]("Download JQuery")
-  lazy val installZ3Linux64 = TaskKey[Unit]("Download and build Z3 (Linux 64)")
-  lazy val installZ3Win64 = TaskKey[Unit]("Download and build Z3 (Windows 64)")
 
   def copyInto(from:File,to:File) = IO.copyFile(from, to / from.name)
 
@@ -19,6 +17,9 @@ object Downloads extends AutoPlugin {
     lazy val installResources = TaskKey[Seq[File]]("Download and build dependencies - if needed; returns list of resource files")
     lazy val installJars = TaskKey[Seq[File]]("Download and build dependencies - if needed; returns list of jar files")
     lazy val z3Version = SettingKey[String]("Z3 version")
+    lazy val installZ3Linux64 = TaskKey[Unit]("Download and build Z3 (Linux 64)")
+    lazy val installZ3Win64 = TaskKey[Unit]("Download and build Z3 (Windows 64)")
+    lazy val installZ3Win32 = TaskKey[Unit]("Download and build Z3 (Windows 32)")
 
     lazy val enableDownloads = Seq(
       installResources := recursiveFiles(installJQuery.value,installMathQuill.value),
@@ -43,6 +44,14 @@ object Downloads extends AutoPlugin {
           copyInto(dir/"bin/libz3.dll", base.value/"lib/win64")
           copyInto(dir/"bin/libz3java.dll", base.value/"lib/win64")
           copyInto(dir/"bin/vcomp110.dll", base.value/"lib/win64")
+        }},
+
+      installZ3Win32 := {
+        if (!(base.value/"lib/win32/libz3java.dll").exists) {
+          val dir = downloadZ3(z3Version.value,"x86-win",base.value)
+          copyInto(dir/"bin/libz3.dll", base.value/"lib/win32")
+          copyInto(dir/"bin/libz3java.dll", base.value/"lib/win32")
+          copyInto(dir/"bin/vcomp110.dll", base.value/"lib/win32")
         }}
     )
   }

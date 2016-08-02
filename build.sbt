@@ -1,8 +1,8 @@
 val os = { val os = sys.props("os.name"); if (os.startsWith("Windows")) "win" else if (os.startsWith("Linux")) "linux" else error("Unrecognized OS: "+os) }
 val osbits = os + sys.props("sun.arch.data.model")
 
-val targetOs = "win"
-val targetBits = 32
+val targetOs = "linux"
+val targetBits = 64
 
 name := "proof-editor"
 version := "0.1"
@@ -67,16 +67,21 @@ stagingDirectory in Universal := (target in Universal).value / s"stage_$targetOs
 NativePackagerKeys.bashScriptExtraDefines += "export LD_LIBRARY_PATH=$lib_dir"
 NativePackagerKeys.batScriptExtraDefines += """cd %APP_LIB_DIR%"""
 
-mappings in Universal ++= {
-  if (targetOs == "linux")
-    Seq(baseDirectory.value / s"lib/linux$targetBits/libz3.so" -> "lib/libz3.so",
-      baseDirectory.value / s"lib/linux$targetBits/libz3java.so" -> "lib/libz3java.so")
-  else if (targetOs == "win")
-    Seq(baseDirectory.value / s"lib/win$targetBits/libz3.dll" -> "lib/libz3.dll",
-      baseDirectory.value / s"lib/win$targetBits/libz3java.dll" -> "lib/libz3java.dll",
-      baseDirectory.value / s"lib/win$targetBits/vcomp110.dll" -> "lib/vcomp110.dll")
-  else sys.error(s"Don't know how to handle targetOs=$targetOs")
-}
+import NativePackagerHelper._
+
+def dirToLibMapping(dir:File) = (dir.*** --- dir) pair {x => relativeTo(dir)(x).map("lib/"+_)}
+
+mappings in Universal ++= { targetOs+targetBits match {
+  case "linux64" =>
+    installZ3Linux64.value
+    Seq(baseDirectory.value / s"lib/linux64" -> "lib")
+    dirToLibMapping(baseDirectory.value/"lib"/"linux64")
+  case "win32" =>
+    installZ3Win32.value
+    dirToLibMapping(baseDirectory.value/"lib"/"win32")
+  case t =>
+    sys.error(s"Don't know how to handle target $t")
+}}
 
 //NativePackagerKeys.bashScriptExtraDefines += "export LD_LIBRARY_PATH=$lib_dir"
 //NativePackagerKeys.batScriptExtraDefines += """cd %APP_LIB_DIR%"""

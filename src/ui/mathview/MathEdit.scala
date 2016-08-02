@@ -18,6 +18,9 @@ import scalafx.scene.layout.Region
 
 object MathEdit {
   val AlphaChar = "([a-zA-Z])".r
+  private val dataformatCMathML = new DataFormat("-xxx-cmathml-internal-")
+  private val dataformatPopcorn = new DataFormat("text/x.openmath-popcorn")
+  private val dataformatCMathMLXML = new DataFormat("application/mathml-content+xml")
 }
 
 class MathEdit extends MathViewFX {
@@ -230,10 +233,6 @@ class MathEdit extends MathViewFX {
       e.consume()
   }
 
-  private val dataformatCMathML = new DataFormat("-xxx-cmathml-internal-")
-  private val dataformatPopcorn = new DataFormat("text/x.openmath-popcorn")
-  private val dataformatCMathMLXML = new DataFormat("application/mathml-content+xml")
-
   /** Cuts the current selection into the clipboard */
   def clipboardCut(): Unit = selection.value match {
     case None =>
@@ -264,6 +263,7 @@ class MathEdit extends MathViewFX {
       cursorPos.value = CursorPos(none,CursorLeft)
   }
 }
+
 
 
 private class MathCursor(val cursorSide: CursorSide) extends Region with MathHighlight {
