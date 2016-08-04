@@ -19,7 +19,7 @@ import scalafx.scene.layout.Region
 
 object MathEdit {
   val AlphaChar = "([a-zA-Z])".r
-  private val dataformatCMathML = new DataFormat("-xxx-cmathml-internal-")
+  private val dataformatCMathML = new DataFormat("application/x.proof-editor-math-internal")
   private val dataformatPopcorn = new DataFormat("text/x.openmath-popcorn")
   private val dataformatCMathMLXML = new DataFormat("application/mathml-content+xml")
 }
@@ -30,6 +30,7 @@ class MathEdit extends MathViewFX {
   focusTraversable = true
 
   val editable = ObjectProperty(None : Option[MutableCMathML])
+  installHighlight(editable,classOf[EditableHighlight])
 
   override def setMath(m : CMathML): Unit = {
     super.setMath(m)
@@ -61,20 +62,26 @@ class MathEdit extends MathViewFX {
   private def showCursor(pos:CursorPos) =
     getHighlights(pos.node) += new MathCursor(pos.side)
 
-  val selection = ObjectProperty[Option[MutableCMathML]](None)
-  selection.onChange { (_, oldSel, newSel) =>
-    assert(oldSel!=newSel)
-    if (oldSel != newSel) {
-      if (oldSel.isDefined) {
-        val oldHighlights = getHighlights(oldSel.get)
-        oldHighlights.removeIf((_: MathHighlight).isInstanceOf[MathSelection])
-      }
-      if (newSel.isDefined) {
-        val newHighlights = getHighlights(newSel.get)
-        newHighlights += new MathSelection()
+  private def installHighlight(prop: ObjectProperty[Option[MutableCMathML]],
+                               highlightClass: Class[_<:MathHighlight]): Unit = {
+    val cons = highlightClass.getConstructor()
+    prop.onChange { (_, oldSel, newSel) =>
+      assert(oldSel!=newSel)
+      if (oldSel != newSel) {
+        if (oldSel.isDefined) {
+          val oldHighlights = getHighlights(oldSel.get)
+          oldHighlights.removeIf(highlightClass.isInstance(_: MathHighlight))
+        }
+        if (newSel.isDefined) {
+          val newHighlights = getHighlights(newSel.get)
+          newHighlights += cons.newInstance()
+        }
       }
     }
   }
+
+  val selection = ObjectProperty[Option[MutableCMathML]](None)
+  installHighlight(selection,classOf[MathSelection])
 
   private def menuItem(text:String, action: => Unit) = {
     val item = new MenuItem(text)
@@ -158,6 +165,7 @@ class MathEdit extends MathViewFX {
       case "*" => insertBinaryOp(times)
       case "/" => insertBinaryOp(CMathML.divide)
       case "=" => insertBinaryOp(CMathML.equal)
+      case "^" => insertBinaryOp(CMathML.power)
       case AlphaChar(c) => insertMath(CI(c))
       case _ => processed = false
     }
@@ -244,7 +252,9 @@ class MathEdit extends MathViewFX {
       case C if e.shortcutDown => clipboardCopy()
       case V if e.shortcutDown => clipboardPaste()
       case A if e.shortcutDown => selectAll()
-      case _ => /*println("Key pressed: "+e);*/ processed = false
+      case Delete => delete()
+      case BackSpace => backspace()
+      case _ => processed = false
     }
     if (processed)
       e.consume()
@@ -305,7 +315,8 @@ class MathEdit extends MathViewFX {
   def clipboardPaste(): Unit = {
     val clip = Clipboard.systemClipboard
     clip.content(dataformatCMathML) match {
-      case math : CMathML =>
+      case math : CMathML => // TODO: do not use serialization here. Instead, either rely on XML transport,
+        // or simply put an index to an hashmap with unguessable IDs into the clipboard
         insertMath(math)
       case _ =>
         clip.content(dataformatCMathMLXML) match {
@@ -314,6 +325,68 @@ class MathEdit extends MathViewFX {
         }
     }
   }
+
+  /** Deletes the current selection
+    * */
+  def delete(): Unit = selection.value match {
+    case Some(math) =>
+      if (inEditableRange(math)) {
+        val none = new MCNone
+        replaceWith(math, none)
+        clearSelection()
+        cursorPos.value = CursorPos(none, CursorLeft)
+      }
+    case _ =>
+  }
+
+  /** Deletes the current selection
+    *
+    * TODO: Delete left of cursor if no selection
+    * */
+  def backspace(): Unit = selection.value match {
+    case Some(math) =>
+      if (inEditableRange(math)) {
+        val none = new MCNone
+        replaceWith(math, none)
+        clearSelection()
+        cursorPos.value = CursorPos(none, CursorLeft)
+      }
+    case None if (!inEditableRange(cursorPos.value.node)) =>
+      leftOf(cursorPos.value) match {
+        case None =>
+        case Some(pos) => cursorPos.value = pos
+      }
+    case None =>
+      val cursor = cursorPos.value
+      val hole = new MCNone
+        /*
+        Notation: [] = CNone,  | = Cursor,  +BS = apply backspace again
+                  [|] = []| or |[]
+        x+[|] --> x
+        []+[|] --> []
+        DONE: (x+y)| --> x+(y|) + BS  (if y != [])
+        []+(|y) --> |y
+        x+(|y) --> (x|)+y (if y != [])
+        DONE: x| --> |[]  (if x is variable or number)
+        DONE: f(x1,...,xn)| --> f(x1,...,xn|) + BS
+        f(...,x1,|x2,...) --> f(...,x1|,x2,...)  (if x1 != [])
+        f(...,[],|x2,...) --> f(...,|[],x2,...)
+        f(|[],...,[]) --> f|  (if f != [])
+        [](|[],...,[]) --> |[]
+        f(|x1,...,xn) --> ???   (if f != [] and not all xi=[])
+       */
+      (cursor.node, cursor.side, cursor.node.parent) match {
+        case (m @ (MCN(_)|MCI(_)|MCSymbol(_,_)|MCError(_,_,_)), CursorRight, _) => replaceWith(m,hole); cursorPos.value = CursorPos(hole,CursorLeft)
+        case (m @ (MApply(hd,args@_*)), CursorRight, _) =>
+          leftOf(cursor) match {
+            case None =>
+            case Some(pos) =>
+              cursorPos.value = pos
+              backspace()
+          }
+      }
+  }
+
 }
 
 
@@ -337,6 +410,18 @@ private class MathCursor(val cursorSide: CursorSide) extends Region with MathHig
 private class MathSelection extends Region with MathHighlight {
   id = Integer.toHexString(hashCode) // TODO: remove
   styleClass += "mathSelection"
+  override def setSize(size:Bounds) = {
+    layoutX = size.minX
+    layoutY = size.minY
+    prefWidth = size.width
+    prefHeight = size.height
+    resize(size.width,size.height)
+  }
+}
+
+private class EditableHighlight extends Region with MathHighlight {
+  id = Integer.toHexString(hashCode) // TODO: remove
+  styleClass += "mathEditable"
   override def setSize(size:Bounds) = {
     layoutX = size.minX
     layoutY = size.minY

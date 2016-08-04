@@ -40,9 +40,8 @@ object DefaultMathRendererFactory extends MathRendererFactory {
       case MApply(hd@MCSymbol("arith1", "plus"), x, y) => binop(hd, "+", x, y)
       case MApply(hd@MCSymbol("arith1", "minus"), x, y) => binop(hd, "\u2212", x, y)
       case MApply(hd@MCSymbol("arith1", "times"), x, y) => binop(hd, "\u22c5", x, y)
-      case MApply(hd@MCSymbol("arith1", "divide"), x, y) => {
-        own(hd); (new Fraction(get(x), get(y)))
-      }
+      case MApply(hd@MCSymbol("arith1", "divide"), x, y) => own(hd); new Fraction(get(x), get(y))
+      case MApply(hd@MCSymbol("arith1", "power"), x, y) => own(hd); new Power(get(x), get(y))
       case MCNone() => new Missing()
       case MApply(hd, args@_*) => (new GenericApply(get(hd), args.map(get(_))))
       case MCSymbol(cd, name) => (new GenericSymbol(cd, name))
@@ -80,7 +79,7 @@ class BinOp(op:String, a:javafx.scene.Node, b:javafx.scene.Node) extends javafx.
 
   override def layoutChildren(): Unit = {
     val h = math.max(opTxt.prefHeight(-1),math.max(a.prefHeight(-1),b.prefHeight(-1)))
-    val font = symbolFont(h)
+    val font = symbolFont(h+1)
     open.font = font
     close.font = font
     super.layoutChildren()
@@ -102,6 +101,25 @@ class BinOp(op:String, a:javafx.scene.Node, b:javafx.scene.Node) extends javafx.
 //  updateParens()
 
   getChildren.addAll(open,a,opTxt,b,close)
+}
+
+class Power(a:javafx.scene.Node, b:javafx.scene.Node) extends javafx.scene.layout.HBox {
+  import MathText._
+
+  setId(Integer.toHexString(hashCode())) // TODO: remove
+  setAlignment(geometry.Pos.CENTER)
+
+  setFillHeight(false)
+  b.scaleX = 0.8
+  b.scaleY = 0.8
+
+  getChildren.addAll(a,b)
+
+  override def layoutChildren(): Unit = {
+    val aHeight = a.prefHeight(-1)
+    b.translateY = -0.4 * aHeight
+    super.layoutChildren()
+  }
 }
 
 class PrefixOp(op:String, a:Node) extends HBox {
@@ -129,6 +147,7 @@ class PrefixOp(op:String, a:Node) extends HBox {
 
   children.addAll(open,opTxt,a,close)
 }
+
 
 
 class Fraction(a:Node, b:Node) extends javafx.scene.layout.VBox {

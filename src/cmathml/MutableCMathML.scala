@@ -8,6 +8,7 @@ import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
 
+// TODO: add isNCName for cd's and name's everywhere
 
 sealed abstract class MutableCMathMLParent {
   def replace(a: MutableCMathML, b: MutableCMathML): Unit
@@ -291,6 +292,10 @@ final class MCI(attributes: AttributesRO, private var _name:String) extends Muta
     new MCI(NoAttr, _name)
   }
 }
+object MCI {
+  def unapply(that:MCI) = Some(that._name)
+}
+
 final class MCN(attributes: AttributesRO, val n:BigDecimal) extends MutableCMathML(attributes) {
   override def toCMathML: CMathML = CN(attributesToCMathML,n)
 
@@ -335,6 +340,10 @@ final class MCError(attributes: AttributesRO, val cd: String, val name: String, 
 
   override def copy(): MutableCMathML = ???
 }
+object MCError {
+  def unapplySeq(that:MCError) = Some((that.cd,that.name,that.args))
+}
+
 object MCNone {
   def unapply(that:MCNone) = true
 }

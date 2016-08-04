@@ -18,6 +18,8 @@ class TestFxApp extends Application {
   override def start(st: Stage): Unit = {
     import TestFxApp._
 
+
+
     stage = st
 
     WebConsoleListener.setDefaultListener(new WebConsoleListener {
