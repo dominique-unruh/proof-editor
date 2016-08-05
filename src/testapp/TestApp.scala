@@ -21,7 +21,7 @@ import com.sun.javafx.webkit.WebConsoleListener
 import misc.GetterSetterProperty
 import misc.Utils.ImplicitConversions._
 import testapp.TestApp.TrafoChoice
-import theory.Formula
+import theory.{Formula, Theory}
 import trafo._
 import ui.Interactor.{Editor, EditorFactory}
 import ui.mathview.MathEdit
@@ -66,8 +66,11 @@ class TestApp extends Application {
   private def errorPopup(msg: String): Unit =
     new Alert(Alert.AlertType.ERROR, msg).showAndWait()
 
+  private def okCancelPopup(msg: String): Boolean =
+    new Alert(Alert.AlertType.CONFIRMATION, msg).showAndWait().get == ButtonType.OK
+
   @FXML private def useButtonClicked(event: ActionEvent) = {
-    theoryView.addTrafoInstance(interactor.result.get.get)
+    theoryView.theory.addTrafoInstance(interactor.result.get.get)
   }
 
   @FXML
@@ -90,16 +93,17 @@ class TestApp extends Application {
 
   @FXML
   private def newFromSelection(event: ActionEvent): Unit = {
-    val math = theoryView.selectedMathEdit
-    if (math == null) {
-      log("No selected ui.mathview"); return
+    theoryView.selectedMathEdit match {
+      case None => log("No selected ui.mathview")
+      case Some(math) =>
+        val sel = math.selection.value
+        if (sel.isEmpty) {
+          log("No selection");
+          return
+        }
+        val m = math.selection.value.get.toCMathML
+        theoryView.theory.addFormula(Formula(m))
     }
-    val sel = math.selection.value
-    if (sel.isEmpty) {
-      log("No selection"); return
-    }
-    val m = math.selection.value.get.toCMathML
-    theoryView.addFormula(Formula(m))
   }
 
   /** Only invoke methods in JavaFX thread! */
@@ -107,24 +111,21 @@ class TestApp extends Application {
 
   @FXML
   private def simplify(event: ActionEvent): Unit = {
-    val math = theoryView.selectedMathEdit
-    if (math == null) {
-      log("No selected ui.mathview"); return
-    }
-    val expr = z3.fromCMathML(math.mathDoc.toCMathML)
-    val simp = expr.simplify
-    val simp2 = simp.toCMathML
-    theoryView.addFormula(Formula(simp2))
-  }
+    theoryView.selectedMathEdit match {
+      case None => log("No selected ui.mathview"); return
+      case Some(math) =>
+        val expr = z3.fromCMathML(math.mathDoc.toCMathML)
+        val simp = expr.simplify
+        val simp2 = simp.toCMathML
+        theoryView.theory.addFormula(Formula(simp2))
+  }}
 
   @FXML
   private def deleteFormula(event: ActionEvent): Unit = {
-    val math = theoryView.selectedFormula
-    if (math == null) {
-      errorPopup("No formula selected")
-    }
-    theoryView.deleteFormula(math)
-  }
+    theoryView.selectedFormula match {
+      case None => errorPopup("No formula selected")
+      case Some(formula) => theoryView.theory.deleteFormula(formula)
+  }}
 
   def log(msg: String, numLines: Int = -1) = {
     var msg2: String = msg
@@ -152,6 +153,22 @@ class TestApp extends Application {
     XML.save("theory.xml",xml,enc="UTF-8",xmlDecl=true)
   }
 
+  def loadTheory(): Unit = {
+    try {
+      val xml = XML.loadFile("theory.xml")
+      val thy = Theory.fromXML(xml)
+      theoryView.theory.setTheory(thy)
+    } catch { case e:Exception =>
+      e.printStackTrace()
+      val newThy = okCancelPopup(
+        """Loading the theory from the previous session failed.
+          |Start with a fresh theory?
+          |(Looses the data from the previous session.)""".stripMargin)
+      if (!newThy) sys.exit(1)
+      for (m <- examples) theoryView.theory.addFormula(Formula(m))
+    }
+  }
+
   def start(primaryStage: Stage) {
     val fxmlSrc = getClass().getResource("/testapp/testapp.fxml")
     assert(fxmlSrc != null)
@@ -177,8 +194,9 @@ class TestApp extends Application {
 
     interactor.setEditorFactory(editorFactory)
 
-    println(theoryView)
-    for (m <- examples) theoryView.addFormula(Formula(m))
+    loadTheory()
+//    for (m <- examples) theoryView.theory.addFormula(Formula(m))
+
 
     primaryStage.getScene.getStylesheets.add(getClass().getResource("testapp.css").toExternalForm())
 
@@ -232,15 +250,17 @@ class TestApp extends Application {
         valueProperty.fireValueChangedEvent()
     })
     pickButton.addEventHandler(ActionEvent.ACTION, { (_:ActionEvent) =>
-      if (theoryView.selectedFormula==null) {
+      theoryView.selectedFormula match {
+      case None =>
         formula = None
+        line.rightProperty.set(null)
         mathedit.setVisible(false)
-      } else {
-        formula = Some(theoryView.selectedFormula)
+      case Some(form) =>
+        formula = Some(form)
         mathedit.setVisible(true)
-        mathedit.setMath(formula.get.math)
+        mathedit.setMath(form.math)
+        line.setRight(theoryView.selectedMathEdit.get)
       }
-      line.setRight(theoryView.selectedMathEdit)
       valueProperty.fireValueChangedEvent()
     })
   }

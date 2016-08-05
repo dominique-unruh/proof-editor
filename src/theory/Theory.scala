@@ -4,13 +4,19 @@ import cmathml.CMathML
 import trafo.TrafoInstance
 
 import scala.collection.mutable.ListBuffer
-import scala.xml.Comment
+import scala.xml.{Comment, Elem}
 
-case class Theory(val counter : Int,
-                  /** Invariants:
+final case class Theory(counter : Int,
+                        /** Invariants:
                     * - for any (i->f) in this map, f.id==i.
                     * - for any (i->f), i<[[counter]] */
-                  val formulas : Map[Int,Formula]) {
+                        formulas : Map[Int,Formula]) {
+  def deleteFormula(formula: Formula) : (Theory,Formula) = {
+    val form2 = formulas(formula.id)
+    val thy2 = copy(formulas = formulas - formula.id)
+    (thy2,form2)
+  }
+
   def toXML = {
     def formulaNL(f:Formula) = Seq(f.toXML,scala.xml.Text("\n"))
     <theory counter={counter.toString}>
@@ -62,16 +68,29 @@ case class Theory(val counter : Int,
 }
 object Theory {
   def apply() : Theory = Theory(0,Map.empty)
+  def fromXML(xml:Elem) : Theory = {
+    assert(xml.label=="theory")
+    val formulas = Map[Int,Formula]((xml \ "formulas" \ "formula").map { x => val f = Formula.fromXML(x.asInstanceOf[Elem]); f.id -> f } : _*)
+    val counter = xml.attribute("counter").get.text.toInt
+    new Theory(counter,formulas)
+  }
 }
 
-case class Formula(val id : Int = Formula.NO_ID, val math : CMathML) {
+final case class Formula private[theory] (val id : Int = Formula.NO_ID, val math : CMathML) {
   import Formula._
   def detach: Formula = copy(id=NO_ID)
   def toXML = <formula id={id.toString}>{Comment(" "+math.toPopcorn+" ")}{math.toXMLMath}</formula>
 }
+
 object Formula {
   def apply(math : CMathML) = new Formula(id=NO_ID, math=math)
   val NO_ID = -1
+  def fromXML(xml:Elem) : Formula = {
+    assert(xml.label=="formula")
+    val id = xml.attribute("id").get.text.toInt
+    val math = CMathML.fromXML((xml \ "math").head.asInstanceOf[Elem])
+    new Formula(id,math)
+  }
 }
 
 //case class FormulaRef(val id : Int, val formula : Formula) {

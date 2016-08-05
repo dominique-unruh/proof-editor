@@ -23,8 +23,15 @@ class MutableTheory {
     form2
   }
 
+  def deleteFormula(formula: Formula): Unit = {
+    val (thy2,form2) = theory.deleteFormula(formula)
+    theory = thy2
+    for (l <- listeners) l.formulaDeleted(form2)
+  }
+
   def addTrafoInstance(trafo: TrafoInstance) : Seq[Formula] = {
     val (thy2,formulas) = theory.addTrafoInstance(trafo)
+    theory = thy2
     for (f <- formulas) for (l <- listeners) l.formulaAdded(f)
     formulas
   }
@@ -35,6 +42,13 @@ class MutableTheory {
     (newForm,oldForm)
   }
 
+  def setTheory(thy: Theory): Unit = {
+    theory = thy
+    for (l <- listeners) l.theoryCleared()
+    for (f <- theory.formulas.values)
+      for (l <- listeners)
+        l.formulaAdded(f)
+  }
 
   /** Returns the current state of the theory as an immutable value */
   def getTheory = theory
@@ -42,6 +56,8 @@ class MutableTheory {
 
 object MutableTheory {
   trait Listener {
+    def formulaDeleted(formula: Formula) : Unit
+    def theoryCleared() : Unit
     def formulaAdded(formula:Formula) : Unit
     def formulaUpdated(newFormula:Formula, oldFormula:Formula) : Unit
   }

@@ -14,8 +14,13 @@ import javafx.scene.web.{HTMLEditor, WebView}
 import scala.reflect.runtime.universe.TypeTag
 import com.sun.javafx.webkit.WebConsoleListener
 
+import scala.xml.Elem
+
 
 object Utils {
+  def elementsIn(xml: Elem) : Seq[Elem] =
+    xml.child.filter(_.isInstanceOf[Elem]).map(_.asInstanceOf[Elem])
+
   /** Makes a copy of xs with sep interspersed. E.g., intersperse(ArrayBuffer(x,y),sep) = List(x,sep,y). */
   @Pure
   def intersperse[T](xs:Seq[T],sep:T) : List[T] = {

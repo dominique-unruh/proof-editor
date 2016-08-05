@@ -4,7 +4,7 @@ import java.math.MathContext
 
 import cmathml.CMathML._
 import com.sun.org.apache.xerces.internal.util.XMLChar
-import misc.Pure
+import misc.{Pure, Utils}
 import org.symcomp.openmath._
 
 import scala.xml.{Elem, Utility}
@@ -80,6 +80,7 @@ sealed trait CMathML {
 }
 
 object CMathML {
+
   type Attributes = Map[(String,String),Any]
   val NoAttr : Attributes = Map.empty
 
@@ -105,6 +106,14 @@ object CMathML {
 
   val uminus = CSymbol("arith1","unary_minus")
   def uminus(x:CMathML) : Apply = Apply(uminus,x)
+
+  def fromXML(xml: Elem) : CMathML = xml.label match {
+    case "math" => fromXML(xml.child.head.asInstanceOf[Elem])
+    case "csymbol" => CSymbol.fromXML(xml)
+    case "cn" => CN.fromXML(xml)
+    case "ci" => CI.fromXML(xml)
+    case "apply" => Apply.fromXML(xml)
+  }
 }
 
 sealed protected trait Leaf extends CMathML {
@@ -171,12 +180,19 @@ final case class Apply(val attributes : Attributes, hd: CMathML, args: CMathML*)
   override protected def toSymcomp$: OpenMathBase = hd.toSymcomp.apply(Array(args.map(_.toSymcomp) : _*))
 }
 object Apply {
+  def fromXML(xml: Elem) : Apply = {
+    val elems = Utils.elementsIn(xml)
+    val hd = CMathML.fromXML(elems.head)
+    val args = elems.tail.map(CMathML.fromXML)
+    Apply(hd,args :_*)
+  }
+
   def apply(hd: CMathML, args: CMathML*) = new Apply(NoAttr,hd,args:_*)
 }
 
 /** <ci>-Content MathML element
   * @see [[https://www.w3.org/TR/MathML3/chapter4.html#contm.ci]] */
-final case class CI(val attributes : Attributes = NoAttr, name : String) extends CMathML with Leaf {
+final case class CI(attributes : Attributes = NoAttr, name : String) extends CMathML with Leaf {
   def this(name:String) = this(NoAttr,name)
   override def toString = toPopcorn
 
@@ -191,16 +207,18 @@ final case class CI(val attributes : Attributes = NoAttr, name : String) extends
   def toSymcomp$: OpenMathBase = new OMVariable(name)
 }
 object CI {
+  def fromXML(xml: Elem) = CI(xml.text)
+
   def apply(name:String) = new CI(NoAttr,name)
 }
 
 /** <cn>-Content MathML element
   * The BigDecimal *must* have rounding mode [[java.math.RoundingMode.UNNECESSARY]] and precision 0.
   * @see [[https://www.w3.org/TR/MathML3/chapter4.html#contm.cn]] */
-final case class CN(val attributes : Attributes = NoAttr, n: BigDecimal) extends CMathML with Leaf {
+final case class CN(attributes : Attributes = NoAttr, n: BigDecimal) extends CMathML with Leaf {
   assert(n.mc.getPrecision==0)
   assert(n.mc.getRoundingMode==java.math.RoundingMode.UNNECESSARY)
-  @Pure final def isNegative = (n < 0)
+  @Pure def isNegative = n < 0
   override def negate() = CN(-n)
   override def toString = toPopcorn
 
@@ -221,6 +239,8 @@ final case class CN(val attributes : Attributes = NoAttr, n: BigDecimal) extends
       ???
 }
 object CN {
+  def fromXML(xml: Elem) = CN(xml.text)
+
   def apply(d:BigDecimal) = new CN(NoAttr,d)
   def apply(i:Int) = new CN(NoAttr,BigDecimal(i,MATHCONTEXT))
   def apply(i:Double) = new CN(NoAttr,BigDecimal.exact(i)(MATHCONTEXT))
@@ -234,7 +254,7 @@ object CN {
 /** <csymbol>-Content MathML element
  *
   * @see [[https://www.w3.org/TR/MathML3/chapter4.html#contm.csymbol]] */
-final case class CSymbol(val attributes : Attributes = NoAttr, cd: String, name: String) extends CMathML with Leaf {
+final case class CSymbol(attributes : Attributes = NoAttr, cd: String, name: String) extends CMathML with Leaf {
   import CMathML._
   assert(isNCName(cd))
   assert(isNCName(name))
@@ -249,13 +269,15 @@ final case class CSymbol(val attributes : Attributes = NoAttr, cd: String, name:
   def toSymcomp$: OpenMathBase = new OMSymbol(cd,name)
 }
 object CSymbol {
+  def fromXML(xml: Elem) = CSymbol(xml.attribute("cd").get.text, xml.text)
+
   def apply(cd: String, name: String) = new CSymbol(NoAttr,cd,name)
 }
 
 /** <cerror>-Content MathML element
   * We are more flexible than the standard here, we allow arbitrary elements as error arguments (not just MathML)
   * @see [[https://www.w3.org/TR/MathML3/chapter4.html#contm.cerror]] */
-final case class CError(val attributes : Attributes, cd: String, name: String, args: Any*) extends CMathML with Leaf {
+final case class CError(attributes : Attributes, cd: String, name: String, args: Any*) extends CMathML with Leaf {
   assert(isNCName(cd))
   assert(isNCName(name))
   /** Same as [[toPopcorn]] but without the outermost attributes */
@@ -277,7 +299,7 @@ final case class CError(val attributes : Attributes, cd: String, name: String, a
 /** An addition to the Content MathML standard. Represents a missing node.
   * Not valid Content MathML, cannot be exported to valid XML
   */
-final case class CNone(val attributes : Attributes = NoAttr) extends CMathML with Leaf {
+final case class CNone(attributes : Attributes = NoAttr) extends CMathML with Leaf {
   /** Same as [[toPopcorn]] but without the outermost attributes */
   override protected def toPopcorn$(sb: StringBuilder, priority: Int): Unit =
   sb += '\u25a2'

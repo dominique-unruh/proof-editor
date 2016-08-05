@@ -41,6 +41,7 @@
             <ToolBar prefHeight="40.0" prefWidth="200.0">
               <items>
                   <Button mnemonicParsing="false" onAction="#newFromSelection" text="New from selection" />
+                  <Button mnemonicParsing="false" onAction="#deleteFormula" text="Delete" />
                   <Button mnemonicParsing="false" onAction="#simplify" text="Simplify" />
               </items>
             </ToolBar>
