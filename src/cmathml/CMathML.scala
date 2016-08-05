@@ -5,8 +5,8 @@ import java.math.MathContext
 import cmathml.CMathML._
 import com.sun.org.apache.xerces.internal.util.XMLChar
 import misc.Pure
+import org.symcomp.openmath._
 
-import scala.math.BigDecimal.RoundingMode
 import scala.xml.{Elem, Utility}
 
 case class InvalidPath() extends Exception
@@ -59,21 +59,36 @@ sealed trait CMathML {
   @Pure protected def toPopcorn$(sb:StringBuilder, priority:Int) : Unit
 
   // TODO: should we use the library from here? http://java.symcomp.org/
-  @Pure def toPopcorn : String = {
+  // SHA1=b860b688621a1ee4dcb8a7440b3d30ccbaa6a2b0
+  // http://java.symcomp.org/maven/2/org/symcomp/openmath/1.4.0/openmath-1.4.0.jar
+  @Pure def toPopcornOLD : String = {
     val sb = new StringBuilder
     toPopcorn(sb,0)
     sb.toString
   }
+
+  @Pure def toPopcorn : String = toSymcomp.toPopcorn
+
+  @Pure def toSymcomp : org.symcomp.openmath.OpenMathBase = {
+    if (attributes.isEmpty)
+      toSymcomp$
+    else
+      ???
+  }
+
+  @Pure protected def toSymcomp$ : org.symcomp.openmath.OpenMathBase
 }
 
 object CMathML {
+  type Attributes = Map[(String,String),Any]
+  val NoAttr : Attributes = Map.empty
+
+  val holeSymbol: CMathML = CSymbol("internal","hole")
 
   /** Is it an NCName in the sense of [[https://www.w3.org/TR/xmlschema-2/#NCName]]? */
   private[cmathml] def isNCName(name: String): Boolean =
     XMLChar.isValidNCName(name) // This is not public api, but should be easy to reimplement if needed
 
-  type Attributes = Map[(String,String),Any]
-  val NoAttr : Attributes = Map.empty
   val equal = CSymbol("relation1","eq")
   def equal(a: CMathML, b: CMathML) : Apply = Apply(equal,a,b)
 
@@ -151,6 +166,9 @@ final case class Apply(val attributes : Attributes, hd: CMathML, args: CMathML*)
   }
 
   override def toXML$: Elem = <apply>{hd.toXML}{args.map(_.toXML)}</apply>
+
+  @Pure
+  override protected def toSymcomp$: OpenMathBase = hd.toSymcomp.apply(Array(args.map(_.toSymcomp) : _*))
 }
 object Apply {
   def apply(hd: CMathML, args: CMathML*) = new Apply(NoAttr,hd,args:_*)
@@ -168,6 +186,9 @@ final case class CI(val attributes : Attributes = NoAttr, name : String) extends
 
   /** Same as [[toXML]] but without the outermost attributes */
   override def toXML$: Elem = <ci>{name}</ci>
+
+  @Pure override protected
+  def toSymcomp$: OpenMathBase = new OMVariable(name)
 }
 object CI {
   def apply(name:String) = new CI(NoAttr,name)
@@ -191,6 +212,13 @@ final case class CN(val attributes : Attributes = NoAttr, n: BigDecimal) extends
   override def toXML$: Elem =
     if (n.isWhole) <cn type="integer">{n.toString}</cn>
     else  <cn type="real">{n.toString}</cn>
+
+  @Pure override protected
+  def toSymcomp$: OpenMathBase =
+    if (n.isWhole)
+      new OMInteger(n.toBigIntExact.get.bigInteger)
+    else
+      ???
 }
 object CN {
   def apply(d:BigDecimal) = new CN(NoAttr,d)
@@ -216,6 +244,9 @@ final case class CSymbol(val attributes : Attributes = NoAttr, cd: String, name:
   override def toString = toPopcorn
 
   override def toXML$: Elem = <csymbol cd={cd}>{name}</csymbol>
+
+  @Pure override protected
+  def toSymcomp$: OpenMathBase = new OMSymbol(cd,name)
 }
 object CSymbol {
   def apply(cd: String, name: String) = new CSymbol(NoAttr,cd,name)
@@ -238,6 +269,9 @@ final case class CError(val attributes : Attributes, cd: String, name: String, a
 
   /** Same as [[toXML]] but without the outermost attributes */
   override def toXML$: Elem = <cerror><csymbol cd={cd}>{name}</csymbol>{args.map(anyToXML)}</cerror>
+
+  @Pure override protected
+  def toSymcomp$: OpenMathBase = ???
 }
 
 /** An addition to the Content MathML standard. Represents a missing node.
@@ -252,6 +286,9 @@ final case class CNone(val attributes : Attributes = NoAttr) extends CMathML wit
 
   /** Same as [[toXML]] but without the outermost attributes */
   override def toXML$: Elem = <cerror><csymbol cd="moreerrors">encodingError</csymbol><cs>Cannot encode "hole" in formula</cs></cerror>
+
+  @Pure override protected
+  def toSymcomp$: OpenMathBase = CMathML.holeSymbol.toSymcomp
 }
 
 object Path {
