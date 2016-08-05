@@ -1,3 +1,5 @@
+import java.io.File
+
 import com.typesafe.sbt.packager.MappingsHelper
 
 import scala.xml.{Elem, UnprefixedAttribute}
@@ -146,4 +148,14 @@ antBuildDefn in JDKPackager := <project name="proof-editor" default="default" ba
 
 //antPackagerTasks in JDKPackager := Some((javaHome.value.get / "../lib/ant-javafx.jar").getCanonicalFile)
 
-val _ = sys.props("java.home")
+
+val dropboxDirectory = file("E:\\Dropbox\\share\\merily-salura\\proof-editor")
+lazy val uploadToDropbox = taskKey[Unit]("Upload Windows binaries to my dropbox")
+uploadToDropbox := {
+  assert(os == "win")
+  (packageBin in JDKPackager).value
+  val dir = (target in JDKPackager).value / "bundles" / (name in JDKPackager).value
+  assert(dir.isDirectory)
+  IO.delete(dropboxDirectory)
+  IO.copyDirectory(dir,dropboxDirectory)
+}
