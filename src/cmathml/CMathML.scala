@@ -64,6 +64,7 @@ sealed trait CMathML {
 }
 
 object CMathML {
+
   /** Is it an NCName in the sense of [[https://www.w3.org/TR/xmlschema-2/#NCName]]? */
   private[cmathml] def isNCName(name: String): Boolean =
     XMLChar.isValidNCName(name) // This is not public api, but should be easy to reimplement if needed
@@ -71,19 +72,21 @@ object CMathML {
   type Attributes = Map[(String,String),Any]
   val NoAttr : Attributes = Map.empty
   val equal = CSymbol("relation1","eq")
-  def equal(a: CMathML, b: CMathML) : CMathML = Apply(equal,a,b)
+  def equal(a: CMathML, b: CMathML) : Apply = Apply(equal,a,b)
 
   val plus = CSymbol("arith1","plus")
-  def plus(x:CMathML,y:CMathML) : CMathML = Apply(plus,x,y)
+  def plus(x:CMathML,y:CMathML) : Apply = Apply(plus,x,y)
   val minus = CSymbol("arith1","minus")
-  def minus(x:CMathML,y:CMathML) : CMathML = Apply(minus,x,y)
+  def minus(x:CMathML,y:CMathML) : Apply = Apply(minus,x,y)
   val times = CSymbol("arith1","times")
-  def times(x:CMathML,y:CMathML) : CMathML = Apply(times,x,y)
+  def times(x:CMathML,y:CMathML) : Apply = Apply(times,x,y)
   val divide = CSymbol("arith1","divide")
-  def divide(x:CMathML,y:CMathML) : CMathML = Apply(divide,x,y)
+  def divide(x:CMathML,y:CMathML) : Apply = Apply(divide,x,y)
+  val power = CSymbol("arith1","power")
+  def power(x:CMathML, y:CMathML) : Apply = Apply(power,x,y)
 
   val uminus = CSymbol("arith1","unary_minus")
-  def uminus(x:CMathML) : CMathML = Apply(uminus,x)
+  def uminus(x:CMathML) : Apply = Apply(uminus,x)
 }
 
 sealed protected trait Leaf extends CMathML {
