@@ -21,6 +21,7 @@ libraryDependencies += "org.scalafx" %% "scalafx" % "8.0.92-R10" // https://mvnr
 //libraryDependencies += "org.apache.xmlgraphics" % "xmlgraphics-commons" % "2.1"
 //libraryDependencies += "org.jetbrains" % "annotations" % "15.0"
 //libraryDependencies += "com.google.code.findbugs" % "jsr305" % "3.0.1"
+//libraryDependencies += "org.symcomp" % "openmath" % "1.4.0"
 
 scalaSource in Compile := baseDirectory.value / "src"
 scalaSource in Test := baseDirectory.value / "test"

@@ -1,19 +1,20 @@
 package testapp
-import java.io.{PrintWriter, StringWriter}
+import java.io.{File, FileOutputStream, PrintWriter, StringWriter}
 import java.lang.System.out
+import java.nio.channels.{Channels, FileChannel}
 import java.util.IllegalFormatCodePointException
 import javafx.application.{Application, Platform}
 import javafx.beans.property.SimpleObjectProperty
 import javafx.beans.value.{ChangeListener, ObservableValue}
 import javafx.collections.FXCollections
-import javafx.event.ActionEvent
+import javafx.event.{ActionEvent, EventHandler}
 import javafx.fxml.{FXML, FXMLLoader}
 import javafx.geometry.Insets
 import javafx.scene.control._
 import javafx.scene.layout.{HBox, VBox}
 import javafx.scene.web.WebView
 import javafx.scene.{Parent, Scene}
-import javafx.stage.Stage
+import javafx.stage.{Stage, WindowEvent}
 
 import cmathml._
 import com.sun.javafx.webkit.WebConsoleListener
@@ -29,6 +30,8 @@ import z3.Z3
 
 import scala.reflect.runtime.universe._
 import scala.runtime.BoxedUnit
+import scala.util.control.Exception._
+import scala.xml.{Utility, XML}
 import scalafx.application.JFXApp
 
 object TestApp {
@@ -138,6 +141,17 @@ class TestApp extends Application {
   def actualException(e: Throwable): Throwable =
     if (e.getCause != null) actualException(e.getCause) else e
 
+  def saveTheory(): Unit = {
+//    println("saving",new File(".").getAbsolutePath)
+    val xml = theoryView.theory.getTheory.toXML
+//    val str = new scala.xml.PrettyPrinter(80,4).format(xml)
+//    val fos = new FileOutputStream("theory.xml")
+//    val w = Channels.newWriter(fos.getChannel(), "UTF-8")
+//    ultimately(w.close()) {
+//      w.write(str) }
+    XML.save("theory.xml",xml,enc="UTF-8",xmlDecl=true)
+  }
+
   def start(primaryStage: Stage) {
     val fxmlSrc = getClass().getResource("/testapp/testapp.fxml")
     assert(fxmlSrc != null)
@@ -153,6 +167,8 @@ class TestApp extends Application {
       e2.printStackTrace(new PrintWriter(sw))
       log(sw.getBuffer.toString, 5)
     })
+
+    primaryStage.setOnHidden {(event: WindowEvent) => saveTheory()}
 
     primaryStage.setScene(new Scene(fxml, 800, 600))
     primaryStage.setTitle("Proof editor")

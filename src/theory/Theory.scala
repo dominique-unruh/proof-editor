@@ -4,13 +4,24 @@ import cmathml.CMathML
 import trafo.TrafoInstance
 
 import scala.collection.mutable.ListBuffer
+import scala.xml.Comment
 
-case class Theory(val counter : Int, val formulas : Map[Int,Formula]) {
+case class Theory(val counter : Int,
+                  /** Invariants:
+                    * - for any (i->f) in this map, f.id==i.
+                    * - for any (i->f), i<[[counter]] */
+                  val formulas : Map[Int,Formula]) {
+  def toXML = {
+    def formulaNL(f:Formula) = Seq(f.toXML,scala.xml.Text("\n"))
+    <theory counter={counter.toString}>
+      <formulas>
+        {formulas.values.flatMap(formulaNL)}</formulas>
+    </theory>
+  }
 
   def addFormula(formula:Formula) : (Theory,Formula) = {
     assert(formula.id==Formula.NO_ID)
     val formula2 = formula.copy(id=counter)
-//    val ref = FormulaRef(counter, formula)
     val thy = copy(counter = counter+1, formulas = formulas.updated(counter, formula2))
     (thy, formula2)
   }
@@ -56,7 +67,7 @@ object Theory {
 case class Formula(val id : Int = Formula.NO_ID, val math : CMathML) {
   import Formula._
   def detach: Formula = copy(id=NO_ID)
-
+  def toXML = <formula id={id.toString}>{Comment(" "+math.toPopcorn+" ")}{math.toXMLMath}</formula>
 }
 object Formula {
   def apply(math : CMathML) = new Formula(id=NO_ID, math=math)

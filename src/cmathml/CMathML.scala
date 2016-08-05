@@ -31,11 +31,13 @@ sealed trait CMathML {
   val attributes : Attributes
 
   @Pure def toXMLDoc : String = {
-    val xml = <math xmlns="http://www.w3.org/1998/Math/MathML">{toXML}</math>
+    val xml = toXMLMath
     val sb = new StringBuilder
     sb ++= """<?xml version="1.0" encoding="UTF-8"?>"""
     Utility.serialize(xml,sb=sb).toString
   }
+
+  @Pure def toXMLMath = <math xmlns="http://www.w3.org/1998/Math/MathML">{toXML}</math>
 
   @Pure def toXML =
     if (attributes.isEmpty)
@@ -56,6 +58,7 @@ sealed trait CMathML {
   /** Same as [[toPopcorn]] but without the outermost attributes */
   @Pure protected def toPopcorn$(sb:StringBuilder, priority:Int) : Unit
 
+  // TODO: should we use the library from here? http://java.symcomp.org/
   @Pure def toPopcorn : String = {
     val sb = new StringBuilder
     toPopcorn(sb,0)
