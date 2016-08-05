@@ -44,6 +44,8 @@ object Downloads extends AutoPlugin {
           copyInto(dir/"bin/libz3.dll", base.value/"lib/win64")
           copyInto(dir/"bin/libz3java.dll", base.value/"lib/win64")
           copyInto(dir/"bin/vcomp110.dll", base.value/"lib/win64")
+          copyInto(dir/"bin/msvcr110.dll", base.value/"lib/win64")
+          copyInto(dir/"bin/msvcp110.dll", base.value/"lib/win64")
         }},
 
       installZ3Win32 := {

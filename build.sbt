@@ -16,7 +16,7 @@ version := "0.1"
 maintainer := "Dominique Unruh"
 organization := "de.unruh"
 
-javaHome := Some(file(sys.props("java.home")).getAbsoluteFile)
+//javaHome := Some(file(sys.props("java.home")).getAbsoluteFile)
 
 scalaVersion := "2.11.8"
 libraryDependencies += "org.scala-lang.modules" % "scala-xml_2.11" % "1.0.5"
@@ -85,13 +85,13 @@ NativePackagerKeys.batScriptExtraDefines += """cd %APP_LIB_DIR%"""
 mappings in Universal ++= { targetOs+targetBits match {
   case "linux64" =>
     installZ3Linux64.value
-//    Seq(baseDirectory.value / s"lib/linux64" -> "lib")
-//    dirToLibMapping(baseDirectory.value/"lib"/"linux64")
     MappingsHelper.contentOf(baseDirectory.value/"lib"/"linux64")
   case "win32" =>
     installZ3Win32.value
-//    dirToLibMapping(baseDirectory.value/"lib"/"win32")
     MappingsHelper.contentOf(baseDirectory.value/"lib"/"win32")
+  case "win64" =>
+    installZ3Win64.value
+    MappingsHelper.contentOf(baseDirectory.value/"lib"/"win64")
   case t => sys.error(s"Don't know how to handle target $t")
 }}
 
@@ -149,7 +149,7 @@ antBuildDefn in JDKPackager := <project name="proof-editor" default="default" ba
 </project>
 */
 
-//antPackagerTasks in JDKPackager := Some((javaHome.value.get / "../lib/ant-javafx.jar").getCanonicalFile)
+antPackagerTasks in JDKPackager := Some((file(sys.props("java.home")) / "../lib/ant-javafx.jar").getCanonicalFile)
 
 
 val dropboxDirectory = file("E:\\Dropbox\\share\\merily-salura\\proof-editor")
