@@ -55,7 +55,7 @@ sealed trait CMathML {
   else
     ???
 
-  /** Same as [[toPopcorn]] but without the outermost attributes */
+  /** Same as [[toPopcorn(sb:StringBuilder,priority:Int):Unit*]] but without the outermost attributes */
   @Pure protected def toPopcorn$(sb:StringBuilder, priority:Int) : Unit
 
   // TODO: should we use the library from here? http://java.symcomp.org/
@@ -222,7 +222,6 @@ final case class CN(attributes : Attributes = NoAttr, n: BigDecimal) extends CMa
   override def negate() = CN(-n)
   override def toString = toPopcorn
 
-  /** Same as [[toPopcorn]] but without the outermost attributes */
   override protected def toPopcorn$(sb: StringBuilder, priority: Int): Unit =
     sb ++= n.toString
 
@@ -247,7 +246,7 @@ object CN {
 //  def apply(i:BigDecimal) = { if (i.mc!=MATHCONTEXT) new CN(new BigDecimal(i.bigDecimal,MATHCONTEXT)) else i }
   def apply(i:String) = new CN(NoAttr,BigDecimal(i,MATHCONTEXT))
 
-  /** Use this math context to construct [[BigDecimal]]s for [[CN]] */
+  /** Use this math context to construct [[scala.BigDecimal]]s for [[CN]] */
   val MATHCONTEXT = new MathContext(0,java.math.RoundingMode.UNNECESSARY)
 }
 
@@ -258,7 +257,6 @@ final case class CSymbol(attributes : Attributes = NoAttr, cd: String, name: Str
   import CMathML._
   assert(isNCName(cd))
   assert(isNCName(name))
-  /** Same as [[toPopcorn]] but without the outermost attributes */
   override protected def toPopcorn$(sb: StringBuilder, priority: Int): Unit = {
     sb ++= cd; sb += '.'; sb ++= name }
   override def toString = toPopcorn
