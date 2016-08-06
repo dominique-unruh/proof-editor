@@ -13,12 +13,13 @@ import javafx.stage.Stage
 
 import com.sun.javafx.webkit.WebConsoleListener
 
+import scalafx.scene.input
+
+import misc.Utils.ImplicitConversions._
 
 class TestFxApp extends Application {
   override def start(st: Stage): Unit = {
     import TestFxApp._
-
-
 
     stage = st
 
@@ -35,6 +36,8 @@ class TestFxApp extends Application {
     if (callMe!=null) callMe()
 //    stage.getScene.addMnemonic(new Mnemonic(pane,
 //      new KeyCodeCombination(KeyCode.Q, KeyCombination.SHORTCUT_DOWN)))
+    stage.getScene.getAccelerators.put(input.KeyCombination("Shortcut+Q"), () => stage.hide)
+
     stage.show()
   }
 }
