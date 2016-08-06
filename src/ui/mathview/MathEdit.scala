@@ -351,6 +351,13 @@ class MathEdit extends MathViewFX {
     case _ =>
   }
 
+  private def moveLeft() = {
+    leftOf(cursorPos.value) match {
+      case None =>
+      case Some(pos) => cursorPos.value = pos
+    }
+  }
+
   /** Deletes the current selection
     *
     * TODO: Delete left of cursor if no selection
@@ -364,13 +371,17 @@ class MathEdit extends MathViewFX {
         cursorPos.value = CursorPos(none, CursorLeft)
       }
     case None if !inEditableRange(cursorPos.value.node) =>
-      leftOf(cursorPos.value) match {
-        case None =>
-        case Some(pos) => cursorPos.value = pos
-      }
+      moveLeft()
     case None =>
       val cursor = cursorPos.value
       val hole = new MCNone
+      def leftAndBS() = {
+        leftOf(cursor) match {
+          case None =>
+          case Some(pos) =>
+            cursorPos.value = pos
+            backspace()
+        }}
         /*
         Notation: [] = CNone,  | = Cursor,  +BS = apply backspace again
                   [|] = []| or |[]
@@ -387,18 +398,41 @@ class MathEdit extends MathViewFX {
         [](|[],...,[]) --> |[]
         f(|x1,...,xn) --> ???   (if f != [] and not all xi=[])
        */
-      (cursor.node, cursor.side, cursor.node.parent) match {
-        case (m @ (MCN(_)|MCI(_)|MCSymbol(_,_)|MCError(_,_,_)), CursorRight, _) => replaceWith(m,hole); cursorPos.value = CursorPos(hole,CursorLeft)
-        case (m @ (MApply(hd,args@_*)), CursorRight, _) =>
-          leftOf(cursor) match {
-            case None =>
-            case Some(pos) =>
-              cursorPos.value = pos
-              backspace()
+      (cursor.node, cursor.side) match {
+        case (m @ (MCN(_)|MCI(_)|MCSymbol(_,_)|MCError(_,_,_)), CursorRight) => replaceWith(m,hole); cursorPos.value = CursorPos(hole,CursorLeft)
+        case (m @ (MApply(_,_*) | MCNone()), CursorRight) => leftAndBS()
+        case (m, CursorLeft) =>
+          m.parent match {
+            case _ : MutableCMathMLDocument => () // We are at the left of the formula
+            case parent : MutableCMathML if !inEditableRange(parent) => moveLeft()
+            case parent : MApply =>
+              (parent,m) match {
+                case MApply.IsHead() => leftAndBS()
+                case MApply.IsArg(i) =>
+                  // TODO: check if parent is rendered as f(...). We currently assume infix rendering
+                  if (i==0) leftAndBS()
+                  else singleNotNoneArg(parent) match {
+                    case None => moveLeft()
+                    case Some((arg,idx)) =>
+                      arg.replaceWith(new MCNone) // detaching
+                      replaceWith(parent,arg)
+                      cursorPos.value = CursorPos(arg,if (idx<i) CursorRight else CursorLeft)
+                  }
+                case _ => ??? // Must be in the attributes
+              }
           }
       }
   }
 
+  private def singleNotNoneArg(apply:MApply) = {
+    var num = 0
+    var arg = new MCNone : MutableCMathML
+    var idx = -1
+    for ((a,i) <- apply.args.zipWithIndex) {
+      if (!a.isInstanceOf[MCNone]) { num += 1; arg = a; idx = 0 }
+    }
+    if (num<=1) Some((arg,idx)) else None
+  }
 }
 
 

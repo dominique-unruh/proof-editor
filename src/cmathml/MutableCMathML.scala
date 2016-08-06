@@ -171,9 +171,24 @@ object MutableCMathML {
 
 object MApply {
   def unapplySeq(arg: MApply): Some[(MutableCMathML,Seq[MutableCMathML])] = Some((arg._head,arg._args))
+
+
+  object IsHead {
+    def unapply(tuple: (MApply, MutableCMathML)): Boolean = tuple._1._head eq tuple._2
+  }
+
+  object IsArg {
+    def unapply(tuple: (MApply, MutableCMathML)): Option[Int] =
+      tuple._1._args.indexOf(tuple._2) match {
+        case -1 => None
+        case i => Some(i)
+    }
+  }
 }
 
 final class MApply(attributes:AttributesRO) extends MutableCMathML(attributes) {
+  def args = _args.toSeq
+
   def setHead(head: MutableCMathML) = {
     assert(head!=null)
     assert(!head.isAttached)
