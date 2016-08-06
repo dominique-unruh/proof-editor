@@ -8,7 +8,7 @@ import javafx.scene.control._
 import javafx.scene.layout.{HBox, StackPane, VBox}
 
 import cmathml._
-import misc.GetterSetterProperty
+import misc.{GetterSetterProperty, Log}
 import misc.Utils.ImplicitConversions._
 import testapp.TestApp.TrafoChoice
 import theory.{Formula, Theory}
@@ -200,7 +200,7 @@ class TestApp extends JFXApp {
     if (e.getCause != null) actualException(e.getCause) else e
 
   def saveTheory(): Unit = {
-    println("saving theory")
+    Log.info("saving theory")
     val xml = theoryView.theory.getTheory.toXML
     XML.save("theory.xml",xml,enc="UTF-8",xmlDecl=true)
   }

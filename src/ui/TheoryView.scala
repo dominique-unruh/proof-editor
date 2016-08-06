@@ -41,7 +41,7 @@ class TheoryView extends VBox {
   })
 
   private def addFormulaToGUI(form:Formula) = {
-    println("addFormulaToGUI",form)
+//    println("addFormulaToGUI",form)
     val id = form.id
     assert(!nodes.contains(id),"formula with id "+id+" added twice")
     val mathedit = new MathEdit()

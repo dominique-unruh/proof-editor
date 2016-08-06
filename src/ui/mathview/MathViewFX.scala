@@ -94,7 +94,6 @@ class MathViewFX extends HBox {
   })
 
   private def own(node: MathNodeImpl, mathChild: MutableCMathML) : Unit = {
-    println(s"own($node,$mathChild)")
     assert(node != null)
     assert(node.math ne mathChild)
     val info = getInfoWithNewNode(mathChild)
@@ -168,7 +167,7 @@ class MathViewFX extends HBox {
 
   private def setRootNode(): Unit = {
     val rootNode = getNodeForRoot()
-    rootNode.printInfo()
+//    rootNode.printInfo()
     children.setAll(rootNode)
   }
 
@@ -319,15 +318,15 @@ class MathViewFX extends HBox {
       for (h <- highlights) h.setSize(s)
     }
 
-    def printInfo() = {
-      println(this)
-      println("CMML: "+math.toCMathML.toString)
-      println("Child: "+child)
-      println("Invalid: "+invalid)
-      println("Owned: "+owned)
-      println("Embedded: "+embedded)
-      println("Info: "+getInfoWithNewNode(math))
-    }
+//    def printInfo() = {
+//      debug(this)
+//      debug("CMML: "+math.toCMathML.toString)
+//      debug("Child: "+child)
+//      debug("Invalid: "+invalid)
+//      debug("Owned: "+owned)
+//      debug("Embedded: "+embedded)
+//      debug("Info: "+getInfoWithNewNode(math))
+//    }
 
     override def toString(): String = s"[MathNodeImpl: ${math}]"
 
@@ -382,7 +381,6 @@ class MathViewFX extends HBox {
     }
 
     def update() = {
-      println("update",this)
       disownAll()
       disembedAll()
       invalid = false
@@ -395,8 +393,8 @@ class MathViewFX extends HBox {
 
 object MathViewFX {
   sealed trait CursorSide
-  final object CursorLeft extends CursorSide
-  final object CursorRight extends CursorSide
+  object CursorLeft extends CursorSide
+  object CursorRight extends CursorSide
   case class CursorPos(node:MutableCMathML, side:CursorSide)
 }
 

@@ -122,7 +122,7 @@ class MathEdit extends MathViewFX {
   }
 
   onContextMenuRequested = { e:ContextMenuEvent =>
-    println("Context menu requested: "+e)
+//    println("Context menu requested: "+e)
     createContextMenu.show(this,e.screenX,e.screenY)
   }
 
@@ -158,7 +158,7 @@ class MathEdit extends MathViewFX {
   }
 
   private def handleKeyTyped(e:KeyEvent) = {
-    println("Key typed: "+e)
+//    println("Key typed: "+e)
     var processed = true
     e.character match {
       case "+" => insertBinaryOp(plus)
@@ -254,7 +254,7 @@ class MathEdit extends MathViewFX {
             if (selectingFrom.isEmpty)
               selectingFrom = Some(cursorPos.value)
             val selected = encompassingNode(newPos.get.node,selectingFrom.get.node)
-            println(s"Selection: From ${selectingFrom.get.node} to ${newPos.get.node}: $selected")
+//            println(s"Selection: From ${selectingFrom.get.node} to ${newPos.get.node}: $selected")
             selection.value = Some(selected)
           } else
             clearSelection()
@@ -363,7 +363,7 @@ class MathEdit extends MathViewFX {
         clearSelection()
         cursorPos.value = CursorPos(none, CursorLeft)
       }
-    case None if (!inEditableRange(cursorPos.value.node)) =>
+    case None if !inEditableRange(cursorPos.value.node) =>
       leftOf(cursorPos.value) match {
         case None =>
         case Some(pos) => cursorPos.value = pos
