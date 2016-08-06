@@ -12,6 +12,7 @@ import scala.collection.{JavaConversions, JavaConverters}
 
 
 final class Z3(config:Map[String,String]) {
+  def this() = this(Map())
   /** Not thread safe */
   private def toCMathML(expr: Expr) : CMathML = expr match {
     case e: ArithExpr if e.isAdd => Apply(CMathML.plus, e.getArgs map toCMathML: _*)
@@ -104,7 +105,7 @@ object Z3 {
 //  monkeyPatchZ3Native() // TODO needed?
 //  loadLib("/libz3.so")
 //  loadLib("/libz3java.so")
-  print("java.library.path",System.getProperty("java.library.path"))
+//  print("java.library.path",System.getProperty("java.library.path"))
 //  try System.loadLibrary("z3")
 //  catch { case _ : UnsatisfiedLinkError => System.loadLibrary("libz3") }
   try System.loadLibrary("z3java")

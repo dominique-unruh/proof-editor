@@ -19,9 +19,10 @@ final case class Theory(counter : Int,
 
   def toXML = {
     def formulaNL(f:Formula) = Seq(f.toXML,scala.xml.Text("\n"))
+    val sortedFormulas = formulas.values.toSeq.sortBy(_.id)
     <theory counter={counter.toString}>
       <formulas>
-        {formulas.values.flatMap(formulaNL)}</formulas>
+        {sortedFormulas.flatMap(formulaNL)}</formulas>
     </theory>
   }
 

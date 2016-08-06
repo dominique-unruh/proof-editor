@@ -45,7 +45,7 @@ class MutableTheory {
   def setTheory(thy: Theory): Unit = {
     theory = thy
     for (l <- listeners) l.theoryCleared()
-    for (f <- theory.formulas.values)
+    for (f <- theory.formulas.values.toSeq.sortBy(_.id))
       for (l <- listeners)
         l.formulaAdded(f)
   }

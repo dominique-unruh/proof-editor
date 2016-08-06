@@ -25,6 +25,7 @@ import scalafx.Includes._
 import scalafx.application.JFXApp
 import scalafx.application.JFXApp.PrimaryStage
 import scalafx.collections.ObservableBuffer
+import scalafx.scene.input.{KeyCode, KeyCodeCombination, KeyCombination}
 import scalafx.scene.layout.{Pane, Priority}
 import scalafx.scene.{control, layout}
 
@@ -33,6 +34,8 @@ object Launch {
 }
 
 object TestApp {
+//  Z3 // To make sure we notice missing libraries right away
+
   final case class TrafoChoice(label:String, trafo:Transformation) {
     override def toString = label
   }
@@ -68,9 +71,43 @@ class TestApp extends JFXApp {
     }
   }
 
-  lazy val theoryPane = new control.ScrollPane {
-    fitToWidth = true
-    content = theoryView
+
+  lazy val newFormulaEdit = new MathEdit {
+    editable.value = Some(mathDoc.root) }
+
+  def insertNewFormula() : Unit = {
+    val math = newFormulaEdit.mathDoc.root.toCMathML
+    if (!isValidMath(math)) {
+      errorPopup("The formula you entered is not valid math")
+      return
+    }
+    theoryView.theory.addFormula(Formula(math))
+  }
+
+  private val z3 = new Z3
+  def isValidMath(math:CMathML): Boolean = {
+    try {
+      z3.fromCMathML(math)
+      true
+    }
+    catch {
+      case e : Exception => false
+    }
+  }
+
+  lazy val theoryPane = new layout.VBox {
+    children = List(
+      new layout.HBox {
+        this.children = List(
+          new control.Label("New formula:"),
+          newFormulaEdit,
+          new control.Button("Insert") {
+            onAction = handle(insertNewFormula())
+          })},
+      new control.ScrollPane {
+        fitToWidth = true
+        content = theoryView
+      })
   }
 
   lazy val interactorPane = new control.ScrollPane {
@@ -88,8 +125,13 @@ class TestApp extends JFXApp {
 
 
   lazy val menubar = new control.MenuBar {
-    menus += new control.Menu("_File")
-  }
+    menus = List(new control.Menu("_File") {
+      items = List(new control.MenuItem("_Quit") {
+        onAction = handle(stage.hide())
+        accelerator = KeyCombination("Shortcut+Q") //new KeyCodeCombination(KeyCode.Q,KeyCombination.ShortcutDown)
+      })
+    })}
+
   lazy val toolbar = new control.ToolBar {
     content = List(
       new control.Button("New from selection") { onAction = handle(newFromSelection()) },
@@ -109,7 +151,7 @@ class TestApp extends JFXApp {
     override def changed(observable: ObservableValue[_ <: Option[TrafoInstance]], oldValue: Option[TrafoInstance], newValue: Option[TrafoInstance]): Unit = {
       useButton.setDisable(newValue.isEmpty)
     }})
-}
+  }
   private lazy val overlay = new Pane() { mouseTransparent = true }
 
   private lazy val theoryView = new TheoryView
@@ -146,7 +188,7 @@ class TestApp extends JFXApp {
     }
   }
 
-  private val z3 = new Z3(Map())
+//  private val z3 = new Z3(Map())
 
   private def deleteFormula(): Unit = {
     theoryView.selectedFormula match {
@@ -158,6 +200,7 @@ class TestApp extends JFXApp {
     if (e.getCause != null) actualException(e.getCause) else e
 
   def saveTheory(): Unit = {
+    println("saving theory")
     val xml = theoryView.theory.getTheory.toXML
     XML.save("theory.xml",xml,enc="UTF-8",xmlDecl=true)
   }
