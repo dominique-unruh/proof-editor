@@ -38,4 +38,11 @@ class CMathMLTest extends UnitSpec {
     assertResult("""<cn type="integer">123</cn>""") { CN(123).toXML.toString }
     assertResult("""<cn type="real">0.5</cn>""") { CN(0.5).toXML.toString }
   }
+
+  test("toPopcorn") {
+    assertResult("$x") { CI("x").toPopcorn }
+    assertResult("arith1.times") { times.toPopcorn }
+    assertResult("123") { CN(123).toPopcorn }
+//    assertResult("0.5") { CN(0.5).toPopcorn }  // Not supported yet
+  }
 }

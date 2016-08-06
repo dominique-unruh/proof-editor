@@ -1,7 +1,6 @@
 package ui
 
-import theory.{Formula, MutableTheory, Theory}
-import trafo.TrafoInstance
+import theory.{Formula, MutableTheory}
 import ui.mathview.MathEdit
 
 import scala.collection.mutable

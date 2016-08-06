@@ -1,23 +1,13 @@
 package testapp
-import java.io.{File, FileOutputStream, PrintWriter, StringWriter}
-import java.lang.System.out
-import java.nio.channels.{Channels, FileChannel}
-import java.util.IllegalFormatCodePointException
-import javafx.application.{Application, Platform}
+import java.io.{PrintWriter, StringWriter}
 import javafx.beans.property.SimpleObjectProperty
 import javafx.beans.value.{ChangeListener, ObservableValue}
-import javafx.collections.FXCollections
-import javafx.event.{ActionEvent, EventHandler}
+import javafx.event.ActionEvent
 import javafx.geometry.Insets
 import javafx.scene.control._
 import javafx.scene.layout.{HBox, StackPane, VBox}
-import javafx.scene.web.WebView
-import javafx.scene.{Group, Parent, Scene}
-import javafx.stage.{Stage, WindowEvent}
 
-import scalafx.Includes._
 import cmathml._
-import com.sun.javafx.webkit.WebConsoleListener
 import misc.GetterSetterProperty
 import misc.Utils.ImplicitConversions._
 import testapp.TestApp.TrafoChoice
@@ -27,18 +17,16 @@ import ui.Interactor.{Editor, EditorFactory}
 import ui.mathview.MathEdit
 import ui.{ConnectingLine, Interactor, TheoryView}
 import z3.Z3
-import misc.Utils.ImplicitConversions._
 
 import scala.reflect.runtime.universe._
 import scala.runtime.BoxedUnit
-import scala.util.control.Exception._
-import scala.xml.{Utility, XML}
+import scala.xml.XML
+import scalafx.Includes._
 import scalafx.application.JFXApp
 import scalafx.application.JFXApp.PrimaryStage
 import scalafx.collections.ObservableBuffer
-import scalafx.scene
-import scalafx.scene.{control, layout}
 import scalafx.scene.layout.{Pane, Priority}
+import scalafx.scene.{control, layout}
 
 object Launch {
   def main(args: Array[String]) = (new TestApp).main(args)
@@ -115,20 +103,14 @@ class TestApp extends JFXApp {
 
 
 
-//  @FXML protected[this] var theoryView = null : TheoryView
-//  @FXML protected[this] var logArea = null: TextArea
   private lazy val interactor = new Interactor[TrafoInstance] {
   setEditorFactory(editorFactory)
   result.addListener(new ChangeListener[Option[TrafoInstance]] {
     override def changed(observable: ObservableValue[_ <: Option[TrafoInstance]], oldValue: Option[TrafoInstance], newValue: Option[TrafoInstance]): Unit = {
-      //        println("interactor result change: "+newValue)
       useButton.setDisable(newValue.isEmpty)
     }})
 }
   private lazy val overlay = new Pane() { mouseTransparent = true }
-//  @FXML protected[this] var trafoChoice = null : ChoiceBox[TrafoChoice]
-//  @FXML protected[this] var useButton = null : Button
-//  @FXML protected[this] var rootPane = null : StackPane
 
   private lazy val theoryView = new TheoryView
 
@@ -151,24 +133,6 @@ class TestApp extends JFXApp {
     theoryView.theory.addTrafoInstance(interactor.result.get.get)
   }
 
-//  @FXML
-//  private def quit(event: ActionEvent): Unit = {
-//    Platform.exit()
-//  }
-
-//  @FXML
-//  private def editSelection(event: ActionEvent): Unit = {
-//    val math = theoryView.selectedMathEdit
-//    if (math == null) {
-//      log("No selected ui.mathview"); return
-//    }
-//    val sel = math.selection.value
-//    if (sel.isEmpty) {
-//      log("No selection"); return
-//    }
-//    math.setMath(math.mathDoc.toCMathML, Some(sel.get))
-//  }
-
   private def newFromSelection(): Unit = {
     theoryView.selectedMathEdit match {
       case None =>
@@ -182,18 +146,7 @@ class TestApp extends JFXApp {
     }
   }
 
-  /** Only invoke methods in JavaFX thread! */
   private val z3 = new Z3(Map())
-
-//  private def simplify(event: ActionEvent): Unit = {
-//    theoryView.selectedMathEdit match {
-//      case None =>
-//      case Some(math) =>
-//        val expr = z3.fromCMathML(math.mathDoc.toCMathML)
-//        val simp = expr.simplify
-//        val simp2 = simp.toCMathML
-//        theoryView.theory.addFormula(Formula(simp2))
-//  }}
 
   private def deleteFormula(): Unit = {
     theoryView.selectedFormula match {
@@ -201,29 +154,11 @@ class TestApp extends JFXApp {
       case Some(formula) => theoryView.theory.deleteFormula(formula)
   }}
 
-//  def log(msg: String, numLines: Int = -1) = {
-//    var msg2: String = msg
-//    if (numLines >= 0) {
-//      var idx = 0
-//      for (i <- 1 to numLines)
-//        if (idx != -1) idx = msg2.indexOf('\n', idx) + 1
-//      msg2 = if (idx == -1) msg2 else msg2.substring(0, idx)
-//    }
-//    logArea.appendText(msg2)
-//    logArea.appendText("\n")
-//  }
-
   def actualException(e: Throwable): Throwable =
     if (e.getCause != null) actualException(e.getCause) else e
 
   def saveTheory(): Unit = {
-//    println("saving",new File(".").getAbsolutePath)
     val xml = theoryView.theory.getTheory.toXML
-//    val str = new scala.xml.PrettyPrinter(80,4).format(xml)
-//    val fos = new FileOutputStream("theory.xml")
-//    val w = Channels.newWriter(fos.getChannel(), "UTF-8")
-//    ultimately(w.close()) {
-//      w.write(str) }
     XML.save("theory.xml",xml,enc="UTF-8",xmlDecl=true)
   }
 
@@ -251,33 +186,6 @@ class TestApp extends JFXApp {
   })
 
   loadTheory()
-
-//  def start(primaryStage: Stage) {
-
-//    primaryStage.setScene(new Scene(fxml, 800, 600))
-//    primaryStage.setTitle("Proof editor")
-//    WebConsoleListener.setDefaultListener((webView: WebView, message: String, lineNumber: Int, sourceId: String) =>
-//      out.println("Console: [" + sourceId + ":" + lineNumber + "] " + message))
-
-//    rootPane.getChildren.add(overlay)
-
-
-//    for (m <- examples) theoryView.theory.addFormula(Formula(m))
-
-
-//    primaryStage.getScene.getStylesheets.add(getClass().getResource("testapp.css").toExternalForm())
-
-//    useButton.setDisable(true)
-//    interactor.result.addListener(new ChangeListener[Option[TrafoInstance]] {
-//      override def changed(observable: ObservableValue[_ <: Option[TrafoInstance]], oldValue: Option[TrafoInstance], newValue: Option[TrafoInstance]): Unit = {
-////        println("interactor result change: "+newValue)
-//        useButton.setDisable(newValue.isEmpty)
-//    }})
-
-
-//    copyTrafo(null)
-//    primaryStage.show
-//  }
 
   class FormulaEditor extends HBox with Editor[Option[Formula]] {
     override val editedType: TypeTag[Option[Formula]] = typeTag[Option[Formula]]

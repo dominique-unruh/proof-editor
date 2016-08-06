@@ -20,11 +20,15 @@ object Downloads extends AutoPlugin {
     lazy val installZ3Linux64 = TaskKey[Unit]("Download and build Z3 (Linux 64)")
     lazy val installZ3Win64 = TaskKey[Unit]("Download and build Z3 (Windows 64)")
     lazy val installZ3Win32 = TaskKey[Unit]("Download and build Z3 (Windows 32)")
+    lazy val installSymcompOpenmath = TaskKey[Unit]("Download Symcomp's openmath.jar")
 
     lazy val enableDownloads = Seq(
       installResources := recursiveFiles(installJQuery.value,installMathQuill.value),
 
-      installJars := { installZ3Linux64.value; ((base.value/"lib") ** "*.jar").get },
+      installJars := {
+        installZ3Linux64.value
+        installSymcompOpenmath.value
+        ((base.value/"lib") ** "*.jar").get },
 
       installMathQuill := downloadMathQuill(base.value),
 
@@ -54,7 +58,20 @@ object Downloads extends AutoPlugin {
           copyInto(dir/"bin/libz3.dll", base.value/"lib/win32")
           copyInto(dir/"bin/libz3java.dll", base.value/"lib/win32")
           copyInto(dir/"bin/vcomp110.dll", base.value/"lib/win32")
-        }}
+        }},
+
+      installSymcompOpenmath := {
+        val target = base.value/"lib/openmath-1.4.0.jar"
+        if (!target.exists) {
+          IO.download(url("http://java.symcomp.org/maven/2/org/symcomp/openmath/1.4.0/openmath-1.4.0.jar"), target)
+          val hash = Hash.toHex(Hash(target))
+          val expected = "b860b688621a1ee4dcb8a7440b3d30ccbaa6a2b0"
+          if (hash != expected) {
+            target.delete()
+            sys.error(s"SHA-1 hash does not match (hash=$hash)")
+          }
+        }
+      }
     )
   }
 
