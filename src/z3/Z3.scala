@@ -9,7 +9,7 @@ import ui.mathview.MathException
 //import org.apache.commons.io.IOUtils
 //import org.objectweb.asm.{ClassReader, ClassVisitor, ClassWriter, Opcodes}
 import scala.collection.{JavaConversions, JavaConverters}
-
+import com.microsoft.z3.enumerations.Z3_decl_kind._
 
 
 final class Z3(config:Map[String,String]) {
@@ -30,13 +30,23 @@ final class Z3(config:Map[String,String]) {
   def this() = this(Map())
   /** Not thread safe */
   private def toCMathML(expr: Expr) : CMathML = expr match {
-    case e: ArithExpr if e.isAdd => Apply(CMathML.plus, e.getArgs map toCMathML: _*)
-    case e: ArithExpr if e.isMul => Apply(CMathML.times, e.getArgs map toCMathML: _*)
-    case e: ArithExpr if e.isSub => Apply(CMathML.minus, e.getArgs map toCMathML: _*)
-    case e: ArithExpr if e.isDiv => Apply(CMathML.divide, e.getArgs map toCMathML: _*)
-    case e: ArithExpr if e.isUMinus => Apply(CMathML.uminus, e.getArgs map toCMathML: _*)
-    case e: BoolExpr if e.isEq => Apply(CMathML.equal, e.getArgs map toCMathML: _*)
     case e: ArithExpr if e.isConst => CI(e.getFuncDecl.getName.toString)
+    case e: ArithExpr if e.isApp =>
+      e.getFuncDecl.getDeclKind match {
+        case Z3_OP_ADD => Apply(CMathML.plus, e.getArgs map toCMathML: _*)
+        case Z3_OP_MUL => Apply(CMathML.times, e.getArgs map toCMathML: _*)
+        case Z3_OP_SUB => Apply(CMathML.minus, e.getArgs map toCMathML: _*)
+        case Z3_OP_DIV => Apply(CMathML.divide, e.getArgs map toCMathML: _*)
+        case Z3_OP_UMINUS => Apply(CMathML.uminus, e.getArgs map toCMathML: _*)
+        case Z3_OP_EQ => Apply(CMathML.equal, e.getArgs map toCMathML: _*)
+        case Z3_OP_POWER => Apply(CMathML.power, e.getArgs map toCMathML: _*)
+        case k => throw new MathException(s"cannot convert arith expr from Z3 to CMathML: $e (unkown decl kind $k)")
+      }
+    case e: BoolExpr if e.isApp =>
+      e.getFuncDecl.getDeclKind match {
+        case Z3_OP_EQ => Apply(CMathML.equal, e.getArgs map toCMathML: _*)
+        case k => throw new MathException(s"cannot convert bool expr from Z3 to CMathML: $e (unkown decl kind $k)")
+      }
     case e: RatNum =>
       val num = e.getBigIntNumerator
       val denom = e.getBigIntDenominator
@@ -68,6 +78,7 @@ final class Z3(config:Map[String,String]) {
                                                     fromCMathML_(y).asInstanceOf[ArithExpr])
     case Apply(_, CMathML.equal,x,y) => context.mkEq(fromCMathML_(x),fromCMathML_(y))
     case Apply(_, CMathML.uminus,x) => context.mkUnaryMinus(fromCMathML_(x).asInstanceOf[ArithExpr])
+    case Apply(_, CMathML.power,x,y) => context.mkPower(fromCMathML_(x).asInstanceOf[ArithExpr],fromCMathML_(y).asInstanceOf[ArithExpr])
   }
 
 
@@ -79,13 +90,13 @@ final class Z3(config:Map[String,String]) {
   private lazy val intSort_ = context.mkIntSort()
   private lazy val realSort_ = context.mkRealSort()
 
-  /** Declares a new function. Note: the range of the function is given <b>first</b>!
-    * (Hence the suffix RD)
-    *
-    * @param name
-    * @param range
-    * @param domain
-    */
+//  /** Declares a new function. Note: the range of the function is given <b>first</b>!
+//    * (Hence the suffix RD)
+//    *
+//    * @param name
+//    * @param range
+//    * @param domain
+//    */
 //  def mkFuncDeclRD(name:Symbol, range:Z3.Sort, domain:Z3.Sort*): Z3.FuncDecl = {
 //    assert(range.z3 eq this)
 //    for (d<-domain) assert(d.z3 eq this)
