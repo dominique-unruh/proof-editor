@@ -12,6 +12,20 @@ import scala.collection.{JavaConversions, JavaConverters}
 
 
 final class Z3(config:Map[String,String]) {
+  def isEqual(a: CMathML, b: CMathML) : Option[Boolean] = synchronized {
+    val a$ = fromCMathML_(a)
+    val b$ = fromCMathML_(b)
+    val neq = context.mkNot(context.mkEq(a$,b$))
+    val solver = context.mkSolver()
+    solver.add(neq)
+    val status = solver.check
+    status match {
+      case Status.SATISFIABLE => Some(false)
+      case Status.UNKNOWN => None
+      case Status.UNSATISFIABLE => Some(true)
+    }
+  }
+
   def this() = this(Map())
   /** Not thread safe */
   private def toCMathML(expr: Expr) : CMathML = expr match {

@@ -112,7 +112,14 @@ class Interactor[T]() extends layout.VBox {
         children.remove(idx, children.size)
         result_.set(None)
       case InteractionRunning(id,question,answer) =>
-        val int2 = answer(answers.getOrElse(id,question.default))
+        val a = answers.getOrElse(id,question.default)
+        val int2 =
+          try { answer(a) }
+        catch { case e:Throwable =>
+            e.printStackTrace()
+            Interaction.failWith("internal-error-"+System.identityHashCode(this),
+              <span>internal error: {e.toString}</span>)
+        }
         updateInteraction(idx, int2)
     }
   }
