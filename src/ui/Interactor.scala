@@ -10,7 +10,7 @@ import javafx.scene.layout.VBox
 import misc.Utils
 import misc.Utils.ImplicitConversions._
 import trafo._
-import ui.Interactor.Editor
+import ui.Interactor.{Editor, EditorFactory}
 
 import scala.collection.mutable
 import scala.reflect.api.TypeTags
@@ -18,11 +18,13 @@ import scala.runtime.BoxedUnit
 import scala.xml.Elem
 import scalafx.beans.Observable
 import scalafx.beans.property.{ObjectProperty, ReadOnlyObjectWrapper}
+import scalafx.{Includes, scene}
+import scalafx.scene.layout
 
 
 
 
-class Interactor[T]() extends VBox {
+class Interactor[T]() extends layout.VBox {
   def this(interaction : Interaction[T]) = { this(); setInteraction(interaction) }
   private val interactions = new mutable.ArrayBuffer[Interaction[T]]
   private val answers = new mutable.HashMap[String, AnyRef]()
@@ -36,7 +38,7 @@ class Interactor[T]() extends VBox {
     editorFactory = factory
 
   def clearInteraction() : Unit = {
-    getChildren.clear()
+    children.clear()
     interactions.clear()
     answers.clear()
     interaction = null
@@ -80,7 +82,7 @@ class Interactor[T]() extends VBox {
         })
         if (edit0.valueProperty.getValue!=null)
           setAnswer(idx, edit0.valueProperty.getValue)
-        getChildren.add(edit0)
+        this.getChildren.add(edit0)
       } else {
         if (question!=q) {
           assert(edit.questionType==q.questionType)
@@ -103,11 +105,11 @@ class Interactor[T]() extends VBox {
     int match {
       case InteractionFinished(res) =>
         interactions.remove(idx, interactions.length - idx)
-        getChildren.remove(idx, getChildren.size)
+        children.remove(idx, children.size)
         result_.set(Some(res))
       case InteractionFailed() =>
         interactions.remove(idx, interactions.length - idx)
-        getChildren.remove(idx, getChildren.size)
+        children.remove(idx, children.size)
         result_.set(None)
       case InteractionRunning(id,question,answer) =>
         val int2 = answer(answers.getOrElse(id,question.default))
@@ -127,9 +129,9 @@ class Interactor[T]() extends VBox {
   }
 
   private def updateGUI(idx: Int) = {
-    if (idx == getChildren.size) getChildren.add(new Cell(idx))
+    if (idx == children.size) children.add(new Cell(idx))
     val int = interactions(idx)
-    val cell = getChildren().get(idx).asInstanceOf[Cell]
+    val cell = children.get(idx).asInstanceOf[Cell] // If Cell would inherit from scalafx...VBox, not javafx..VBox, this cast would fail because the delegate of the Cell is added
     int match {
       case InteractionFinished(result) =>
         cell.noQuestion()

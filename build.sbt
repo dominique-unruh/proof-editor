@@ -64,7 +64,7 @@ envVars := Map("LD_LIBRARY_PATH" -> (baseDirectory.value / "lib" / (os+bits)).ge
 
 fork in Test := true // Needed because otherwise we try to load the same shared lib in different classloaders during consecutive test runs
 
-JFX.mainClass := Some("testapp.TestApp")
+JFX.mainClass := Some("testapp.Launch")
 
 jfxSettings
 

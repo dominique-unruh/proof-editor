@@ -5,9 +5,14 @@ import trafo.TrafoInstance
 import ui.mathview.MathEdit
 
 import scala.collection.mutable
+import scalafx.geometry.Insets
+import scalafx.scene.layout.VBox
 
-class TheoryView extends javafx.scene.layout.VBox {
-  setSpacing(10)
+class TheoryView extends VBox {
+  spacing = 10
+  fillWidth = false
+  padding = Insets(10)
+
   val theory = new MutableTheory()
   private var selectedFormulaId = None : Option[Int]
   private val nodes = new mutable.HashMap[Int,MathEdit]
@@ -15,12 +20,6 @@ class TheoryView extends javafx.scene.layout.VBox {
   def selectedFormula = selectedFormulaId.map(theory.getTheory.formulas(_))
   def selectedMathEdit = selectedFormulaId.map(nodes)
   def getMathEditForFormula(formula:Formula) = nodes(formula.id)
-
-//  def addFormula(formula:Formula) = {
-//    val form = theory.addFormula(formula)
-//    addFormulaToGUI(form)
-//  }
-//
 
   theory.addListener(new MutableTheory.Listener {
     override def formulaAdded(formula: Formula): Unit = addFormulaToGUI(formula)
@@ -30,14 +29,14 @@ class TheoryView extends javafx.scene.layout.VBox {
       edit.setMath(newFormula.math)
     }
     override def theoryCleared(): Unit = {
-      getChildren.clear
+      children.clear
       selectedFormulaId = None
       nodes.clear
     }
     override def formulaDeleted(formula: Formula): Unit = {
       val id = formula.id
       if (selectedFormulaId.contains(id)) selectedFormulaId = None
-      getChildren.remove(nodes(id))
+      children.remove(nodes(id))
       nodes -= id
     }
   })
@@ -52,7 +51,7 @@ class TheoryView extends javafx.scene.layout.VBox {
 //      if (oldVal) selectedFormulaId = None
       if (newVal) selectedFormulaId = Some(id) }
     nodes.update(id,mathedit)
-    getChildren.add(mathedit)
+    children.add(mathedit)
   }
 
 //  def addTrafoInstance(trafo: TrafoInstance) = {

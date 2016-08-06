@@ -22,8 +22,8 @@ import scalafx.scene.shape.Line
   *                (Or at least that its local coordinates coincide with the scene coordinates)
   */
 class ConnectingLine(val owner : Node, val overlay : Pane) {
-  def this(owner : javafx.scene.Node, overlay : javafx.scene.layout.Pane) =
-    this(jfxNode2sfx(owner), jfxPane2sfx(overlay))
+//  def this(owner : javafx.scene.Node, overlay : javafx.scene.layout.Pane) =
+//    this(jfxNode2sfx(owner), jfxPane2sfx(overlay))
 
   val line = new Line()
   //    private var lineAdded = true
