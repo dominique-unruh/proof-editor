@@ -5,6 +5,7 @@ import java.math.BigInteger
 import cmathml.{Apply, CI, CMathML, CN}
 import com.microsoft.z3.{BoolSort, _}
 import misc.{Pure, Utils}
+import ui.mathview.MathException
 //import org.apache.commons.io.IOUtils
 //import org.objectweb.asm.{ClassReader, ClassVisitor, ClassWriter, Opcodes}
 import scala.collection.{JavaConversions, JavaConverters}
@@ -48,6 +49,7 @@ final class Z3(config:Map[String,String]) {
           case _: ArithmeticException => CMathML.divide(CN(num2), CN(denom2))
         }
       }
+    case e => throw new MathException("cannot convert from Z3 to CMathML: "+e)
   }
 
   def fromCMathML(m: CMathML) = synchronized { new Z3.Expr(this, fromCMathML_(m)) }

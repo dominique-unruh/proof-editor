@@ -19,6 +19,7 @@ import scalafx.scene.layout.Region
 
 object MathEdit {
   val AlphaChar = "([a-zA-Z])".r
+  val NumChar = "([0-9])".r
   private val dataformatCMathML = new DataFormat("application/x.proof-editor-math-internal")
   private val dataformatPopcorn = new DataFormat("text/x.openmath-popcorn")
   private val dataformatCMathMLXML = new DataFormat("application/mathml-content+xml")
@@ -167,6 +168,7 @@ class MathEdit extends MathViewFX {
       case "=" => insertBinaryOp(CMathML.equal)
       case "^" => insertBinaryOp(CMathML.power)
       case AlphaChar(c) => insertMath(CI(c))
+      case NumChar(c) => insertDigit(c(0)-'0')
       case _ => processed = false
     }
     if (processed) e.consume()
@@ -180,6 +182,16 @@ class MathEdit extends MathViewFX {
       selection.value = Some(b)
     if (cursorPos.value.node == a)
       cursorPos.value = cursorPos.value.copy(node=b)
+  }
+
+  def insertDigit(digit:Int) : Unit = {
+    assert(digit >= 0 && digit <= 9)
+    (selection.value, cursorPos.value) match {
+      case (None, CursorPos(m@MCN(i), CursorRight)) =>
+        if (i.isWhole) m.n = i * 10 + digit
+        else ???
+      case _ => insertMath(CN(digit))
+    }
   }
 
   /** Inserts math at cursor or instead of selection. (Only if in the editable range.) */

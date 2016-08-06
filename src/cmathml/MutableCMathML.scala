@@ -296,8 +296,18 @@ object MCI {
   def unapply(that:MCI) = Some(that._name)
 }
 
-final class MCN(attributes: AttributesRO, val n:BigDecimal) extends MutableCMathML(attributes) {
+final class MCN(attributes: AttributesRO, private var _n:BigDecimal) extends MutableCMathML(attributes) {
+  assert(_n.mc.getPrecision==0)
+  assert(_n.mc.getRoundingMode==java.math.RoundingMode.UNNECESSARY)
   override def toCMathML: CMathML = CN(attributesToCMathML,n)
+
+  def n = _n
+  def n_=(n:BigDecimal): Unit = {
+    assert(n.mc.getPrecision==0)
+    assert(n.mc.getRoundingMode==java.math.RoundingMode.UNNECESSARY)
+    _n = n
+    fireChange()
+  }
 
   override def replace(a: MutableCMathML, b: MutableCMathML): Unit =
     replaceInAttributes(a,b)
