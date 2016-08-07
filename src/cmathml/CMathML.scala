@@ -1,11 +1,12 @@
 package cmathml
 
-import java.math.MathContext
+import java.math.{BigInteger, MathContext}
+import javafx.scene.control.ButtonBar.ButtonData
 
 import cmathml.CMathML._
 import com.sun.org.apache.xerces.internal.util.XMLChar
-import misc.{Pure, Utils}
-import org.symcomp.openmath._
+import misc.{Log, Pure, Utils}
+import org.symcomp.openmath.{OMSymbol, _}
 
 import scala.xml.{Elem, Utility}
 
@@ -80,6 +81,37 @@ sealed trait CMathML {
 }
 
 object CMathML {
+  def tryFromPopcorn(str: String) : Option[CMathML] = {
+    val om = try
+      OpenMathBase.parsePopcorn(str.trim)
+    catch {
+      case e: OpenMathException =>
+        Log.stackTraceDebug("tryFromPopcorn: could not parse",e)
+        return None
+    }
+    Some(fromSymcomp(om))
+  }
+
+  def fromPopcorn(str: String) = {
+    val om = OpenMathBase.parsePopcorn(str.trim)
+    fromSymcomp(om)
+  }
+
+  def fromSymcomp(math: OpenMathBase) : CMathML = math match {
+    case n : OMInteger => CN(n.getIntValue)
+    case s : OMSymbol =>
+      CSymbol(s.getCd,s.getName) match {
+        case CSymbol(attr,"internal","hole") => CNone(attr)
+        case m => m
+      }
+    case x : OMVariable => CI(x.getName)
+    case a : OMApply =>
+      Apply(fromSymcomp(a.getHead),a.getParams.map(fromSymcomp) : _*) match {
+        case Apply(attr,CSymbol(_,"internal","decimalfraction"),CN(_,unscaled),CN(_,scale)) =>
+          CN(attr,BigDecimal(unscaled.toBigIntExact.get,scale.toIntExact,CN.MATHCONTEXT))
+        case m => m
+      }
+  }
 
   type Attributes = Map[(String,String),Any]
   val NoAttr : Attributes = Map.empty
@@ -249,16 +281,17 @@ final case class CN(attributes : Attributes = NoAttr, n: BigDecimal) extends CMa
     if (n.isWhole)
       new OMInteger(n.toBigIntExact.get.bigInteger)
     else
-      ???
+      new OMApply("internal","decimalfraction",new OMInteger(n.bigDecimal.unscaledValue),new OMInteger(n.scale))
 }
 object CN {
   def fromXML(xml: Elem) = CN(xml.text)
 
   def apply(d:BigDecimal) = new CN(NoAttr,d)
+  def apply(i:BigInteger) = new CN(NoAttr,BigDecimal(i,MATHCONTEXT))
   def apply(i:Int) = new CN(NoAttr,BigDecimal(i,MATHCONTEXT))
-  def apply(i:Double) = new CN(NoAttr,BigDecimal.exact(i)(MATHCONTEXT))
+  def apply(d:Double) = new CN(NoAttr,BigDecimal.exact(d)(MATHCONTEXT))
 //  def apply(i:BigDecimal) = { if (i.mc!=MATHCONTEXT) new CN(new BigDecimal(i.bigDecimal,MATHCONTEXT)) else i }
-  def apply(i:String) = new CN(NoAttr,BigDecimal(i,MATHCONTEXT))
+  def apply(s:String) = new CN(NoAttr,BigDecimal(s,MATHCONTEXT))
 
   /** Use this math context to construct [[scala.BigDecimal]]s for [[CN]] */
   val MATHCONTEXT = new MathContext(0,java.math.RoundingMode.UNNECESSARY)

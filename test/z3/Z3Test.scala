@@ -2,7 +2,7 @@ package z3
 
 import java.math.BigInteger
 
-import cmathml.{Apply, CI, CMathML, CN}
+import cmathml._
 import com.microsoft.z3.{Expr, RatNum, Version}
 import test.UnitSpec
 
@@ -29,20 +29,7 @@ class Z3Test extends UnitSpec {
   test("roundtrips CMathML<->Expr") {
     val z3 = new Z3(Map())
     import cmathml.CMathML._
-    val expressions = List(
-      plus(CN(1),CN(2)),
-      CI("x"),
-      equal(CI("x"),CN(2)),
-      CN(1.23),
-      divide(CN(2),CN(2)),
-      minus(CN(3),CN(2)),
-      times(minus(CN(4),CN(2)),CN(1.2)),
-      uminus(CI("x")),
-      uminus(CN("123")),
-      CN(-234),
-      power(CN(3),CI("x"))
-    )
-    for (e <- expressions) {
+    for (e <- CMathMLTest.cMathMLRoundtrips) {
       val e2 = z3.fromCMathML(e)
       assertResult(e) { e2.toCMathML }
     }

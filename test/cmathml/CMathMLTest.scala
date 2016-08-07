@@ -1,8 +1,8 @@
 package cmathml
 
 import test.UnitSpec
-
 import CMathML._
+import z3.Z3
 
 class CMathMLTest extends UnitSpec {
   test("CMathML.replace") {
@@ -27,9 +27,9 @@ class CMathMLTest extends UnitSpec {
   }
 
   test("CN.isNegative") {
-    assert(CN(1).isNegative == false)
-    assert(CN(0).isNegative == false)
-    assert(CN(-1).isNegative == true)
+    assert(!CN(1).isNegative)
+    assert(!CN(0).isNegative)
+    assert(CN(-1).isNegative)
   }
 
   test("XML") {
@@ -45,4 +45,28 @@ class CMathMLTest extends UnitSpec {
     assertResult("123") { CN(123).toPopcorn }
 //    assertResult("0.5") { CN(0.5).toPopcorn }  // Not supported yet
   }
+
+  test("popcorn roundtrip") {
+    for (e <- CMathMLTest.cMathMLRoundtrips) {
+      val p = e.toPopcorn
+      assertResult(e) { CMathML.fromPopcorn(p) }
+    }
+  }
+}
+
+object CMathMLTest {
+  val cMathMLRoundtrips = List(
+    plus(CN(1),CN(2)),
+    CI("x"),
+    equal(CI("x"),CN(2)),
+    CN(1.23),
+    divide(CN(2),CN(2)),
+    minus(CN(3),CN(2)),
+    times(minus(CN(4),CN(2)),CN(1.2)),
+    uminus(CI("x")),
+    uminus(CN("123")),
+    CN(-234),
+    power(CN(3),CI("x"))
+  )
+
 }

@@ -30,4 +30,9 @@ object Log {
     Console.err.println(s"$filebase:${line.value}: WARN  $msg")
     e.printStackTrace()
   }
+  def stackTraceDebug(msg:String, e:Throwable)(implicit line: sourcecode.Line, file: sourcecode.File) = {
+    val filebase = new File(file.value).getName.stripSuffix(".scala")
+    Console.err.println(s"$filebase:${line.value}: DEBUG $msg")
+    e.printStackTrace(System.out)
+  }
 }

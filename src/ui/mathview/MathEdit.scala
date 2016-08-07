@@ -324,22 +324,40 @@ class MathEdit extends MathViewFX {
   private def errorPopup(msg: String): Unit =
     new Alert(Alert.AlertType.ERROR, msg).showAndWait()
 
+  private def clipboardToCMathML(clip:Clipboard) : Option[CMathML] = {
+    clip.content(dataformatCMathML) match {
+      case math: CMathML => // TODO: do not use serialization here. Instead, either rely on XML transport,
+        // or simply put an index to an hashmap with unguessable IDs into the clipboard
+        return Some(math)
+      case _ =>
+    }
+
+    clip.content(dataformatCMathMLXML) match {
+      case xml: Any => ???
+      case _ =>
+    }
+
+    clip.content(DataFormat.PlainText) match {
+      case str: String =>
+        // TODO: ignore if it's not popcorn
+        CMathML.tryFromPopcorn(str) match {
+          case Some(math) => return Some(math)
+          case None =>
+        }
+    }
+
+    None
+  }
+
   def clipboardPaste(): Unit = {
     val clip = Clipboard.systemClipboard
-    clip.content(dataformatCMathML) match {
-      case math : CMathML => // TODO: do not use serialization here. Instead, either rely on XML transport,
-        // or simply put an index to an hashmap with unguessable IDs into the clipboard
-        insertMath(math)
-      case _ =>
-        clip.content(dataformatCMathMLXML) match {
-          case xml : Any => ???
-          case null => errorPopup("Selection does not contain Content MathML")
-        }
+    clipboardToCMathML(clip) match {
+      case Some(math) => insertMath(math)
+      case None => errorPopup("Selection does not contain Content MathML or another supported math format")
     }
   }
 
-  /** Deletes the current selection
-    * */
+  /** Deletes the current selection */
   def delete(): Unit = selection.value match {
     case Some(math) =>
       if (inEditableRange(math)) {
