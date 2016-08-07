@@ -25,14 +25,16 @@ object Log {
     val argsStr = if (args.isEmpty) "" else " ("+args.mkString(", ")+")"
     Console.err.println(s"${mkPfx(line,file)} WARN  $msg$argsStr")
   }
-  def stackTrace(msg:String, e:Throwable)(implicit line: sourcecode.Line, file: sourcecode.File) = {
+  def stackTrace(msg:String, e:Throwable, args:Any*)(implicit line: sourcecode.Line, file: sourcecode.File) = {
     val filebase = new File(file.value).getName.stripSuffix(".scala")
-    Console.err.println(s"$filebase:${line.value}: WARN  $msg")
+    val argsStr = if (args.isEmpty) "" else " ("+args.mkString(", ")+")"
+    Console.err.println(s"$filebase:${line.value}: WARN  $msg$argsStr")
     e.printStackTrace()
   }
-  def stackTraceDebug(msg:String, e:Throwable)(implicit line: sourcecode.Line, file: sourcecode.File) = {
+  def stackTraceDebug(msg:String, e:Throwable, args:Any*)(implicit line: sourcecode.Line, file: sourcecode.File) = {
     val filebase = new File(file.value).getName.stripSuffix(".scala")
-    Console.err.println(s"$filebase:${line.value}: DEBUG $msg")
+    val argsStr = if (args.isEmpty) "" else " ("+args.mkString(", ")+")"
+    Console.err.println(s"$filebase:${line.value}: DEBUG $msg$argsStr")
     e.printStackTrace(System.out)
   }
 }

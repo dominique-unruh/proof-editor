@@ -2,10 +2,9 @@ package z3
 
 import java.math.BigInteger
 
-import cmathml.{Apply, CI, CMathML, CN}
+import cmathml._
 import com.microsoft.z3.{BoolSort, _}
 import misc.{Pure, Utils}
-import ui.mathview.MathException
 //import org.apache.commons.io.IOUtils
 //import org.objectweb.asm.{ClassReader, ClassVisitor, ClassWriter, Opcodes}
 import scala.collection.{JavaConversions, JavaConverters}
@@ -42,6 +41,17 @@ final class Z3(config:Map[String,String]) {
         case (Z3_OP_POWER,2) => Apply(CMathML.power, e.getArgs map toCMathML: _*)
         case k => throw new MathException(s"cannot convert arith expr from Z3 to CMathML: $e (unkown decl kind $k)")
       }
+    case e: Quantifier => // Must be before "case e:BoolExpr" because Quantifier <: BoolExpr
+      val vars1 = e.getBoundVariableNames.toSeq.zip(e.getBoundVariableSorts)
+      val vars2 = vars1.map { v => context.mkConst(v._1,v._2) }
+      val vars3 = vars2.map(toCMathML(_).asInstanceOf[CI])
+      val body1 = e.getBody.substituteVars(vars2.toArray)
+      val body2 = toCMathML(body1)
+      var sym : CSymbol =
+        if (e.isUniversal) CMathML.forall
+        else if (e.isExistential) CMathML.exists
+        else throw new MathException("Z3 quantifier is neither universal nor existential",e)
+      Bind(sym,vars3,body2)
     case e: BoolExpr if e.isApp =>
       (e.getFuncDecl.getDeclKind,e.getNumArgs) match {
         case (Z3_OP_EQ,2) => Apply(CMathML.equal, e.getArgs map toCMathML: _*)
@@ -87,6 +97,11 @@ final class Z3(config:Map[String,String]) {
     case Apply(_, CMathML.equal,x,y) => context.mkEq(fromCMathML_(x),fromCMathML_(y))
     case Apply(_, CMathML.uminus,x) => context.mkUnaryMinus(fromCMathML_(x).asInstanceOf[ArithExpr])
     case Apply(_, CMathML.power,x,y) => context.mkPower(fromCMathML_(x).asInstanceOf[ArithExpr],fromCMathML_(y).asInstanceOf[ArithExpr])
+    case Bind(_, CMathML.forall,vs,body) =>
+      context.mkForall(
+        vs.map(fromCMathML_(_)).toArray,
+        fromCMathML_(body),
+        0, null, null,null,null)
   }
 
 

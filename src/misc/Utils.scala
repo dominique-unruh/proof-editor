@@ -14,10 +14,22 @@ import javafx.scene.web.{HTMLEditor, WebView}
 import scala.reflect.runtime.universe.TypeTag
 import com.sun.javafx.webkit.WebConsoleListener
 
+import scala.collection.mutable
 import scala.xml.Elem
 
 
 object Utils {
+  def max(nums: Seq[Double]) = {
+    val it = nums.iterator
+    var m = it.next()
+    for (n <- it)
+      if (n > m) m = n
+    m
+  }
+
+  def firstElementIn(xml: Elem): Elem =
+    xml.child.find(_.isInstanceOf[Elem]).get.asInstanceOf[Elem]
+
   def elementsIn(xml: Elem) : Seq[Elem] =
     xml.child.filter(_.isInstanceOf[Elem]).map(_.asInstanceOf[Elem])
 
@@ -28,7 +40,7 @@ object Utils {
     val it = xs.reverseIterator
     result = it.next() :: result
     for (x <- it) { result = x :: sep :: result }
-    return result
+    result
   }
 
   @Pure

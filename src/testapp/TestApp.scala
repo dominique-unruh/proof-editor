@@ -91,7 +91,9 @@ class TestApp extends JFXApp {
       true
     }
     catch {
-      case e : Exception => false
+      case e : Exception =>
+        Log.stackTraceDebug("while converting to Z3",e,math)
+        false
     }
   }
 

@@ -160,33 +160,17 @@ object MutableCMathML {
 //  private def fromCMathMLAttr(attributes:CMathML.Attributes) : AttributesRO =
 //    attributes.mapValues { case m : CMathML => fromCMathML(m); case x => x }
   def fromCMathML(math:CMathML) : MutableCMathML = math match {
-    case Apply(att, hd, args @ _*) => new MApply(att,fromCMathML(hd),args.map(fromCMathML(_)) : _*)
+    case Apply(att, hd, args @ _*) => new MApply(att,fromCMathML(hd),args.map(fromCMathML) : _*)
     case CI(att, v) => new MCI(att,v)
     case CN(att, n) => new MCN(att,n)
     case CSymbol(att, cd, name) => new MCSymbol(att,cd,name)
     case CError(att, cd, name, args @ _*) => new MCError(att,cd,name,args)
     case CNone(att) => new MCNone(att)
+    case Bind(att, hd, vars, arg) => new MBind(att,fromCMathML(hd),vars.map(fromCMathML(_).asInstanceOf[MCI]),fromCMathML(arg))
   }
 }
 
-object MApply {
-  def unapplySeq(arg: MApply): Some[(MutableCMathML,Seq[MutableCMathML])] = Some((arg._head,arg._args))
-
-
-  object IsHead {
-    def unapply(tuple: (MApply, MutableCMathML)): Boolean = tuple._1._head eq tuple._2
-  }
-
-  object IsArg {
-    def unapply(tuple: (MApply, MutableCMathML)): Option[Int] =
-      tuple._1._args.indexOf(tuple._2) match {
-        case -1 => None
-        case i => Some(i)
-    }
-  }
-}
-
-final class MApply(attributes:AttributesRO) extends MutableCMathML(attributes) {
+final class MApply private (attributes:AttributesRO) extends MutableCMathML(attributes) {
   def args = _args.toSeq
 
   def setHead(head: MutableCMathML) = {
@@ -289,10 +273,171 @@ final class MApply(attributes:AttributesRO) extends MutableCMathML(attributes) {
 
   override def copy(): MutableCMathML = ???
 }
-final class MCI(attributes: AttributesRO, private var _name:String) extends MutableCMathML(attributes) {
+object MApply {
+  def unapplySeq(arg: MApply): Some[(MutableCMathML,Seq[MutableCMathML])] = Some((arg._head,arg._args))
+
+
+  object IsHead {
+    def unapply(tuple: (MApply, MutableCMathML)): Boolean = tuple._1._head eq tuple._2
+  }
+
+  object IsArg {
+    def unapply(tuple: (MApply, MutableCMathML)): Option[Int] =
+      tuple._1._args.indexOf(tuple._2) match {
+        case -1 => None
+        case i => Some(i)
+      }
+  }
+}
+
+final class MBind private (attributes:AttributesRO) extends MutableCMathML(attributes) {
+  private var _head : MutableCMathML = null
+  private val _vars : mutable.ArrayBuffer[MCILike] = new mutable.ArrayBuffer()
+  private var _body : MutableCMathML = null
+
+  def vars = _vars.toSeq
+
+  def setHead(head: MutableCMathML) = {
+    assert(head!=null)
+    assert(!head.isAttached)
+    _removeHead()
+    _head = head
+    head.setParent(this)
+    fireChange()
+  }
+  def setBody(body: MutableCMathML) = {
+    assert(body!=null)
+    assert(!body.isAttached)
+    _removeBody()
+    _body = body
+    body.setParent(this)
+    fireChange()
+  }
+  def setVar(i:Int, m:MCILike) = {
+    assert(!m.isAttached)
+    _removeVar(i)
+    _vars.update(i,m)
+    m.setParent(this)
+    fireChange()
+  }
+
+  def setVars(vars: MCILike*) = {
+    for (a<-vars) assert(!a.isAttached)
+    _removeVars()
+    _vars.insertAll(0,vars)
+    for (a <- _vars) {
+      assert(!a.isAttached) // Could be violated if _args contains duplicates
+      a.setParent(this)
+    }
+    fireChange()
+  }
+
+  def this(attributes: AttributesRO, head:MutableCMathML, vars:Seq[MCILike], body:MutableCMathML) = {
+    this(attributes)
+    setHead(head)
+    setVars(vars:_*)
+    setBody(body)
+  }
+  def this(head:MutableCMathML, vars:Seq[MCILike], body:MutableCMathML) =
+    this(NoAttr,head,vars,body)
+  def this(head:CMathML, vars:Seq[MCILike], arg:MutableCMathML) =
+    this(fromCMathML(head),vars,arg)
+
+  def head = _head
+  def variable(i:Int) = _vars(i)
+  def varNum = _vars.length
+  private def _removeHead() : MutableCMathML = {
+    val h = _head
+    if (h!=null) {
+      _head = null
+      h.detach()
+      h
+    } else null
+  }
+  private def _removeBody() : MutableCMathML = {
+    val b = _body
+    if (b!=null) {
+      _body = null
+      b.detach()
+      b
+    } else null
+  }
+  def removeHead() : MutableCMathML = {
+    val hd = _removeHead()
+    _head = new MCNone()
+    if (hd!=null) fireChange()
+    hd
+  }
+  def removeVar(i:Int) : MutableCMathML = {
+    val a = _removeVar(i)
+    _vars(i) = new MCNone()
+    if (a!=null) fireChange()
+    a
+  }
+  private def _removeVar(i:Int) : MutableCMathML = {
+    if (i<0 || i>=_vars.length) throw new IllegalArgumentException
+    val a = _vars(i)
+    if (a!=null) {
+      _vars.update(i, null)
+      a.detach()
+      a
+    } else null
+  }
+  private def _removeVars() : Unit = {
+    for (a <- _vars)
+      a.detach()
+    _vars.clear()
+  }
+
+  override def toCMathML: CMathML =
+    Bind(attributesToCMathML, _head.toCMathML, _vars.map(_.toCMathML), _body.toCMathML)
+
+  override def replace(a: MutableCMathML, b: MutableCMathML): Unit = {
+    if (_head==a) setHead(b)
+    else if (_body==a) setBody(b)
+    else {
+      val i = _vars.indexOf(a)
+      if (i>=0)
+        b match {
+          case b$: MCILike => setVar(i, b$)
+          case _ => throw new InvalidType("replacing variable binder by " + b.getClass)
+        }
+      else
+        replaceInAttributes(a,b)
+    }
+  }
+
+  override def copy(): MutableCMathML = ???
+}
+object MBind {
+  def unapply(arg: MBind): Some[(MutableCMathML,Seq[MCILike],MutableCMathML)] = Some((arg._head,arg._vars,arg._body))
+
+  object IsHead {
+    def unapply(tuple: (MBind, MutableCMathML)): Boolean = tuple._1._head eq tuple._2
+  }
+  object IsBody {
+    def unapply(tuple: (MBind, MutableCMathML)): Boolean = tuple._1._body eq tuple._2
+  }
+
+  object IsVar {
+    def unapply(tuple: (MBind, MutableCMathML)): Option[Int] =
+      tuple._1._vars.indexOf(tuple._2) match {
+        case -1 => None
+        case i => Some(i)
+      }
+  }
+
+}
+
+/** An MCI or an MCNone */
+sealed trait MCILike extends MutableCMathML {
+  override def toCMathML : CILike
+}
+
+final class MCI(attributes: AttributesRO, private var _name:String) extends MutableCMathML(attributes) with MCILike {
   def this(name:String) = this(NoAttr,name)
 
-  override def toCMathML: CMathML = CI(attributesToCMathML,_name)
+  override def toCMathML: CI = CI(attributesToCMathML,_name)
   def name = _name
   def name_=(name:String) = {
     _name = name
@@ -372,8 +517,8 @@ object MCError {
 object MCNone {
   def unapply(that:MCNone) = true
 }
-final class MCNone(attributes: AttributesRO = NoAttr) extends MutableCMathML(attributes) {
-  override def toCMathML: CMathML = CNone(attributesToCMathML)
+final class MCNone(attributes: AttributesRO = NoAttr) extends MutableCMathML(attributes) with MCILike {
+  override def toCMathML: CNone = CNone(attributesToCMathML)
   override def replace(a: MutableCMathML, b: MutableCMathML): Unit =
     replaceInAttributes(a,b)
 

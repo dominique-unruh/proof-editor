@@ -1,22 +1,20 @@
 package ui.mathview
 
 import java.io.IOException
-import javafx.beans.value.{ChangeListener, ObservableValue}
 import javafx.geometry
-import javafx.geometry.Bounds
-import javafx.scene.shape
 
 import cmathml._
+import misc.Utils
 
+import scala.collection.mutable
+import scalafx.Includes._
 import scalafx.beans.binding.Bindings
 import scalafx.geometry.Pos
 import scalafx.scene.Node
-import scalafx.scene.layout.{HBox, VBox}
+import scalafx.scene.layout.HBox
+import scalafx.scene.paint.Color
 import scalafx.scene.shape.{Line, Rectangle}
 import scalafx.scene.text.{Font, FontPosture, Text}
-import scalafx.Includes._
-import scalafx.application.Platform
-import scalafx.scene.paint.Color
 
 object DefaultMathRendererFactory extends MathRendererFactory {
   override def renderer(context: MathRendererContext, math: MutableCMathML): Node = {
@@ -31,6 +29,10 @@ object DefaultMathRendererFactory extends MathRendererFactory {
     def prefixop(hd: MutableCMathML, op: String, x: MutableCMathML) = {
       own(hd)
       new PrefixOp(op, get(x))
+    }
+    def quant(hd: MutableCMathML, op:String, vs: Seq[MCILike], body:MutableCMathML) = {
+      own(hd)
+      new Quantifier(op, vs.map(get(_):javafx.scene.Node), get(body))
     }
 
     math match {
@@ -50,8 +52,11 @@ object DefaultMathRendererFactory extends MathRendererFactory {
       case MApply(hd@MCSymbol("logic1", "not"), x) => prefixop(hd, "¬", x)
       case MCSymbol("logic1","true") => new SFSymbol("true")
       case MCSymbol("logic1","false") => new SFSymbol("false")
+      case MBind(hd@MCSymbol("quant1","forall"), vs, body) => quant(hd, "∀", vs, body)
+      case MBind(hd@MCSymbol("quant1","exists"), vs, body) => quant(hd, "∃", vs, body)
       case MCNone() => new Missing()
       case MApply(hd, args@_*) => new GenericApply(get(hd), args.map(get(_)))
+      case MBind(hd, vars, arg) => new GenericBind(get(hd), vars.map(get(_)), get(arg))
       case MCSymbol(cd, name) => new GenericSymbol(cd, name)
       case m @ MCN(num) => new Num(m)
     }
@@ -112,9 +117,39 @@ class BinOp(op:String, a:javafx.scene.Node, b:javafx.scene.Node) extends javafx.
   getChildren.addAll(open,a,opTxt,b,close)
 }
 
-class Power(a:javafx.scene.Node, b:javafx.scene.Node) extends javafx.scene.layout.HBox {
+class Quantifier(op:String, vars:Seq[javafx.scene.Node], body:javafx.scene.Node) extends javafx.scene.layout.HBox {
   import MathText._
+  setId(Integer.toHexString(hashCode())) // TODO: remove
+  setAlignment(geometry.Pos.CENTER)
+  val open = symbolText("(")
+  val close = symbolText(")")
+  val inner = mutable.MutableList[javafx.scene.Node]()
+  inner += symbolText(op)
+  var first = true
+  for (v <- vars) {
+    if (!first) inner += symbolText(",")
+    inner += v
+    first = false
+  }
+  inner += symbolText(".")
+  inner += body
 
+  setFillHeight(false)
+
+  override def layoutChildren(): Unit = {
+    val h = Utils.max(inner.map(_.prefHeight(-1)))
+    val font = symbolFont(h+1)
+    open.font = font
+    close.font = font
+    super.layoutChildren()
+  }
+
+  getChildren.add(open)
+  getChildren.addAll(inner:_*)
+  getChildren.add(close)
+}
+
+class Power(a:javafx.scene.Node, b:javafx.scene.Node) extends javafx.scene.layout.HBox {
   setId(Integer.toHexString(hashCode())) // TODO: remove
   setAlignment(geometry.Pos.CENTER)
 
@@ -203,6 +238,20 @@ class GenericApply(head:Node, args:Seq[Node])
     first = false
   }
   children.add(symbolText(")"))
+}
+
+class GenericBind(head:Node, vars:Seq[Node], arg:Node)
+  extends HBox {
+  import MathText._
+  alignment = Pos.Center
+  children.addAll(head,symbolText("["))
+  var first = true
+  for (a <- vars) {
+    if (!first) children.add(symbolText(","))
+    children.add(a)
+    first = false
+  }
+  children.addAll(symbolText("→"),arg,symbolText("]"))
 }
 
 class Var(math:MCI) extends Text(math.name) {

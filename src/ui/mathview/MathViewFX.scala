@@ -412,4 +412,3 @@ trait MathNode {
 }
 
 class MathViewException(message: String, args: Any*) extends MathException(message,args)
-class MathException(message: String, val args: Any*) extends Exception(message)

@@ -1,7 +1,6 @@
 package cmathml
 
 import java.math.{BigInteger, MathContext}
-import javafx.scene.control.ButtonBar.ButtonData
 
 import cmathml.CMathML._
 import com.sun.org.apache.xerces.internal.util.XMLChar
@@ -10,7 +9,9 @@ import org.symcomp.openmath.{OMSymbol, _}
 
 import scala.xml.{Elem, Utility}
 
-case class InvalidPath() extends Exception
+class MathException(message: String, val args: Any*) extends Exception(message)
+class InvalidPath(message: String, val path:Path, args: Any*) extends MathException(message,(path::args.toList):_*)
+class InvalidType(message: String, args:Any*) extends MathException(message,args)
 
 /** Represents mathematical formulas in Strict Content MathML encoding */
 sealed trait CMathML {
@@ -49,24 +50,24 @@ sealed trait CMathML {
   /** Same as [[toXML]] but without the outermost attributes */
   @Pure def toXML$ : scala.xml.Elem
 
-  /** Terms with priority `priority` or lower need to be parenthesised */
-  @Pure def toPopcorn(sb:StringBuilder, priority:Int) : Unit =
-  if (attributes.isEmpty)
-    toPopcorn$(sb,priority)
-  else
-    ???
+//  /** Terms with priority `priority` or lower need to be parenthesised */
+//  @Pure def toPopcorn(sb:StringBuilder, priority:Int) : Unit =
+//  if (attributes.isEmpty)
+//    toPopcorn$(sb,priority)
+//  else
+//    ???
 
-  /** Same as [[toPopcorn(sb:StringBuilder,priority:Int):Unit*]] but without the outermost attributes */
-  @Pure protected def toPopcorn$(sb:StringBuilder, priority:Int) : Unit
+//  /** Same as [[toPopcorn(sb:StringBuilder,priority:Int):Unit*]] but without the outermost attributes */
+//  @Pure protected def toPopcorn$(sb:StringBuilder, priority:Int) : Unit
 
-  // TODO: should we use the library from here? http://java.symcomp.org/
-  // SHA1=b860b688621a1ee4dcb8a7440b3d30ccbaa6a2b0
-  // http://java.symcomp.org/maven/2/org/symcomp/openmath/1.4.0/openmath-1.4.0.jar
-  @Pure def toPopcornOLD : String = {
-    val sb = new StringBuilder
-    toPopcorn(sb,0)
-    sb.toString
-  }
+//  // TODO: should we use the library from here? http://java.symcomp.org/
+//  // SHA1=b860b688621a1ee4dcb8a7440b3d30ccbaa6a2b0
+//  // http://java.symcomp.org/maven/2/org/symcomp/openmath/1.4.0/openmath-1.4.0.jar
+//  @Pure def toPopcornOLD : String = {
+//    val sb = new StringBuilder
+//    toPopcorn(sb,0)
+//    sb.toString
+//  }
 
   @Pure def toPopcorn : String = toSymcomp.toPopcorn
 
@@ -111,6 +112,8 @@ object CMathML {
           CN(attr,BigDecimal(unscaled.toBigIntExact.get,scale.toIntExact,CN.MATHCONTEXT))
         case m => m
       }
+    case b : OMBind =>
+      Bind(fromSymcomp(b.getSymbol), b.getBvars.map(fromSymcomp(_).asInstanceOf[CI]).toSeq, fromSymcomp(b.getParam))
   }
 
   type Attributes = Map[(String,String),Any]
@@ -149,6 +152,11 @@ object CMathML {
   def or(x:CMathML, y:CMathML) : Apply = Apply(or,x,y)
   val xor = CSymbol("logic1","xor")
   def xor(x:CMathML, y:CMathML) : Apply = Apply(xor,x,y)
+  val forall = CSymbol("quant1","forall")
+  def forall(vars:Seq[CILike],body:CMathML) : Bind = Bind(forall,vars,body)
+  val exists = CSymbol("quant1","exists")
+  def exists(vars:Seq[CILike],body:CMathML) : Bind = Bind(exists,vars,body)
+
 
   val uminus = CSymbol("arith1","unary_minus")
   def uminus(x:CMathML) : Apply = Apply(uminus,x)
@@ -159,12 +167,13 @@ object CMathML {
     case "cn" => CN.fromXML(xml)
     case "ci" => CI.fromXML(xml)
     case "apply" => Apply.fromXML(xml)
+    case "bind" => Bind.fromXML(xml)
   }
 }
 
 sealed protected trait Leaf extends CMathML {
-  def mapAt(p: Path, f: CMathML=>CMathML): CMathML = { if (!p.isEmpty) throw InvalidPath(); f(this) }
-  def subterm(p: Path): CMathML = { if (!p.isEmpty) throw InvalidPath(); this }
+  def mapAt(p: Path, f: CMathML=>CMathML): CMathML = { if (!p.isEmpty) throw new InvalidPath("path descending below leaf",p); f(this) }
+  def subterm(p: Path): CMathML = { if (!p.isEmpty) throw new InvalidPath("path descending below leaf",p); this }
 }
 
 
@@ -175,50 +184,48 @@ final case class Apply(val attributes : Attributes, hd: CMathML, args: CMathML*)
   override def mapAt(p: Path, f: (CMathML) => CMathML): CMathML = {
     if (p.isEmpty) return f(this)
     val idx = p.head; val tl = p.tail
-    if (idx==0) return Apply(hd.mapAt(tl,f),args:_*)
-    if (idx<1) throw InvalidPath()
-    if (idx>args.length) throw InvalidPath()
-    return Apply(hd,args.toList.updated(idx-1, args(idx-1).mapAt(tl,f)):_*)
+    if (idx==0) return Apply(attributes,hd.mapAt(tl,f),args:_*)
+    if (idx>args.length) throw new InvalidPath("path refers to argument beyond last in Apply",p)
+    Apply(attributes,hd,args.toList.updated(idx-1, args(idx-1).mapAt(tl,f)):_*)
   }
 
   override def subterm(p: Path): CMathML = {
     if (p.isEmpty) return this
     val idx = p.head; val tl = p.tail
     if (idx==0) return hd.subterm(tl)
-    if (idx<1) throw InvalidPath()
-    if (idx>args.length) throw InvalidPath()
-    return args(idx-1).subterm(tl)
+    if (idx>args.length) throw new InvalidPath("path refers to argument beyond last in Apply",p)
+    args(idx-1).subterm(tl)
   }
 
 //  override def toString : String = {
 //    "Apply("+hd+","+args.mkString(",")+")"
 //  }
 
-  private def popcornBinop(sb: StringBuilder,priority:Int,opPriority:Int,op:String,x:CMathML,y:CMathML): Unit = {
-    if (opPriority <= priority) sb += '('
-    x.toPopcorn(sb,opPriority)
-    sb ++= op
-    y.toPopcorn(sb,opPriority)
-    if (opPriority <= priority) sb += ')'
-  }
+//  private def popcornBinop(sb: StringBuilder,priority:Int,opPriority:Int,op:String,x:CMathML,y:CMathML): Unit = {
+//    if (opPriority <= priority) sb += '('
+//    x.toPopcorn(sb,opPriority)
+//    sb ++= op
+//    y.toPopcorn(sb,opPriority)
+//    if (opPriority <= priority) sb += ')'
+//  }
 
-  override protected def toPopcorn$(sb: StringBuilder, priority: Int): Unit = this match {
-    case Apply(_,`equal`,x,y) => popcornBinop(sb,priority,10,"=",x,y)
-    case Apply(_,`plus`,x,y) => popcornBinop(sb,priority,15,"+",x,y)
-    case Apply(_,`minus`,x,y) => popcornBinop(sb,priority,16,"-",x,y)
-    case Apply(_,`times`,x,y) => popcornBinop(sb,priority,17,"*",x,y)
-    case Apply(_,`divide`,x,y) => popcornBinop(sb,priority,18,"/",x,y)
-    case _ =>
-      hd.toPopcorn(sb,1000)
-      sb += '('
-      var first = true
-      for (a <- args) {
-        if (!first) sb += ','
-        a.toPopcorn(sb,0)
-        first = false
-      }
-      sb += ')'
-  }
+//  override protected def toPopcorn$(sb: StringBuilder, priority: Int): Unit = this match {
+//    case Apply(_,`equal`,x,y) => popcornBinop(sb,priority,10,"=",x,y)
+//    case Apply(_,`plus`,x,y) => popcornBinop(sb,priority,15,"+",x,y)
+//    case Apply(_,`minus`,x,y) => popcornBinop(sb,priority,16,"-",x,y)
+//    case Apply(_,`times`,x,y) => popcornBinop(sb,priority,17,"*",x,y)
+//    case Apply(_,`divide`,x,y) => popcornBinop(sb,priority,18,"/",x,y)
+//    case _ =>
+//      hd.toPopcorn(sb,1000)
+//      sb += '('
+//      var first = true
+//      for (a <- args) {
+//        if (!first) sb += ','
+//        a.toPopcorn(sb,0)
+//        first = false
+//      }
+//      sb += ')'
+//  }
 
   override def toXML$: Elem = <apply>{hd.toXML}{args.map(_.toXML)}</apply>
 
@@ -236,15 +243,73 @@ object Apply {
   def apply(hd: CMathML, args: CMathML*) = new Apply(NoAttr,hd,args:_*)
 }
 
+
+/** <apply>-Content MathML element
+  * @see [[https://www.w3.org/TR/MathML3/chapter4.html#contm.bind]] */
+final case class Bind(attributes : Attributes, hd: CMathML, vars: Seq[CILike], arg: CMathML) extends CMathML {
+  override def toString = toPopcorn
+  override def mapAt(p: Path, f: (CMathML) => CMathML): CMathML = {
+    if (p.isEmpty) return f(this)
+    val idx = p.head; val tl = p.tail
+    idx match {
+      case 0 => Bind(attributes,hd.mapAt(tl,f),vars,arg)
+      case 1 => Bind(attributes,hd,vars,arg.mapAt(tl,f))
+      case i if i>=2 =>
+        if (idx-2>=vars.length) throw new InvalidPath("Beyond last variable in Bind",p,this)
+        vars(idx-2).mapAt(tl,f) match {
+          case s : CI =>
+            Bind(attributes,hd,vars.toList.updated(idx-2, s),arg)
+          case m => throw new InvalidType(s"trying to substitute variable in binder by ${m.getClass}",this)
+        }
+    }
+  }
+
+  override def subterm(p: Path): CMathML = {
+    if (p.isEmpty) return this
+    val idx = p.head; val tl = p.tail
+    idx match {
+      case 0 => hd.subterm(tl)
+      case 1 => arg.subterm(tl)
+      case _ if idx >= 2 =>
+        if (idx-2 >= vars.length) throw new InvalidPath("Beyond last variable in Bind",p,this)
+        vars(idx-2).subterm(tl)
+    }
+  }
+
+  override def toXML$: Elem = <bind>{hd.toXML}{vars.map(v => <bvar>{v.toXML}</bvar>)}{arg.toXML}</bind>
+
+  @Pure
+  override protected def toSymcomp$: OpenMathBase =
+    hd.toSymcomp.bind(Array(vars.map(_.toSymcomp.asInstanceOf[OMVariable]):_*), arg.toSymcomp)
+}
+object Bind {
+  def fromXML(xml: Elem) : Bind = {
+    val elems = Utils.elementsIn(xml)
+    val hd = CMathML.fromXML(elems.head)
+    val arg = CMathML.fromXML(elems.last)
+    val vars = elems.tail.dropRight(1).map { bvar =>
+      assert(bvar.label=="bvar")
+      CMathML.fromXML(Utils.firstElementIn(bvar)).asInstanceOf[CI]
+    }
+    Bind(hd,vars,arg)
+  }
+
+  def apply(hd: CMathML, vars: Seq[CILike], arg:CMathML) = new Bind(NoAttr,hd,vars,arg)
+  def apply(hd: CMathML, variable: CILike, arg:CMathML) = new Bind(NoAttr,hd,Seq(variable),arg)
+}
+
+/** A CI or CNone */
+sealed trait CILike extends CMathML
+
 /** <ci>-Content MathML element
   * @see [[https://www.w3.org/TR/MathML3/chapter4.html#contm.ci]] */
-final case class CI(attributes : Attributes = NoAttr, name : String) extends CMathML with Leaf {
+final case class CI(attributes : Attributes = NoAttr, name : String) extends CMathML with Leaf with CILike {
   def this(name:String) = this(NoAttr,name)
   override def toString = toPopcorn
 
-  /** Terms with priority `priority` or lower need to be parenthesised */
-  override protected def toPopcorn$(sb: StringBuilder, priority: Int): Unit = {
-    sb += '$'; sb ++= name }
+//  /** Terms with priority `priority` or lower need to be parenthesised */
+//  override protected def toPopcorn$(sb: StringBuilder, priority: Int): Unit = {
+//    sb += '$'; sb ++= name }
 
   /** Same as [[toXML]] but without the outermost attributes */
   override def toXML$: Elem = <ci>{name}</ci>
@@ -268,8 +333,8 @@ final case class CN(attributes : Attributes = NoAttr, n: BigDecimal) extends CMa
   override def negate() = CN(-n)
   override def toString = toPopcorn
 
-  override protected def toPopcorn$(sb: StringBuilder, priority: Int): Unit =
-    sb ++= n.toString
+//  override protected def toPopcorn$(sb: StringBuilder, priority: Int): Unit =
+//    sb ++= n.toString
 
   /** Same as [[toXML]] but without the outermost attributes */
   override def toXML$: Elem =
@@ -304,8 +369,8 @@ final case class CSymbol(attributes : Attributes = NoAttr, cd: String, name: Str
   import CMathML._
   assert(isNCName(cd))
   assert(isNCName(name))
-  override protected def toPopcorn$(sb: StringBuilder, priority: Int): Unit = {
-    sb ++= cd; sb += '.'; sb ++= name }
+//  override protected def toPopcorn$(sb: StringBuilder, priority: Int): Unit = {
+//    sb ++= cd; sb += '.'; sb ++= name }
   override def toString = toPopcorn
 
   override def toXML$: Elem = <csymbol cd={cd}>{name}</csymbol>
@@ -326,7 +391,7 @@ final case class CError(attributes : Attributes, cd: String, name: String, args:
   assert(isNCName(cd))
   assert(isNCName(name))
   /** Same as [[toPopcorn]] but without the outermost attributes */
-  override protected def toPopcorn$(sb: StringBuilder, priority: Int): Unit = ???
+//  override protected def toPopcorn$(sb: StringBuilder, priority: Int): Unit = ???
   override def toString = toPopcorn
 
   private def anyToXML(o : Any) = o match {
@@ -344,10 +409,10 @@ final case class CError(attributes : Attributes, cd: String, name: String, args:
 /** An addition to the Content MathML standard. Represents a missing node.
   * Not valid Content MathML, cannot be exported to valid XML
   */
-final case class CNone(attributes : Attributes = NoAttr) extends CMathML with Leaf {
+final case class CNone(attributes : Attributes = NoAttr) extends CMathML with Leaf with CILike {
   /** Same as [[toPopcorn]] but without the outermost attributes */
-  override protected def toPopcorn$(sb: StringBuilder, priority: Int): Unit =
-  sb += '\u25a2'
+//  override protected def toPopcorn$(sb: StringBuilder, priority: Int): Unit =
+//  sb += '\u25a2'
 
   override def toString = toPopcorn
 
