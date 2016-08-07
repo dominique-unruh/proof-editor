@@ -1,6 +1,6 @@
 package trafo
 import scala.language.existentials
-import cmathml.CMathML
+import cmathml.{CMathML, CNone}
 import misc.Pure
 import theory.Formula
 
@@ -9,7 +9,6 @@ import scala.reflect.api.TypeTags
 import scala.util.control.Breaks
 import scala.runtime.BoxedUnit
 import scala.xml.Elem
-
 import scala.reflect.runtime.universe._
 
 
@@ -21,12 +20,16 @@ abstract class Question[T] {
   val default : T
 }
 
-class FormulaQ(val message:Elem
-//               @deprecated val newFormula:Formula=null
-              ) extends Question[Option[Formula]] {
+class FormulaQ(val message:Elem) extends Question[Option[Formula]] {
   val answerType = typeTag[Option[Formula]]
   val questionType = typeTag[FormulaQ]
   val default = None
+}
+
+class MathQ(val message:Elem, val default : CMathML = CNone()) extends Question[CMathML] {
+  val answerType = typeTag[CMathML]
+  val questionType = typeTag[MathQ]
+//  val default = CNone
 }
 
 class IntQ(val message:Elem) extends Question[Integer] {

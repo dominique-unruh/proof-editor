@@ -6,6 +6,7 @@ import cmathml.CMathML._
 import com.sun.org.apache.xerces.internal.util.XMLChar
 import misc.{Log, Pure, Utils}
 import org.symcomp.openmath.{OMSymbol, _}
+import _root_.z3.Z3
 
 import scala.xml.{Elem, Utility}
 
@@ -79,7 +80,42 @@ sealed trait CMathML {
   }
 
   @Pure protected def toSymcomp$ : org.symcomp.openmath.OpenMathBase
+
+  /** Checks whether the formula is valid.
+    *
+    * - Does not contain CNone
+    * - Is well-typed
+    * - Contains only supported symbols
+    *
+    * TODO: currently this is done by simply converting to Z3. Should be checked directly
+    * TODO: should return explanation why this is not valid math
+    */
+  @Pure def isValidMath: Boolean = {
+    try {
+      z3.fromCMathML(this)
+      true
+    }
+    catch {
+      case e : Exception =>
+        Log.debug("while converting to Z3",e,this)
+        false
+    }
+  }
+
+  /** Checks whether the formula is valid (see [[isValidMath]]) and boolean.
+    */
+  @Pure def isValidBooleanMath: Boolean = {
+    try {
+      z3.fromCMathML(this).isBool
+    }
+    catch {
+      case e : Exception =>
+        Log.debug("while converting to Z3",e,this)
+        false
+    }
+  }
 }
+
 
 object CMathML {
   def tryFromPopcorn(str: String) : Option[CMathML] = {
@@ -92,6 +128,8 @@ object CMathML {
     }
     Some(fromSymcomp(om))
   }
+
+  private val z3 = new Z3()
 
   def fromPopcorn(str: String) = {
     val om = OpenMathBase.parsePopcorn(str.trim)

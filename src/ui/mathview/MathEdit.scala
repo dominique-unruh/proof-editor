@@ -33,9 +33,19 @@ class MathEdit extends MathViewFX {
   val editable = ObjectProperty(None : Option[MutableCMathML])
   installHighlight(editable,classOf[EditableHighlight])
 
+  var _onChange : () => Unit = { () => }
+  def onChange(f:()=>Unit) = _onChange = f
+  mathDoc.addGlobalChangeListener({ _ => _onChange() })
+//  def onChange(f:()=>Unit) = _onChange = f
+
   override def setMath(m : CMathML): Unit = {
     super.setMath(m)
     cursorPos.value = CursorPos(mathDoc.root, CursorRight)
+  }
+
+  def setMathEditable(m : CMathML): Unit = {
+    setMath(m)
+    editable.value = Some(mathDoc.root)
   }
 
   override def setMath(m : MutableCMathML): Unit = {

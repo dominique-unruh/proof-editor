@@ -10,6 +10,7 @@ import javafx.scene.layout.{HBox, StackPane, VBox}
 import cmathml._
 import misc.{GetterSetterProperty, Log}
 import misc.Utils.ImplicitConversions._
+import sun.java2d.cmm.kcms.CMM
 import testapp.TestApp.TrafoChoice
 import theory.{Formula, Theory}
 import trafo._
@@ -77,7 +78,7 @@ class TestApp extends JFXApp {
 
   def insertNewFormula() : Unit = {
     val math = newFormulaEdit.mathDoc.root.toCMathML
-    if (!isValidMath(math)) {
+    if (!math.isValidMath) {
       errorPopup("The formula you entered is not valid math")
       return
     }
@@ -85,17 +86,6 @@ class TestApp extends JFXApp {
   }
 
   private val z3 = new Z3
-  def isValidMath(math:CMathML): Boolean = {
-    try {
-      z3.fromCMathML(math)
-      true
-    }
-    catch {
-      case e : Exception =>
-        Log.stackTraceDebug("while converting to Z3",e,math)
-        false
-    }
-  }
 
   lazy val theoryPane = new layout.VBox {
     children = List(
@@ -141,8 +131,8 @@ class TestApp extends JFXApp {
     )}
 
   private lazy val transformations = ObservableBuffer(
-    TrafoChoice("Simplify formula", new SimplifyTrafo),
-    TrafoChoice("Equality check", new CheckEqualTrafo)
+    TrafoChoice("Edit formula", new EditFormulaTrafo),
+    TrafoChoice("Simplify formula", new SimplifyTrafo)
   )
 
 
@@ -253,7 +243,7 @@ class TestApp extends JFXApp {
       }
     }
 
-//    mathedit.setMath(CN(0)) // Otherwise the ui.mathview will not be resized to something small
+    //    mathedit.setMath(CN(0)) // Otherwise the ui.mathview will not be resized to something small
     mathedit.setVisible(false)
     getChildren.addAll(new VBox(1,pickButton,clearButton),mathedit)
     clearButton.addEventHandler(ActionEvent.ACTION, {
@@ -265,18 +255,42 @@ class TestApp extends JFXApp {
     })
     pickButton.addEventHandler(ActionEvent.ACTION, { (_:ActionEvent) =>
       theoryView.selectedFormula match {
-      case None =>
-        formula = None
-        line.rightProperty.set(null)
-        mathedit.setVisible(false)
-      case Some(form) =>
-        formula = Some(form)
-        mathedit.setVisible(true)
-        mathedit.setMath(form.math)
-        line.setRight(theoryView.selectedMathEdit.get)
+        case None =>
+          formula = None
+          line.rightProperty.set(null)
+          mathedit.setVisible(false)
+        case Some(form) =>
+          formula = Some(form)
+          mathedit.setVisible(true)
+          mathedit.setMath(form.math)
+          line.setRight(theoryView.selectedMathEdit.get)
       }
       valueProperty.fireValueChangedEvent()
     })
+  }
+
+  class MathEditor extends HBox with Editor[CMathML] {
+    override val editedType: TypeTag[CMathML] = typeTag[CMathML]
+    override val questionType = typeTag[MathQ]
+    val mathedit = new MathEdit()
+    var math : CMathML = CNone()
+
+    override val valueProperty: GetterSetterProperty[CMathML] = new GetterSetterProperty[CMathML] {
+      override protected def getter: CMathML = math
+      override protected def setter(value: CMathML): Unit = {
+        math = value
+        mathedit.setMathEditable(value)
+      }
+    }
+
+    valueProperty.value = CNone()
+
+    mathedit.onChange { () => // TODO: for efficiency reasons, we should update only occasionally!
+      math = mathedit.mathDoc.root.toCMathML
+      valueProperty.fireValueChangedEvent()
+    }
+
+    getChildren.addAll(mathedit)
   }
 
   class ShowFormula(q:ShowFormulaQ) extends HBox with Editor[BoxedUnit] {
@@ -299,6 +313,9 @@ class TestApp extends JFXApp {
         cast(q.answerType, edit)
       } else if (q.questionType==typeTag[ShowFormulaQ]) {
         val edit = new ShowFormula(q.asInstanceOf[ShowFormulaQ])
+        cast(q.answerType, edit)
+      } else if (q.questionType==typeTag[MathQ]) {
+        val edit = new MathEditor()
         cast(q.answerType, edit)
       } else
         Interactor.defaultEditorFactory.create(q)

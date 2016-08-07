@@ -15,7 +15,9 @@ final class Z3(config:Map[String,String]) {
   def isEqual(a: CMathML, b: CMathML) : Option[Boolean] = synchronized {
     val a$ = fromCMathML_(a)
     val b$ = fromCMathML_(b)
-    val neq = context.mkNot(context.mkEq(a$,b$))
+    val equal = try { context.mkEq(a$, b$) }
+      catch { case _ : Z3Exception => return Some(false) } // Happens if the sorts of a,b do not even match
+    val neq = context.mkNot(equal)
     val solver = context.mkSolver()
     solver.add(neq)
     val status = solver.check
@@ -97,6 +99,14 @@ final class Z3(config:Map[String,String]) {
     case Apply(_, CMathML.equal,x,y) => context.mkEq(fromCMathML_(x),fromCMathML_(y))
     case Apply(_, CMathML.uminus,x) => context.mkUnaryMinus(fromCMathML_(x).asInstanceOf[ArithExpr])
     case Apply(_, CMathML.power,x,y) => context.mkPower(fromCMathML_(x).asInstanceOf[ArithExpr],fromCMathML_(y).asInstanceOf[ArithExpr])
+    case Apply(_, CMathML.or,x,y) => context.mkOr(fromCMathML_(x).asInstanceOf[BoolExpr], fromCMathML_(y).asInstanceOf[BoolExpr])
+    case Apply(_, CMathML.and,x,y) => context.mkOr(fromCMathML_(x).asInstanceOf[BoolExpr], fromCMathML_(y).asInstanceOf[BoolExpr])
+    case Apply(_, CMathML.equivalent,x,y) => context.mkOr(fromCMathML_(x).asInstanceOf[BoolExpr], fromCMathML_(y).asInstanceOf[BoolExpr])
+    case Apply(_, CMathML.implies,x,y) => context.mkOr(fromCMathML_(x).asInstanceOf[BoolExpr], fromCMathML_(y).asInstanceOf[BoolExpr])
+    case Apply(_, CMathML.xor,x,y) => context.mkOr(fromCMathML_(x).asInstanceOf[BoolExpr], fromCMathML_(y).asInstanceOf[BoolExpr])
+    case Apply(_, CMathML.not,x) => context.mkOr(fromCMathML_(x).asInstanceOf[BoolExpr])
+    case CMathML.trueSym => context.mkTrue()
+    case CMathML.falseSym => context.mkFalse()
     case Bind(_, CMathML.forall,vs,body) =>
       context.mkForall(
         vs.map(fromCMathML_(_)).toArray,
@@ -176,6 +186,8 @@ object Z3 {
   def toggleWarningMessages(enabled: Boolean) = com.microsoft.z3.Global.ToggleWarningMessages(enabled)
 
   final class Expr protected[z3] (val z3:Z3, private val expr:com.microsoft.z3.Expr) {
+    def isBool = expr.isBool
+
     def simplify = z3.synchronized { new Expr(z3,expr.simplify) }
     override def toString = expr.toString
 

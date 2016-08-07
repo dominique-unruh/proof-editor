@@ -1,6 +1,7 @@
 package cmathml
 
 import cmathml.MutableCMathML.{Attributes, AttributesRO, NoAttr, fromCMathML}
+import misc.Log
 import ui.mathview.MathViewFX.CursorSide
 
 import scala.annotation.tailrec
@@ -14,8 +15,12 @@ sealed abstract class MutableCMathMLParent {
   def replace(a: MutableCMathML, b: MutableCMathML): Unit
 
   val changeListeners = new ListBuffer[() => Unit]
-  protected def fireChange() : Unit =
-    for (l <- changeListeners) l()
+  protected def fireChange() : Unit = {
+    for (doc <- getDocument) doc.fireGlobalChange(this)
+    for (l <- changeListeners)
+      try l()
+      catch { case e: Throwable => Log.stackTrace("while firing changeListeners", e) }
+  }
   def addChangeListener(listener: () => Unit) =
     changeListeners += listener
   def getDocument : Option[MutableCMathMLDocument]
@@ -26,6 +31,17 @@ final class MutableCMathMLDocument private () extends MutableCMathMLParent {
     case MCNone() => true
     case _ => false
   }
+
+  private[cmathml] def fireGlobalChange(m: MutableCMathMLParent) =
+    for (l <- globalChangeListeners)
+      try l(m)
+      catch {
+        case e: Throwable => Log.stackTrace("while firing globalChangeListeners",e)
+      }
+
+  val globalChangeListeners = new ListBuffer[MutableCMathMLParent => Unit]
+  def addGlobalChangeListener(listener: MutableCMathMLParent => Unit) =
+    globalChangeListeners += listener
 
   private var _root : MutableCMathML = null
   def toCMathML = _root.toCMathML
@@ -124,7 +140,11 @@ sealed abstract class MutableCMathML(attribs : AttributesRO) extends MutableCMat
     assert(_parent==null)
     assert(parent!=null)
     _parent = parent
-    for (l <- parentListeners) l(null)
+    for (l <- parentListeners)
+      try l(null)
+      catch {
+        case e: Throwable => Log.stackTrace("while firing parentListeners",e)
+      }
   }
 
   override def toString = s"[M(${Integer.toHexString(System.identityHashCode(this))}): ${toCMathML}]"
@@ -136,7 +156,11 @@ sealed abstract class MutableCMathML(attribs : AttributesRO) extends MutableCMat
     val prev = _parent
     assert(prev!=null)
     _parent = null
-    for (l <- parentListeners) l(prev)
+    for (l <- parentListeners)
+      try l(prev)
+      catch {
+        case e: Throwable => Log.stackTrace("while firing globalChangeListeners",e)
+      }
   }
   val parentListeners = new ListBuffer[MutableCMathMLParent => Unit]
   def addParentListener(listener : MutableCMathMLParent => Unit) =

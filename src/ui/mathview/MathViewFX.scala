@@ -4,8 +4,10 @@ import javafx.geometry.Bounds
 import javafx.scene.layout
 
 import cmathml._
+import misc.Pure
 import misc.Utils.ImplicitConversions._
 
+import scala.annotation.tailrec
 import scala.collection.mutable
 import scala.util.control.Breaks._
 import scalafx.application.Platform
@@ -121,6 +123,14 @@ class MathViewFX extends HBox {
         if (info.ownedBy != null)
           throw new MathViewException("not a visual node (info.ownedBy!=null)",math)
         info.node
+    }
+  }
+
+  @tailrec @Pure final def isRenderedNode(node : MutableCMathML) : Boolean = {
+    if (node eq mathDoc.root) true
+    else infos.get(node) match {
+      case None => false
+      case Some(info) => info.embeddedIn!=null && isRenderedNode(info.embeddedIn.math)
     }
   }
 

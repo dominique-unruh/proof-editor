@@ -7,7 +7,7 @@ import javafx.scene.Node
 import javafx.scene.control._
 import javafx.scene.layout.VBox
 
-import misc.Utils
+import misc.{Log, Utils}
 import misc.Utils.ImplicitConversions._
 import trafo._
 import ui.Interactor.{Editor, EditorFactory}
@@ -78,10 +78,10 @@ class Interactor[T]() extends layout.VBox {
         edit = edit0
         edit0.valueProperty.addListener(new ChangeListener[T] {
           override def changed(obs: ObservableValue[_ <: T], old: T, answer: T): Unit =
-            setAnswer(idx, answer)
+            setAnswer(idx, answer, fromEditor=true)
         })
         if (edit0.valueProperty.getValue!=null)
-          setAnswer(idx, edit0.valueProperty.getValue)
+          setAnswer(idx, edit0.valueProperty.getValue, fromEditor=true)
         this.getChildren.add(edit0)
       } else {
         if (question!=q) {
@@ -116,7 +116,7 @@ class Interactor[T]() extends layout.VBox {
         val int2 =
           try { answer(a) }
         catch { case e:Throwable =>
-            e.printStackTrace()
+            Log.stackTrace("uncaught exception in Interaction",e)
             Interaction.failWith("internal-error-"+System.identityHashCode(this),
               <span>internal error: {e.toString}</span>)
         }
@@ -124,11 +124,11 @@ class Interactor[T]() extends layout.VBox {
     }
   }
 
-  def setAnswer(idx: Int, answer: AnyRef) : Unit = interactions(idx) match {
+  def setAnswer(idx: Int, answer: AnyRef, fromEditor:Boolean=false) : Unit = interactions(idx) match {
     case InteractionRunning(id, question, _) =>
         if (answers.get(id)!=answer) {
           answers.update(id, answer)
-          updateGUI(idx)
+          if (!fromEditor) updateGUI(idx)
           recompute(idx + 1)
         }
     case InteractionFinished(_) | InteractionFailed() =>
