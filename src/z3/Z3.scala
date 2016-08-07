@@ -32,19 +32,27 @@ final class Z3(config:Map[String,String]) {
   private def toCMathML(expr: Expr) : CMathML = expr match {
     case e: ArithExpr if e.isConst => CI(e.getFuncDecl.getName.toString)
     case e: ArithExpr if e.isApp =>
-      e.getFuncDecl.getDeclKind match {
-        case Z3_OP_ADD => Apply(CMathML.plus, e.getArgs map toCMathML: _*)
-        case Z3_OP_MUL => Apply(CMathML.times, e.getArgs map toCMathML: _*)
-        case Z3_OP_SUB => Apply(CMathML.minus, e.getArgs map toCMathML: _*)
-        case Z3_OP_DIV => Apply(CMathML.divide, e.getArgs map toCMathML: _*)
-        case Z3_OP_UMINUS => Apply(CMathML.uminus, e.getArgs map toCMathML: _*)
-        case Z3_OP_EQ => Apply(CMathML.equal, e.getArgs map toCMathML: _*)
-        case Z3_OP_POWER => Apply(CMathML.power, e.getArgs map toCMathML: _*)
+      (e.getFuncDecl.getDeclKind,e.getNumArgs) match {
+        case (Z3_OP_ADD,2) => Apply(CMathML.plus, e.getArgs map toCMathML: _*)
+        case (Z3_OP_MUL,2) => Apply(CMathML.times, e.getArgs map toCMathML: _*)
+        case (Z3_OP_SUB,2) => Apply(CMathML.minus, e.getArgs map toCMathML: _*)
+        case (Z3_OP_DIV,2) => Apply(CMathML.divide, e.getArgs map toCMathML: _*)
+        case (Z3_OP_UMINUS,1)=> Apply(CMathML.uminus, e.getArgs map toCMathML: _*)
+        case (Z3_OP_EQ,2) => Apply(CMathML.equal, e.getArgs map toCMathML: _*)
+        case (Z3_OP_POWER,2) => Apply(CMathML.power, e.getArgs map toCMathML: _*)
         case k => throw new MathException(s"cannot convert arith expr from Z3 to CMathML: $e (unkown decl kind $k)")
       }
     case e: BoolExpr if e.isApp =>
-      e.getFuncDecl.getDeclKind match {
-        case Z3_OP_EQ => Apply(CMathML.equal, e.getArgs map toCMathML: _*)
+      (e.getFuncDecl.getDeclKind,e.getNumArgs) match {
+        case (Z3_OP_EQ,2) => Apply(CMathML.equal, e.getArgs map toCMathML: _*)
+        case (Z3_OP_TRUE,0) => CMathML.trueSym
+        case (Z3_OP_FALSE,0) => CMathML.falseSym
+        case (Z3_OP_AND,2) => Apply(CMathML.and, e.getArgs map toCMathML: _*)
+        case (Z3_OP_OR,2) => Apply(CMathML.or, e.getArgs map toCMathML: _*)
+        case (Z3_OP_IFF,2) => Apply(CMathML.equivalent, e.getArgs map toCMathML: _*)
+        case (Z3_OP_IMPLIES,2) => Apply(CMathML.implies, e.getArgs map toCMathML: _*)
+        case (Z3_OP_XOR,2) => Apply(CMathML.xor, e.getArgs map toCMathML: _*)
+        case (Z3_OP_NOT,1) => Apply(CMathML.not, e.getArgs map toCMathML: _*)
         case k => throw new MathException(s"cannot convert bool expr from Z3 to CMathML: $e (unkown decl kind $k)")
       }
     case e: RatNum =>

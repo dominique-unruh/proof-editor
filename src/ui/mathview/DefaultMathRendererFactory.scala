@@ -42,9 +42,17 @@ object DefaultMathRendererFactory extends MathRendererFactory {
       case MApply(hd@MCSymbol("arith1", "times"), x, y) => binop(hd, "\u22c5", x, y)
       case MApply(hd@MCSymbol("arith1", "divide"), x, y) => own(hd); new Fraction(get(x), get(y))
       case MApply(hd@MCSymbol("arith1", "power"), x, y) => own(hd); new Power(get(x), get(y))
+      case MApply(hd@MCSymbol("logic1", "and"), x, y) => binop(hd, "∧", x, y)
+      case MApply(hd@MCSymbol("logic1", "or"), x, y) => binop(hd, "∨", x, y)
+      case MApply(hd@MCSymbol("logic1", "equivalent"), x, y) => binop(hd, "≡", x, y)
+      case MApply(hd@MCSymbol("logic1", "xor"), x, y) => binop(hd, "⊕", x, y)
+      case MApply(hd@MCSymbol("logic1", "implies"), x, y) => binop(hd, "⇒", x, y)
+      case MApply(hd@MCSymbol("logic1", "not"), x) => prefixop(hd, "¬", x)
+      case MCSymbol("logic1","true") => new SFSymbol("true")
+      case MCSymbol("logic1","false") => new SFSymbol("false")
       case MCNone() => new Missing()
-      case MApply(hd, args@_*) => (new GenericApply(get(hd), args.map(get(_))))
-      case MCSymbol(cd, name) => (new GenericSymbol(cd, name))
+      case MApply(hd, args@_*) => new GenericApply(get(hd), args.map(get(_)))
+      case MCSymbol(cd, name) => new GenericSymbol(cd, name)
       case m @ MCN(num) => new Num(m)
     }
   }
@@ -58,6 +66,7 @@ object MathText {
   val fontSize = 22 : Double
   //  for (f <- Font.fontNames) println(f)
   val VariableFont = Font("FreeSerif",FontPosture.Italic,fontSize)
+  val SFFont = Font("FreeSans",fontSize)
   //  println(VariableFont)
   val SymbolFont = symbolFont(fontSize)
   def symbolFont(size:Double) = new Font("Symbola",size)
@@ -207,7 +216,11 @@ class Num(math:MCN) extends Text(math.n.toString) {
 }
 
 class GenericSymbol(cd:String, name:String) extends Text(s"$cd.$name") {
-  //  font = MathText.VariableFont
+  font = MathText.VariableFont
+}
+
+class SFSymbol(name:String) extends Text(name) {
+  font = MathText.SFFont
 }
 
 class Missing() extends Rectangle {
