@@ -91,6 +91,7 @@ final class MutableCMathMLDocument private () extends MutableCMathMLParent {
 }
 
 sealed abstract class MutableCMathML(attribs : AttributesRO) extends MutableCMathMLParent {
+  for ((cd,name) <- attribs.keys) { assert(CMathML.isNCName(cd)); assert(CMathML.isNCName(name)) }
   /** Returns true is `this` is equal to or a descendant of `ancestor`
     */
   @tailrec final def isDescendantOf(ancestor: MutableCMathMLParent) : Boolean =
@@ -181,8 +182,7 @@ object MutableCMathML {
   type Attributes = mutable.Map[(String,String),Any]
   type AttributesRO = Map[(String,String),Any]
   val NoAttr : AttributesRO = Map.empty
-//  private def fromCMathMLAttr(attributes:CMathML.Attributes) : AttributesRO =
-//    attributes.mapValues { case m : CMathML => fromCMathML(m); case x => x }
+
   def fromCMathML(math:CMathML) : MutableCMathML = math match {
     case Apply(att, hd, args @ _*) => new MApply(att,fromCMathML(hd),args.map(fromCMathML) : _*)
     case CI(att, v) => new MCI(att,v)
@@ -505,16 +505,19 @@ object MCSymbol {
   def unapply(that:MCSymbol) = Some((that._cd,that._name))
 }
 final class MCSymbol(attributes: AttributesRO, private var _cd:String, private var _name:String) extends MutableCMathML(attributes) {
+  assert(CMathML.isNCName(_cd))
+  assert(CMathML.isNCName(_name))
   def this(m:CSymbol) = this(m.attributes,m.cd,m.name)
   override def toCMathML: CMathML = CSymbol(attributesToCMathML,_cd,_name)
   def cd = _cd
   def cd_=(cd:String) = {
-    assert(cd!=null)
+    assert(CMathML.isNCName(cd))
     _cd = cd
     fireChange()
   }
   def name = _name
   def name_=(name:String) = {
+    assert(CMathML.isNCName(name))
     assert(name!=null)
     _name = name
     fireChange()
@@ -528,6 +531,8 @@ final class MCSymbol(attributes: AttributesRO, private var _cd:String, private v
   }
 }
 final class MCError(attributes: AttributesRO, val cd: String, val name: String, val args: Any*) extends MutableCMathML(attributes) {
+  assert(CMathML.isNCName(cd))
+  assert(CMathML.isNCName(name))
   override def toCMathML: CMathML = CError(attributesToCMathML,cd,name,args)
   override def replace(a: MutableCMathML, b: MutableCMathML): Unit =
     replaceInAttributes(a,b)

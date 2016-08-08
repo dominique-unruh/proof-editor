@@ -11,7 +11,7 @@ import _root_.z3.Z3
 import scala.xml.{Elem, Utility}
 
 class MathException(message: String, val args: Any*) extends Exception(message)
-class InvalidPath(message: String, val path:Path, args: Any*) extends MathException(message,(path::args.toList):_*)
+class InvalidPath(message: String, val path:Path, args: Any*) extends MathException(message, path :: args.toList : _*)
 class InvalidType(message: String, args:Any*) extends MathException(message,args)
 
 /** Represents mathematical formulas in Strict Content MathML encoding */
@@ -50,25 +50,6 @@ sealed trait CMathML {
 
   /** Same as [[toXML]] but without the outermost attributes */
   @Pure def toXML$ : scala.xml.Elem
-
-//  /** Terms with priority `priority` or lower need to be parenthesised */
-//  @Pure def toPopcorn(sb:StringBuilder, priority:Int) : Unit =
-//  if (attributes.isEmpty)
-//    toPopcorn$(sb,priority)
-//  else
-//    ???
-
-//  /** Same as [[toPopcorn(sb:StringBuilder,priority:Int):Unit*]] but without the outermost attributes */
-//  @Pure protected def toPopcorn$(sb:StringBuilder, priority:Int) : Unit
-
-//  // TODO: should we use the library from here? http://java.symcomp.org/
-//  // SHA1=b860b688621a1ee4dcb8a7440b3d30ccbaa6a2b0
-//  // http://java.symcomp.org/maven/2/org/symcomp/openmath/1.4.0/openmath-1.4.0.jar
-//  @Pure def toPopcornOLD : String = {
-//    val sb = new StringBuilder
-//    toPopcorn(sb,0)
-//    sb.toString
-//  }
 
   @Pure def toPopcorn : String = toSymcomp.toPopcorn
 
@@ -235,36 +216,6 @@ final case class Apply(val attributes : Attributes, hd: CMathML, args: CMathML*)
     args(idx-1).subterm(tl)
   }
 
-//  override def toString : String = {
-//    "Apply("+hd+","+args.mkString(",")+")"
-//  }
-
-//  private def popcornBinop(sb: StringBuilder,priority:Int,opPriority:Int,op:String,x:CMathML,y:CMathML): Unit = {
-//    if (opPriority <= priority) sb += '('
-//    x.toPopcorn(sb,opPriority)
-//    sb ++= op
-//    y.toPopcorn(sb,opPriority)
-//    if (opPriority <= priority) sb += ')'
-//  }
-
-//  override protected def toPopcorn$(sb: StringBuilder, priority: Int): Unit = this match {
-//    case Apply(_,`equal`,x,y) => popcornBinop(sb,priority,10,"=",x,y)
-//    case Apply(_,`plus`,x,y) => popcornBinop(sb,priority,15,"+",x,y)
-//    case Apply(_,`minus`,x,y) => popcornBinop(sb,priority,16,"-",x,y)
-//    case Apply(_,`times`,x,y) => popcornBinop(sb,priority,17,"*",x,y)
-//    case Apply(_,`divide`,x,y) => popcornBinop(sb,priority,18,"/",x,y)
-//    case _ =>
-//      hd.toPopcorn(sb,1000)
-//      sb += '('
-//      var first = true
-//      for (a <- args) {
-//        if (!first) sb += ','
-//        a.toPopcorn(sb,0)
-//        first = false
-//      }
-//      sb += ')'
-//  }
-
   override def toXML$: Elem = <apply>{hd.toXML}{args.map(_.toXML)}</apply>
 
   @Pure
@@ -371,9 +322,6 @@ final case class CN(attributes : Attributes = NoAttr, n: BigDecimal) extends CMa
   override def negate() = CN(-n)
   override def toString = toPopcorn
 
-//  override protected def toPopcorn$(sb: StringBuilder, priority: Int): Unit =
-//    sb ++= n.toString
-
   /** Same as [[toXML]] but without the outermost attributes */
   override def toXML$: Elem =
     if (n.isWhole) <cn type="integer">{n.toString}</cn>
@@ -407,8 +355,6 @@ final case class CSymbol(attributes : Attributes = NoAttr, cd: String, name: Str
   import CMathML._
   assert(isNCName(cd))
   assert(isNCName(name))
-//  override protected def toPopcorn$(sb: StringBuilder, priority: Int): Unit = {
-//    sb ++= cd; sb += '.'; sb ++= name }
   override def toString = toPopcorn
 
   override def toXML$: Elem = <csymbol cd={cd}>{name}</csymbol>
@@ -441,7 +387,7 @@ final case class CError(attributes : Attributes, cd: String, name: String, args:
   override def toXML$: Elem = <cerror><csymbol cd={cd}>{name}</csymbol>{args.map(anyToXML)}</cerror>
 
   @Pure override protected
-  def toSymcomp$: OpenMathBase = ???
+  def toSymcomp$: OpenMathBase = ??? // new OMSymbol(cd,name).error(args.map(_.toSymcomp).toArray)
 }
 
 /** An addition to the Content MathML standard. Represents a missing node.

@@ -102,7 +102,7 @@ sealed trait Interaction[+T] {
     case InteractionFinished(result) => InteractionFinished(f(result))
     case InteractionFailed() => InteractionFailed()
   }
-  @Pure final def quickInteract(answers : AnyRef*) : (T,List[MessageQ]) = {
+  @Pure final def quickInteract(answers : AnyRef*) : (T,List[Question[BoxedUnit]]) = {
     val (inter,msgs) = quickInteract0(answers : _*)
     inter match {
       case InteractionFinished(result) => (result,msgs)
@@ -110,16 +110,18 @@ sealed trait Interaction[+T] {
       case InteractionRunning(_,question,_) => throw new RuntimeException("interaction incomplete, expecting "+question.message.text)
     }
   }
-  @Pure final def quickInteract0(answers : AnyRef*) : (Interaction[T],List[MessageQ]) = {
+  @Pure final def quickInteract0(answers : AnyRef*) : (Interaction[T],List[Question[BoxedUnit]]) = {
     import scala.util.control.Breaks._
     var inter = this
-    var messages = Nil: List[MessageQ]
+    var messages = Nil: List[Question[BoxedUnit]]
     val answersIt = answers.iterator
     breakable {
       while (true)
         inter match {
-          case InteractionRunning(id, msg: MessageQ, answer) =>
-            messages = msg :: messages
+//          case InteractionRunning(id, msg: MessageQ, answer) =>
+//            inter = answer(BoxedUnit.UNIT)
+          case InteractionRunning(id, question, answer) if question.answerType==typeTag[BoxedUnit] =>
+            messages = question.asInstanceOf[Question[BoxedUnit]] :: messages
             inter = answer(BoxedUnit.UNIT)
           case InteractionRunning(id, question, answer) =>
             if (answersIt.hasNext)
