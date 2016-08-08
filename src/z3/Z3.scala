@@ -89,22 +89,28 @@ final class Z3(config:Map[String,String]) {
     case CN(_, i) => context.mkNumeral(i.toString, realSort_)
     case CI(_, n) => context.mkConst(n, realSort_)
     case Apply(_, CMathML.plus,x,y) => context.mkAdd(fromCMathML_(x).asInstanceOf[ArithExpr],
-                                                  fromCMathML_(y).asInstanceOf[ArithExpr])
+                                                     fromCMathML_(y).asInstanceOf[ArithExpr])
     case Apply(_, CMathML.minus,x,y) => context.mkSub(fromCMathML_(x).asInstanceOf[ArithExpr],
-                                                   fromCMathML_(y).asInstanceOf[ArithExpr])
+                                                      fromCMathML_(y).asInstanceOf[ArithExpr])
     case Apply(_, CMathML.times,x,y) => context.mkMul(fromCMathML_(x).asInstanceOf[ArithExpr],
-                                                   fromCMathML_(y).asInstanceOf[ArithExpr])
+                                                      fromCMathML_(y).asInstanceOf[ArithExpr])
     case Apply(_, CMathML.divide,x,y) => context.mkDiv(fromCMathML_(x).asInstanceOf[ArithExpr],
-                                                    fromCMathML_(y).asInstanceOf[ArithExpr])
+                                                       fromCMathML_(y).asInstanceOf[ArithExpr])
     case Apply(_, CMathML.equal,x,y) => context.mkEq(fromCMathML_(x),fromCMathML_(y))
     case Apply(_, CMathML.uminus,x) => context.mkUnaryMinus(fromCMathML_(x).asInstanceOf[ArithExpr])
-    case Apply(_, CMathML.power,x,y) => context.mkPower(fromCMathML_(x).asInstanceOf[ArithExpr],fromCMathML_(y).asInstanceOf[ArithExpr])
-    case Apply(_, CMathML.or,x,y) => context.mkOr(fromCMathML_(x).asInstanceOf[BoolExpr], fromCMathML_(y).asInstanceOf[BoolExpr])
-    case Apply(_, CMathML.and,x,y) => context.mkOr(fromCMathML_(x).asInstanceOf[BoolExpr], fromCMathML_(y).asInstanceOf[BoolExpr])
-    case Apply(_, CMathML.equivalent,x,y) => context.mkOr(fromCMathML_(x).asInstanceOf[BoolExpr], fromCMathML_(y).asInstanceOf[BoolExpr])
-    case Apply(_, CMathML.implies,x,y) => context.mkOr(fromCMathML_(x).asInstanceOf[BoolExpr], fromCMathML_(y).asInstanceOf[BoolExpr])
-    case Apply(_, CMathML.xor,x,y) => context.mkOr(fromCMathML_(x).asInstanceOf[BoolExpr], fromCMathML_(y).asInstanceOf[BoolExpr])
-    case Apply(_, CMathML.not,x) => context.mkOr(fromCMathML_(x).asInstanceOf[BoolExpr])
+    case Apply(_, CMathML.power,x,y) => context.mkPower(fromCMathML_(x).asInstanceOf[ArithExpr],
+                                                        fromCMathML_(y).asInstanceOf[ArithExpr])
+    case Apply(_, CMathML.or,x,y) => context.mkOr(fromCMathML_(x).asInstanceOf[BoolExpr],
+                                                  fromCMathML_(y).asInstanceOf[BoolExpr])
+    case Apply(_, CMathML.and,x,y) => context.mkAnd(fromCMathML_(x).asInstanceOf[BoolExpr],
+                                                    fromCMathML_(y).asInstanceOf[BoolExpr])
+    case Apply(_, CMathML.equivalent,x,y) => context.mkIff(fromCMathML_(x).asInstanceOf[BoolExpr],
+                                                           fromCMathML_(y).asInstanceOf[BoolExpr])
+    case Apply(_, CMathML.implies,x,y) => context.mkImplies(fromCMathML_(x).asInstanceOf[BoolExpr],
+                                                            fromCMathML_(y).asInstanceOf[BoolExpr])
+    case Apply(_, CMathML.xor,x,y) => context.mkXor(fromCMathML_(x).asInstanceOf[BoolExpr],
+                                                    fromCMathML_(y).asInstanceOf[BoolExpr])
+    case Apply(_, CMathML.not,x) => context.mkNot(fromCMathML_(x).asInstanceOf[BoolExpr])
     case CMathML.trueSym => context.mkTrue()
     case CMathML.falseSym => context.mkFalse()
     case Bind(_, CMathML.forall,vs,body) =>

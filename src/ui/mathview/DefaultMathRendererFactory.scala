@@ -183,7 +183,7 @@ class PrefixOp(op:String, a:Node) extends HBox {
     val font = symbolFont(h)
     open.font = font
     close.font = font
-    println("height",h)
+//    println("height",h)
   }
 
   innerHeight.onChange(updateParens())
