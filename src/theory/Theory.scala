@@ -9,7 +9,7 @@ import scala.xml.{Comment, Elem}
 final case class Theory(counter : Int,
                         /** Invariants:
                     * - for any (i->f) in this map, f.id==i.
-                    * - for any (i->f), i<[[counter]] */
+                    * - for any (i->f), i<[[Theory!.counter counter]] */
                         formulas : Map[Int,Formula]) {
   def deleteFormula(formula: Formula) : (Theory,Formula) = {
     val form2 = formulas(formula.id)
@@ -46,7 +46,7 @@ final case class Theory(counter : Int,
         assert(isMember(f))
       }
     }
-    (theory,newFormulas.toSeq)
+    (theory,newFormulas.toList)
   }
 
   def isMember(formula:Formula) : Boolean = {
@@ -54,9 +54,10 @@ final case class Theory(counter : Int,
     own.isDefined && own.get == formula
   }
 
-  /**
+  /** Replaces a formula stored in the theory by a new formula.
+    * The formula to be replaced is specified by the id of the new formula.
     *
-    * @param formula
+    * @param formula th new formula
     * @return (thy,newFormula,oldFormula): thy is the new theory, oldFormula is the formula that was replaced,
     *         newFormula is the just added formula (newFormula may or may not be equal to the parameter formula,
     *         but the logical content is guaranteed to be the same)
@@ -77,7 +78,7 @@ object Theory {
   }
 }
 
-final case class Formula private[theory] (val id : Int = Formula.NO_ID, val math : CMathML) {
+final case class Formula private[theory] (id : Int = Formula.NO_ID, math : CMathML) {
   import Formula._
   def detach: Formula = copy(id=NO_ID)
   def toXML = <formula id={id.toString}>{Comment(" "+math.toPopcorn+" ")}{math.toXMLMath}</formula>

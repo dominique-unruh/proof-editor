@@ -160,6 +160,7 @@ class MathViewFX extends HBox {
     if (info.node.invalid) info.node.update()
     info.node
   }
+  //noinspection AccessorLikeMethodIsEmptyParen
   private def getNodeForRoot() : MathNodeImpl = {
     val info = getInfoWithNewNode(mathDoc.root)
     if (info.ownedBy != null) info.ownedBy.invalid = true
@@ -338,7 +339,7 @@ class MathViewFX extends HBox {
 //      debug("Info: "+getInfoWithNewNode(math))
 //    }
 
-    override def toString(): String = s"[MathNodeImpl: ${math}]"
+    override def toString(): String = s"[MathNodeImpl: $math]"
 
     /** Rules:
       * - If [[getNodeForEmbedding]] is called for some proper descendent x of [[math]], then [[own]](x) must be called before.
@@ -364,7 +365,7 @@ class MathViewFX extends HBox {
       node
     }
 
-    private var child: Node = null
+    private var child: Node = _
     var invalid = true
 
     private def setChild(n: Node) =

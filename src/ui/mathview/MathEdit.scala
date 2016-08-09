@@ -111,11 +111,11 @@ class MathEdit extends MathViewFX {
       cm.items += menuItem("_Copy", clipboardCopy())
     else
       cm.items += menuItem("Copy")
-    if (selection.value.exists(inEditableRange(_)))
+    if (selection.value.exists(inEditableRange))
       cm.items += menuItem("C_ut", clipboardCut())
     else
       cm.items += menuItem("Cut")
-    if (selection.value.exists(inEditableRange(_))
+    if (selection.value.exists(inEditableRange)
       || (selection.value.isEmpty && inEditableRange(cursorPos.value.node)))
       cm.items += menuItem("_Paste", clipboardPaste())
     else
@@ -292,7 +292,7 @@ class MathEdit extends MathViewFX {
     image
   }
 
-  private def toClipboard(math: MutableCMathML): Unit ={
+  private def storeInClipboard(math: MutableCMathML): Unit ={
     val content = new ClipboardContent
 
     val cmathml = math.toCMathML
@@ -316,13 +316,13 @@ class MathEdit extends MathViewFX {
   /** Copies the current selection into the clipboard */
   def clipboardCopy(): Unit = selection.value match {
     case None =>
-    case Some(math) => toClipboard(math)
+    case Some(math) => storeInClipboard(math)
   }
 
   /** Cuts the current selection into the clipboard */
   def clipboardCut(): Unit = selection.value match {
     case Some(math) =>
-      toClipboard(math)
+      storeInClipboard(math)
       if (inEditableRange(math)) {
         val none = new MCNone
         replaceWith(math, none)

@@ -36,18 +36,18 @@ class TestFxApp extends Application {
     if (callMe!=null) callMe()
 //    stage.getScene.addMnemonic(new Mnemonic(pane,
 //      new KeyCodeCombination(KeyCode.Q, KeyCombination.SHORTCUT_DOWN)))
-    stage.getScene.getAccelerators.put(input.KeyCombination("Shortcut+Q"), () => stage.hide)
+    stage.getScene.getAccelerators.put(input.KeyCombination("Shortcut+Q"), () => stage.hide())
 
     stage.show()
   }
 }
 object TestFxApp {
   //  var showThisNode : Node = null
-  var pane : Pane = null
-  var callMe : () => Unit = null
+  var pane : Pane = _
+  var callMe : () => Unit = _
   var name : String = "TestFxApp"
-  val testAppCss = getClass().getResource("/testapp/testapp.css").toExternalForm()
-  var stage : Stage = null
+  val testAppCss = getClass.getResource("/testapp/testapp.css").toExternalForm
+  var stage : Stage = _
   def useTestAppCss() = stage.getScene.getStylesheets.add(testAppCss)
 
 

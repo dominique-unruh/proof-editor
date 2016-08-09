@@ -28,7 +28,7 @@ class TheoryView extends VBox {
       edit.setMath(newFormula.math)
     }
     override def theoryCleared(): Unit = {
-      children.clear
+      children.clear()
       selectedFormulaId = None
       nodes.clear
     }

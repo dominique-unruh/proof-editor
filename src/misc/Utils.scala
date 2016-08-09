@@ -61,28 +61,28 @@ object Utils {
 
   object ImplicitConversions {
     import scala.language.implicitConversions
-    implicit def lambdaToEventHandler[T <: Event](handler: T => Unit) = new javafx.event.EventHandler[T] {
+    implicit def lambdaToEventHandler[T <: Event](handler: T => Unit) : javafx.event.EventHandler[T] = new javafx.event.EventHandler[T] {
       override def handle(dEvent: T): Unit = handler(dEvent)
     }
 
-    implicit def lambdaToWebConsoleListener(handler: (WebView, String, Int, String) => Unit) = new WebConsoleListener() {
+    implicit def lambdaToWebConsoleListener(handler: (WebView, String, Int, String) => Unit) : WebConsoleListener = new WebConsoleListener() {
       override def messageAdded(webView: WebView, message: String, lineNumber: Int, sourceId: String): Unit = handler(webView, message, lineNumber, sourceId)
     }
 
-    implicit def lambdaToChangeListener[T](handler: T => Unit) = new ChangeListener[T]() {
+    implicit def lambdaToChangeListener[T](handler: T => Unit) : ChangeListener[T] = new ChangeListener[T]() {
       override def changed(observable: ObservableValue[_ <: T], oldValue: T, newValue: T) = handler(newValue)
     }
 
-    implicit def lambdaToRunnable(f: () => Unit) = new Runnable {
+    implicit def lambdaToRunnable(f: () => Unit) : Runnable = new Runnable {
       override def run(): Unit = f()
     }
 
-    implicit def lambdaToThreadUncaughtExceptionHandler(handler: (Thread, Throwable) => Unit) =
+    implicit def lambdaToThreadUncaughtExceptionHandler(handler: (Thread, Throwable) => Unit) : UncaughtExceptionHandler =
       new UncaughtExceptionHandler {
         override def uncaughtException(t: Thread, e: Throwable): Unit = handler(t, e)
       }
 
-    implicit def lambdaToPredicate[E](pred: E => Boolean) = new Predicate[E] {
+    implicit def lambdaToPredicate[E](pred: E => Boolean) : Predicate[E] = new Predicate[E] {
       override def test(t: E): Boolean = pred(t)
     }
   }
@@ -93,7 +93,7 @@ object Utils {
   * When the value of the property changes (i.e., if [[getter]] would return a different value from now on),
   * invoke [[fireValueChangedEvent]]. (Do not invoke [[fireValueChangedEvent]] if the value was changed via [[setter]].)
   *
-  * @tparam T
+  * @tparam T type of the value contained in the property
   */
 abstract class GetterSetterProperty[T] extends SimpleObjectProperty[T] {
   override def set(value: T) : Unit = {

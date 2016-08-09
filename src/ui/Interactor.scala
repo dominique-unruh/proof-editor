@@ -28,7 +28,7 @@ class Interactor[T]() extends layout.VBox {
   def this(interaction : Interaction[T]) = { this(); setInteraction(interaction) }
   private val interactions = new mutable.ArrayBuffer[Interaction[T]]
   private val answers = new mutable.HashMap[String, AnyRef]()
-  private var interaction : Interaction[T] = null
+  private var interaction : Interaction[T] = _
   private val result_ = ReadOnlyObjectWrapper(None : Option[T])
   val result = result_.readOnlyProperty
 
@@ -54,8 +54,8 @@ class Interactor[T]() extends layout.VBox {
 
   private class Cell(idx:Int) extends VBox {
     private val label = new Label("<initialize me>")
-    var edit: Interactor.Editor[_] = null
-    var question: Question[_] = null
+    var edit: Interactor.Editor[_] = _
+    var question: Question[_] = _
 
     def setHtml(html: Elem) : Unit = {
       label.setText(html.text)
@@ -67,17 +67,17 @@ class Interactor[T]() extends layout.VBox {
       question = null
     }
 
-    def setQuestion[T<:AnyRef](q : Question[T]): Unit = {
+    def setQuestion[U<:AnyRef](q : Question[U]): Unit = {
       if (question == null || q.questionType!=question.questionType) {
         if (edit != null) getChildren.remove(edit)
         edit = null
         question = null
-        val edit0: Interactor.Editor[T] = editorFactory.create(q)
+        val edit0: Interactor.Editor[U] = editorFactory.create(q)
         edit0.setQuestion(q)
         question = q
         edit = edit0
-        edit0.valueProperty.addListener(new ChangeListener[T] {
-          override def changed(obs: ObservableValue[_ <: T], old: T, answer: T): Unit =
+        edit0.valueProperty.addListener(new ChangeListener[U] {
+          override def changed(obs: ObservableValue[_ <: U], old: U, answer: U): Unit =
             setAnswer(idx, answer, fromEditor=true)
         })
         if (edit0.valueProperty.getValue!=null)
@@ -86,7 +86,7 @@ class Interactor[T]() extends layout.VBox {
       } else {
         if (question!=q) {
           assert(edit.questionType==q.questionType)
-          edit.asInstanceOf[Editor[T]].setQuestion(q)
+          edit.asInstanceOf[Editor[U]].setQuestion(q)
         }
       }
     }
@@ -140,9 +140,9 @@ class Interactor[T]() extends layout.VBox {
     val int = interactions(idx)
     val cell = children.get(idx).asInstanceOf[Cell] // If Cell would inherit from scalafx...VBox, not javafx..VBox, this cast would fail because the delegate of the Cell is added
     int match {
-      case InteractionFinished(result) =>
+      case InteractionFinished(res) =>
         cell.noQuestion()
-        cell.setHtml(<span><b>Result: </b>{result}</span>)
+        cell.setHtml(<span><b>Result: </b>{res}</span>)
       case InteractionFailed() =>
         cell.noQuestion()
         cell.setHtml(<b>Failed</b>)

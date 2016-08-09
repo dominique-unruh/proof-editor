@@ -141,7 +141,7 @@ object Downloads extends AutoPlugin {
 
   def recursiveFiles(roots: File*) : Seq[File] = {
     val absroots = roots // map {base/_}
-    val descendents = absroots flatMap { Path.allSubpaths(_) } map {_._1}
+    val descendents = absroots flatMap { Path.allSubpaths } map {_._1}
     absroots ++ descendents
   }
 

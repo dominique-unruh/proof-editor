@@ -55,7 +55,7 @@ object DefaultMathRendererFactory extends MathRendererFactory {
       case MBind(hd@MCSymbol("quant1","forall"), vs, body) => quant(hd, "∀", vs, body)
       case MBind(hd@MCSymbol("quant1","exists"), vs, body) => quant(hd, "∃", vs, body)
       case MCNone() => new Missing()
-      case MApply(hd, args@_*) => new GenericApply(get(hd), args.map(get(_)))
+      case MApply(hd, args@_*) => new GenericApply(get(hd), args.map(get))
       case MBind(hd, vars, arg) => new GenericBind(get(hd), vars.map(get(_)), get(arg))
       case MCSymbol(cd, name) => new GenericSymbol(cd, name)
       case m @ MCN(num) => new Num(m)
