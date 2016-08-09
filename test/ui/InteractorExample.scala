@@ -33,8 +33,8 @@ object InteractorExample {
         new KeyFrame(util.Duration.millis(2000), {(_:ActionEvent) => actor.setAnswer(1,"there")}),
         new KeyFrame(util.Duration.millis(4000), {(_:ActionEvent) => actor.setAnswer(0,2.asInstanceOf[Integer])}),
         new KeyFrame(util.Duration.millis(5000), {(_:ActionEvent) => actor.setAnswer(1, "is")}),
-        new KeyFrame(util.Duration.millis(6000), {(_:ActionEvent) => actor.setAnswer(0,(3.asInstanceOf[Integer]))}),
-        new KeyFrame(util.Duration.millis(7000), {(_:ActionEvent) => actor.setAnswer(1,("test"))})
+        new KeyFrame(util.Duration.millis(6000), {(_:ActionEvent) => actor.setAnswer(0, 3.asInstanceOf[Integer])}),
+        new KeyFrame(util.Duration.millis(7000), {(_:ActionEvent) => actor.setAnswer(1, "test")})
       )
 //      timeline.play()
 

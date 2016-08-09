@@ -197,7 +197,7 @@ object MutableCMathML {
 }
 
 final class MApply private (attributes:AttributesRO) extends MutableCMathML(attributes) {
-  def args = _args.toSeq
+  def args = _args.iterator
 
   def setHead(head: MutableCMathML) = {
     assert(head!=null)

@@ -20,7 +20,7 @@ final case class Theory(counter : Int,
   def toXML = {
     def formulaNL(f:Formula) = Seq(f.toXML,scala.xml.Text("\n"))
     val sortedFormulas = formulas.values.toSeq.sortBy(_.id)
-    <theory counter={counter.toString}>
+    <theory xmlns="http://unruh.de/proof-editor" counter={counter.toString}>
       <formulas>
         {sortedFormulas.flatMap(formulaNL)}</formulas>
     </theory>

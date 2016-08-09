@@ -72,7 +72,7 @@ class ConnectingLine(val owner : Node, val overlay : Pane) {
       if (oldValue && !newValue) overlay.getChildren.remove(line)
       else if (!oldValue && newValue) overlay.getChildren.add(line) }
 
-  assert(addedProperty.get==false) // If it would be true, we would have missed that we need to add the line
+  assert(!addedProperty.get) // If it would be true, we would have missed that we need to add the line
 
   leftProperty.onChange { (_, oldValue, newValue) =>
       if (oldValue eq newValue) ()

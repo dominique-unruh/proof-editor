@@ -16,7 +16,7 @@ class EditFormulaTrafo() extends Transformation {
           res <- if (a.isDefined) {
                     if (!b.isValidMath)
                       failWith("not-valid", <span>The second formula is not valid math</span>)
-                    else if (Z3.default.isEqual(a.get.math, b) != Some(true))
+                    else if (!Z3.default.isEqual(a.get.math, b).contains(true))
                       failWith("noteq", <span>Both formulas must be equal (logically equivalent)</span>)
                     else
                       returnval(new Instance(a.get, Formula(b)))

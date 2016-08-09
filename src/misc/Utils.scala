@@ -101,7 +101,7 @@ abstract class GetterSetterProperty[T] extends SimpleObjectProperty[T] {
     fireValueChangedEvent()
   }
   override def bind(obs : ObservableValue[_ <: T]) = sys.error("Binding not supported")
-  override def get() : T = getter
+  override def get : T = getter
   protected def getter : T
   protected def setter(value:T): Unit
   override def fireValueChangedEvent() = super.fireValueChangedEvent()

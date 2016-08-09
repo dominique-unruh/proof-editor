@@ -70,15 +70,15 @@ class MessageQ(val typ:MessageQ.Type, val message:Elem) extends Question[BoxedUn
   override def toString = "[MSG: "+message.text+"]"
 }
 
-final case class InteractionRunning[T](val id: String,
-                                       val question : Question[_<:AnyRef],
-                                       val answer : AnyRef => Interaction[T]) extends Interaction[T] {
+final case class InteractionRunning[T](id: String,
+                                       question : Question[_<:AnyRef],
+                                       answer : AnyRef => Interaction[T]) extends Interaction[T] {
   override def resultMaybe: Option[T] = None
   override def isDone: Boolean = false
   override def isRunning: Boolean = true
   override def isFailed: Boolean = false
 }
-final case class InteractionFinished[T](val result: T) extends Interaction[T] {
+final case class InteractionFinished[T](result: T) extends Interaction[T] {
   override def resultMaybe: Option[T] = Some(result)
   override def isDone: Boolean = true
   override def isRunning: Boolean = false

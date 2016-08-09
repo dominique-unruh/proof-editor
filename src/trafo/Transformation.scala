@@ -1,7 +1,7 @@
 package trafo
 
 import cmathml.CMathML
-import theory.{Formula}
+import theory.Formula
 
 import scala.collection.immutable.Vector
 
