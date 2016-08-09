@@ -45,7 +45,7 @@ final class MutableCMathMLDocument private () extends MutableCMathMLParent {
   def addGlobalChangeListener(listener: MutableCMathMLParent => Unit) =
     globalChangeListeners += listener
 
-  private var _root : MutableCMathML = null
+  private var _root : MutableCMathML = _
   def toCMathML = _root.toCMathML
 
   def setRoot(root: MutableCMathML) = {
@@ -150,9 +150,9 @@ sealed abstract class MutableCMathML(attribs : AttributesRO) extends MutableCMat
       }
   }
 
-  override def toString = s"[M(${Integer.toHexString(System.identityHashCode(this))}): ${toCMathML}]"
+  override def toString = s"[M(${Integer.toHexString(System.identityHashCode(this))}): $toCMathML]"
 
-  private var _parent : MutableCMathMLParent = null
+  private var _parent : MutableCMathMLParent = _
   def isAttached = _parent!=null
   def parent = _parent
   private[cmathml] def detach() = {
@@ -243,7 +243,7 @@ final class MApply private (attributes:AttributesRO) extends MutableCMathML(attr
   }
 
 
-  private var _head : MutableCMathML = null
+  private var _head : MutableCMathML = _
   private val _args : mutable.ArrayBuffer[MutableCMathML] = new mutable.ArrayBuffer()
   def head = _head
   def arg(i:Int) = _args(i)
@@ -316,11 +316,11 @@ object MApply {
 }
 
 final class MBind private (attributes:AttributesRO) extends MutableCMathML(attributes) {
-  private var _head : MutableCMathML = null
+  private var _head : MutableCMathML = _
   private val _vars : mutable.ArrayBuffer[MCILike] = new mutable.ArrayBuffer()
-  private var _body : MutableCMathML = null
+  private var _body : MutableCMathML = _
 
-  def vars = _vars.toSeq
+  def vars = _vars.iterator
 
   def setHead(head: MutableCMathML) = {
     assert(head!=null)
