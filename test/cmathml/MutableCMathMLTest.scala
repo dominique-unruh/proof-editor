@@ -25,4 +25,15 @@ class MutableCMathMLTest extends UnitSpec {
       assert(root.toCMathML==e)
     }
   }
+
+  test("globalChangeListener") {
+    val e1 = MCSymbol("x","y")
+    val e2 = new MApply(e1,new MCN(1),new MCN(2))
+    val doc = new MutableCMathMLDocument(e2)
+    var seen = false
+    doc.addGlobalChangeListener{m => assert(m eq e1); seen = true }
+    doc.addChangeListener(() => assert(false))
+    e1.name = "fritz"
+    assert(seen)
+  }
 }

@@ -341,7 +341,6 @@ object CN {
   def apply(i:BigInteger) = new CN(NoAttr,BigDecimal(i,MATHCONTEXT))
   def apply(i:Int) = new CN(NoAttr,BigDecimal(i,MATHCONTEXT))
   def apply(d:Double) = new CN(NoAttr,BigDecimal.exact(d)(MATHCONTEXT))
-//  def apply(i:BigDecimal) = { if (i.mc!=MATHCONTEXT) new CN(new BigDecimal(i.bigDecimal,MATHCONTEXT)) else i }
   def apply(s:String) = new CN(NoAttr,BigDecimal(s,MATHCONTEXT))
 
   /** Use this math context to construct [[scala.BigDecimal]]s for [[CN]] */

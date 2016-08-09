@@ -1,6 +1,8 @@
 package cmathml
 
-import cmathml.MutableCMathML.{Attributes, AttributesRO, NoAttr, fromCMathML}
+import java.math.BigInteger
+
+import cmathml.MutableCMathML.{Attributes, AttributesRO, MNoAttr, fromCMathML}
 import misc.Log
 import ui.mathview.MathViewFX.CursorSide
 
@@ -181,7 +183,7 @@ sealed abstract class MutableCMathML(attribs : AttributesRO) extends MutableCMat
 object MutableCMathML {
   type Attributes = mutable.Map[(String,String),Any]
   type AttributesRO = Map[(String,String),Any]
-  val NoAttr : AttributesRO = Map.empty
+  val MNoAttr : AttributesRO = Map.empty
 
   def fromCMathML(math:CMathML) : MutableCMathML = math match {
     case Apply(att, hd, args @ _*) => new MApply(att,fromCMathML(hd),args.map(fromCMathML) : _*)
@@ -230,12 +232,12 @@ final class MApply private (attributes:AttributesRO) extends MutableCMathML(attr
     setArgs(args : _*)
   }
   def this(head:MutableCMathML, args:MutableCMathML*) = {
-    this(NoAttr)
+    this(MNoAttr)
     setHead(head)
     setArgs(args : _*)
   }
   def this(head:CMathML, args:MutableCMathML*) = {
-    this(NoAttr)
+    this(MNoAttr)
     setHead(fromCMathML(head))
     setArgs(args : _*)
   }
@@ -300,7 +302,6 @@ final class MApply private (attributes:AttributesRO) extends MutableCMathML(attr
 object MApply {
   def unapplySeq(arg: MApply): Some[(MutableCMathML,Seq[MutableCMathML])] = Some((arg._head,arg._args))
 
-
   object IsHead {
     def unapply(tuple: (MApply, MutableCMathML)): Boolean = tuple._1._head eq tuple._2
   }
@@ -363,7 +364,7 @@ final class MBind private (attributes:AttributesRO) extends MutableCMathML(attri
     setBody(body)
   }
   def this(head:MutableCMathML, vars:Seq[MCILike], body:MutableCMathML) =
-    this(NoAttr,head,vars,body)
+    this(MNoAttr,head,vars,body)
   def this(head:CMathML, vars:Seq[MCILike], arg:MutableCMathML) =
     this(fromCMathML(head),vars,arg)
 
@@ -459,7 +460,7 @@ sealed trait MCILike extends MutableCMathML {
 }
 
 final class MCI(attributes: AttributesRO, private var _name:String) extends MutableCMathML(attributes) with MCILike {
-  def this(name:String) = this(NoAttr,name)
+  def this(name:String) = this(MNoAttr,name)
 
   override def toCMathML: CI = CI(attributesToCMathML,_name)
   def name = _name
@@ -472,8 +473,8 @@ final class MCI(attributes: AttributesRO, private var _name:String) extends Muta
     replaceInAttributes(a,b)
 
   override def copy(): MCI = {
-    assert(attributes == NoAttr) // TODO: copy() even when attributes exist (must copy all MutableCMathML attributes)
-    new MCI(NoAttr, _name)
+    assert(attributes == MNoAttr) // TODO: copy() even when attributes exist (must copy all MutableCMathML attributes)
+    new MCI(MNoAttr, _name)
   }
 }
 object MCI {
@@ -484,6 +485,12 @@ final class MCN(attributes: AttributesRO, private var _n:BigDecimal) extends Mut
   assert(_n.mc.getPrecision==0)
   assert(_n.mc.getRoundingMode==java.math.RoundingMode.UNNECESSARY)
   override def toCMathML: CMathML = CN(attributesToCMathML,n)
+
+  def this(d:BigDecimal) = this(MNoAttr,d)
+  def this(i:BigInteger) = this(MNoAttr,BigDecimal(i,CN.MATHCONTEXT))
+  def this(i:Int) = this(MNoAttr,BigDecimal(i,CN.MATHCONTEXT))
+  def this(d:Double) = this(MNoAttr,BigDecimal.exact(d)(CN.MATHCONTEXT))
+  def this(s:String) = this(MNoAttr,BigDecimal(s,CN.MATHCONTEXT))
 
   def n = _n
   def n_=(n:BigDecimal): Unit = {
@@ -503,6 +510,7 @@ object MCN {
 }
 object MCSymbol {
   def unapply(that:MCSymbol) = Some((that._cd,that._name))
+  def apply(cd:String, name:String) = new MCSymbol(MNoAttr,cd,name)
 }
 final class MCSymbol(attributes: AttributesRO, private var _cd:String, private var _name:String) extends MutableCMathML(attributes) {
   assert(CMathML.isNCName(_cd))
@@ -526,8 +534,8 @@ final class MCSymbol(attributes: AttributesRO, private var _cd:String, private v
     replaceInAttributes(a,b)
 
   override def copy(): MCSymbol = {
-    assert(attributes == NoAttr) // TODO: copy() even when attributes exist (must copy all MutableCMathML attributes)
-    new MCSymbol(NoAttr, _cd, _name)
+    assert(attributes == MNoAttr) // TODO: copy() even when attributes exist (must copy all MutableCMathML attributes)
+    new MCSymbol(MNoAttr, _cd, _name)
   }
 }
 final class MCError(attributes: AttributesRO, val cd: String, val name: String, val args: Any*) extends MutableCMathML(attributes) {
@@ -546,7 +554,7 @@ object MCError {
 object MCNone {
   def unapply(that:MCNone) = true
 }
-final class MCNone(attributes: AttributesRO = NoAttr) extends MutableCMathML(attributes) with MCILike {
+final class MCNone(attributes: AttributesRO = MNoAttr) extends MutableCMathML(attributes) with MCILike {
   override def toCMathML: CNone = CNone(attributesToCMathML)
   override def replace(a: MutableCMathML, b: MutableCMathML): Unit =
     replaceInAttributes(a,b)
