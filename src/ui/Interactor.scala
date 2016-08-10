@@ -181,17 +181,12 @@ object Interactor {
     override val valueProperty: Property[String] = textProperty()
     override val editedType = typeTag[String]
     override val questionType = typeTag[StringQ]
-//    textProperty.addListener((newVal:String) => valueProperty.setValue(Some(newVal)))
-//    valueProperty.addListener({ (newVal:Option[String]) =>
-//      println("change: ",newVal)
-//      textProperty.setValue(newVal.getOrElse(""))})
   }
 
   class MessageViewer extends Label with Editor[BoxedUnit] {
     override val valueProperty: Property[BoxedUnit] = new SimpleObjectProperty[BoxedUnit](BoxedUnit.UNIT)
     override val editedType = typeTag[BoxedUnit]
     override val questionType = typeTag[MessageQ]
-//    override val setQuestion(question : Question[BoxedUnit]) = setText(question.message.text)
   }
 
   // TODO there should be existing classes for this

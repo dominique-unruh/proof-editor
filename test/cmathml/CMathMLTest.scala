@@ -14,11 +14,8 @@ class CMathMLTest extends UnitSpec {
   }
 
   test("CMathML.subterm") {
-    val m = divide(CN(1),CN(2))
-    val p = Path(1)
-    assertResult(CN(1)) {
-      m.subterm(p)
-    }
+    for ((m,p,s) <- CMathMLTest.subtermTests)
+      assert(m.subterm(p)==s)
   }
 
   /** A few dummy lines to achieve higher test coverage */
@@ -69,4 +66,9 @@ object CMathMLTest {
     power(CN(3),CI("x"))
   )
 
+  val subtermTests = List(
+    ( divide(CN(1),CN(2)), Path(1), CN(1) ),
+    ( equal(CI("x")+CI("y"), CI("y")+CN(-1)), Path(2,2), CN(-1) ),
+    ( equal(CI("x")+CI("y"), CI("y")+CN(-1)), Path(2,1), CI("y") )
+  )
 }

@@ -36,4 +36,22 @@ class MutableCMathMLTest extends UnitSpec {
     e1.name = "fritz"
     assert(seen)
   }
+
+  test("subterm") {
+    for ((m,p,s) <- CMathMLTest.subtermTests) {
+      val mm = MutableCMathML.fromCMathML(m)
+      val ms = mm.subterm(p)
+      val cs = ms.toCMathML
+      assert(cs==s)
+    }
+  }
+
+  test("getPath") {
+    for ((m, p, s) <- CMathMLTest.subtermTests) {
+      val mm = new MutableCMathMLDocument(m)
+      val ms = mm.subterm(p)
+      val p2 = ms.getPath
+      assert(p2 == p)
+    }
+  }
 }

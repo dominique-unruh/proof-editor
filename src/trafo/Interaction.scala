@@ -1,10 +1,11 @@
 package trafo
 import scala.language.existentials
-import cmathml.{CMathML, CNone}
+import cmathml.{CMathML, CNone, Path}
 import misc.Pure
 import theory.Formula
 
 import scala.annotation.tailrec
+import scala.collection.generic.FilterMonadic
 import scala.reflect.api.TypeTags
 import scala.util.control.Breaks
 import scala.runtime.BoxedUnit
@@ -23,6 +24,12 @@ abstract class Question[T] {
 class FormulaQ(val message:Elem) extends Question[Option[Formula]] {
   val answerType = typeTag[Option[Formula]]
   val questionType = typeTag[FormulaQ]
+  val default = None
+}
+
+class FormulaSubtermQ(val message:Elem) extends Question[Option[(Formula,Path)]] {
+  val answerType = typeTag[Option[(Formula,Path)]]
+  val questionType = typeTag[FormulaSubtermQ]
   val default = None
 }
 
@@ -77,27 +84,32 @@ final case class InteractionRunning[T](id: String,
   override def isDone: Boolean = false
   override def isRunning: Boolean = true
   override def isFailed: Boolean = false
+  override def withFilter(p: (T) => Boolean): Interaction[T] = InteractionRunning(id, question, a => answer(a).withFilter(p))
 }
 final case class InteractionFinished[T](result: T) extends Interaction[T] {
   override def resultMaybe: Option[T] = Some(result)
   override def isDone: Boolean = true
   override def isRunning: Boolean = false
   override def isFailed: Boolean = false
+  override def withFilter(p: (T) => Boolean): Interaction[T] =
+    if (p(result)) this else InteractionFailed()
 }
 final case class InteractionFailed[T]() extends Interaction[T] {
   override def resultMaybe: Option[T] = None
   override def isDone: Boolean = false
   override def isRunning: Boolean = false
   override def isFailed: Boolean = true
+  override def withFilter(p: (T) => Boolean): Interaction[T] = this
 }
 
 sealed trait Interaction[+T] {
-  final def flatMap[U](f: T => Interaction[U]) : Interaction[U] = this match {
+  def withFilter(p : T => Boolean) : Interaction[T]
+  final def flatMap[U](f: T => Interaction[U]) : Interaction[U] = this match { // TODO: move to subclasses like withFilter
     case InteractionRunning(id, question, answer) => InteractionRunning(id, question, a => answer(a).flatMap(f))
     case InteractionFinished(result) => f(result)
     case InteractionFailed() => InteractionFailed()
   }
-  final def map[U](f: T => U) : Interaction[U] = this match {
+  final def map[U](f: T => U) : Interaction[U] = this match { // TODO: move to subclasses
     case InteractionRunning(id, question, answer) => InteractionRunning(id, question, a => answer(a).map(f))
     case InteractionFinished(result) => InteractionFinished(f(result))
     case InteractionFailed() => InteractionFailed()

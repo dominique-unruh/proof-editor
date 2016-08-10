@@ -8,9 +8,8 @@ import javafx.scene.control._
 import javafx.scene.layout.{HBox, StackPane, VBox}
 
 import cmathml._
-import misc.{GetterSetterProperty, Log}
 import misc.Utils.ImplicitConversions._
-import sun.java2d.cmm.kcms.CMM
+import misc.{GetterSetterProperty, Log}
 import testapp.TestApp.TrafoChoice
 import theory.{Formula, Theory}
 import trafo._
@@ -26,7 +25,7 @@ import scalafx.Includes._
 import scalafx.application.JFXApp
 import scalafx.application.JFXApp.PrimaryStage
 import scalafx.collections.ObservableBuffer
-import scalafx.scene.input.{KeyCode, KeyCodeCombination, KeyCombination}
+import scalafx.scene.input.KeyCombination
 import scalafx.scene.layout.{Pane, Priority}
 import scalafx.scene.{control, layout}
 
@@ -131,6 +130,7 @@ class TestApp extends JFXApp {
     )}
 
   private lazy val transformations = ObservableBuffer(
+    TrafoChoice("Extract subterm", new SubtermTrafo),
     TrafoChoice("Edit formula", new EditFormulaTrafo),
     TrafoChoice("Simplify formula", new SimplifyTrafo)
   )
@@ -222,51 +222,100 @@ class TestApp extends JFXApp {
 
   loadTheory()
 
-  class FormulaEditor extends HBox with Editor[Option[Formula]] {
-    override val editedType: TypeTag[Option[Formula]] = typeTag[Option[Formula]]
-    override val questionType = typeTag[FormulaQ]
+  abstract class GenericFormulaEditor extends HBox {
     val pickButton = new Button("Pick")
     pickButton.setPadding(Insets.EMPTY)
     val clearButton = new Button("Clear")
     clearButton.setPadding(Insets.EMPTY)
     val mathedit = new MathEdit()
-    var formula : Option[Formula] = None
+    private var _formula : Option[Formula] = None
+    def formula : Option[Formula] = _formula
+    private var _selection : Path = Path.empty
     val line = new ConnectingLine(this, overlay)
     line.setLeft(mathedit)
 
-    override val valueProperty: GetterSetterProperty[Option[Formula]] = new GetterSetterProperty[Option[Formula]] {
-      override protected def getter: Option[Formula] = formula
-      override protected def setter(value: Option[Formula]): Unit = {
-        formula = value
-        if (formula.isEmpty) mathedit.setVisible(false)
-        else { mathedit.setVisible(true); mathedit.setMath(formula.get.math) }
+    def formulaChanged()
+    def selectionChanged() = {}
+
+    def formula_=(value : Option[Formula]) = value match {
+      case None =>
+        _formula = None
+        mathedit.setVisible(false)
+        line.rightProperty.set(null)
+      case Some(form) =>
+        _formula = value
+        mathedit.setVisible(true)
+        mathedit.setMath(form.math)
+        line.setRight(theoryView.selectedMathEdit.get)
+    }
+
+    def selection = _selection
+    var _updatingSelection = false
+    def selection_=(sel: Path) = {
+      _selection = sel
+      try {
+        _updatingSelection = true
+        mathedit.selection.value = Some(mathedit.mathDoc.subterm(sel))
+      } finally {
+        _updatingSelection = false
       }
     }
 
-    //    mathedit.setMath(CN(0)) // Otherwise the ui.mathview will not be resized to something small
+    mathedit.selection.onChange { (_,_,sel) => sel match {
+      case None =>
+      case Some(sel) =>
+        if (!_updatingSelection) {
+          _selection = sel.getPath
+          selectionChanged()
+        }
+    }}
+
     mathedit.setVisible(false)
     getChildren.addAll(new VBox(1,pickButton,clearButton),mathedit)
     clearButton.addEventHandler(ActionEvent.ACTION, {
       (_:ActionEvent) =>
         formula = None
-        mathedit.setVisible(false)
-        line.rightProperty.set(null)
-        valueProperty.fireValueChangedEvent()
+        formulaChanged()
     })
     pickButton.addEventHandler(ActionEvent.ACTION, { (_:ActionEvent) =>
       theoryView.selectedFormula match {
         case None =>
           formula = None
-          line.rightProperty.set(null)
-          mathedit.setVisible(false)
         case Some(form) =>
           formula = Some(form)
-          mathedit.setVisible(true)
-          mathedit.setMath(form.math)
-          line.setRight(theoryView.selectedMathEdit.get)
+          selection = Path.empty
       }
-      valueProperty.fireValueChangedEvent()
+      formulaChanged()
     })
+  }
+
+  class FormulaEditor extends GenericFormulaEditor with Editor[Option[Formula]] {
+    override val editedType: TypeTag[Option[Formula]] = typeTag[Option[Formula]]
+    override val questionType = typeTag[FormulaQ]
+    override val valueProperty: GetterSetterProperty[Option[Formula]] = new GetterSetterProperty[Option[Formula]] {
+      override protected def getter: Option[Formula] = formula
+      override protected def setter(value: Option[Formula]): Unit = formula = value
+    }
+
+    override def formulaChanged() = valueProperty.fireValueChangedEvent()
+  }
+
+  class FormulaSubtermEditor extends GenericFormulaEditor with Editor[Option[(Formula,Path)]] {
+    override val editedType = typeTag[Option[(Formula,Path)]]
+    override val questionType = typeTag[FormulaSubtermQ]
+
+    override val valueProperty: GetterSetterProperty[Option[(Formula,Path)]] = new GetterSetterProperty[Option[(Formula,Path)]] {
+      override protected def getter = formula.map((_,selection))
+      override protected def setter(value: Option[(Formula,Path)]): Unit = value match {
+        case None => formula = None
+        case Some((form,path)) =>
+          formula = Some(form)
+          selection = path
+      }
+    }
+
+    override def formulaChanged() = valueProperty.fireValueChangedEvent()
+    override def selectionChanged() = valueProperty.fireValueChangedEvent()
   }
 
   class MathEditor extends HBox with Editor[CMathML] {
@@ -294,6 +343,7 @@ class TestApp extends JFXApp {
   }
 
   class ShowFormula(q:ShowFormulaQ) extends HBox with Editor[BoxedUnit] {
+    Log.debug("new ShowFormula",q)
     override val editedType: TypeTag[BoxedUnit] = typeTag[BoxedUnit]
     override val questionType = typeTag[ShowFormulaQ]
     val mathedit = new MathEdit()
@@ -308,9 +358,12 @@ class TestApp extends JFXApp {
     override def create[T<:AnyRef](q: Question[T]): Editor[T] = {
       if (q.questionType==typeTag[FormulaQ]) {
         val q2 = q.asInstanceOf[FormulaQ]
-        val edit = /*if (q2.newFormula != null) new FreshFormulaGenerator(q2)
-        else*/ new FormulaEditor()
+        val edit = new FormulaEditor()
         cast(q.answerType, edit)
+      } else if (q.questionType==typeTag[FormulaSubtermQ]) {
+          val q2 = q.asInstanceOf[FormulaSubtermQ]
+          val edit = new FormulaSubtermEditor()
+          cast(q.answerType, edit)
       } else if (q.questionType==typeTag[ShowFormulaQ]) {
         val edit = new ShowFormula(q.asInstanceOf[ShowFormulaQ])
         cast(q.answerType, edit)

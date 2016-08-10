@@ -15,6 +15,7 @@ import scala.collection.mutable.ListBuffer
 
 sealed abstract class MutableCMathMLParent {
   def replace(a: MutableCMathML, b: MutableCMathML): Unit
+  private[cmathml] def extendPath(child : MutableCMathML, childPath : Path) : Path
 
   val changeListeners = new ListBuffer[() => Unit]
   protected def fireChange() : Unit = {
@@ -29,6 +30,8 @@ sealed abstract class MutableCMathMLParent {
 }
 
 final class MutableCMathMLDocument private () extends MutableCMathMLParent {
+  def subterm(path: Path): MutableCMathML = root.subterm(path)
+
   def isEmpty: Boolean = _root match {
     case MCNone() => true
     case _ => false
@@ -90,9 +93,13 @@ final class MutableCMathMLDocument private () extends MutableCMathMLParent {
     assert(_root==a)
     setRoot(b)
   }
+
+  override private[cmathml] def extendPath(child: MutableCMathML, childPath: Path): Path = childPath
 }
 
 sealed abstract class MutableCMathML(attribs : AttributesRO) extends MutableCMathMLParent {
+  def getPath: Path = parent.extendPath(this, Path.empty)
+
   for ((cd,name) <- attribs.keys) { assert(CMathML.isNCName(cd)); assert(CMathML.isNCName(name)) }
   /** Returns true is `this` is equal to or a descendant of `ancestor`
     */
@@ -103,6 +110,18 @@ sealed abstract class MutableCMathML(attribs : AttributesRO) extends MutableCMat
       _parent.asInstanceOf[MutableCMathML].isDescendantOf(ancestor)
     else
       false
+
+  /** with promise that path!=empty and path.head >= 0 */
+  protected def subterm$(path: Path): MutableCMathML
+
+  def subterm(path: Path): MutableCMathML =
+    if (path.isEmpty) this
+    else {
+      val hd = path.head
+      if (hd < 0) ??? // in attributes
+      else subterm$(path)
+    }
+
 
   def copy() : MutableCMathML
 
@@ -298,7 +317,21 @@ final class MApply private (attributes:AttributesRO) extends MutableCMathML(attr
   }
 
   override def copy(): MutableCMathML = ???
+
+  override protected def subterm$(path: Path): MutableCMathML = path.head match {
+    case 0 => head.subterm(path.tail)
+    case i => arg(i-1).subterm(path.tail)
+  }
+
+  override private[cmathml] def extendPath(child: MutableCMathML, childPath: Path): Path =
+    if (_head eq child) childPath.prepend(0)
+    else {
+      val i = _args.indexOf(child)
+      if (i>=0) childPath.prepend(i+1)
+      else ??? // in attributes
+    }
 }
+
 object MApply {
   def unapplySeq(arg: MApply): Some[(MutableCMathML,Seq[MutableCMathML])] = Some((arg._head,arg._args))
 
@@ -433,6 +466,10 @@ final class MBind private (attributes:AttributesRO) extends MutableCMathML(attri
   }
 
   override def copy(): MutableCMathML = ???
+
+  override protected def subterm$(path: Path): MutableCMathML = ???
+
+  override private[cmathml] def extendPath(child: MutableCMathML, childPath: Path): Path = ???
 }
 object MBind {
   def unapply(arg: MBind): Some[(MutableCMathML,Seq[MCILike],MutableCMathML)] = Some((arg._head,arg._vars,arg._body))
@@ -476,6 +513,10 @@ final class MCI(attributes: AttributesRO, private var _name:String) extends Muta
     assert(attributes == MNoAttr) // TODO: copy() even when attributes exist (must copy all MutableCMathML attributes)
     new MCI(MNoAttr, _name)
   }
+
+  override protected def subterm$(path: Path): MutableCMathML = ???
+
+  override private[cmathml] def extendPath(child: MutableCMathML, childPath: Path): Path = ???
 }
 object MCI {
   def unapply(that:MCI) = Some(that._name)
@@ -504,6 +545,10 @@ final class MCN(attributes: AttributesRO, private var _n:BigDecimal) extends Mut
     replaceInAttributes(a,b)
 
   override def copy(): MutableCMathML = ???
+
+  override protected def subterm$(path: Path): MutableCMathML = ???
+
+  override private[cmathml] def extendPath(child: MutableCMathML, childPath: Path): Path = ???
 }
 object MCN {
   def unapply(that:MCN) = Some(that.n)
@@ -537,6 +582,10 @@ final class MCSymbol(attributes: AttributesRO, private var _cd:String, private v
     assert(attributes == MNoAttr) // TODO: copy() even when attributes exist (must copy all MutableCMathML attributes)
     new MCSymbol(MNoAttr, _cd, _name)
   }
+
+  override protected def subterm$(path: Path): MutableCMathML = ???
+
+  override private[cmathml] def extendPath(child: MutableCMathML, childPath: Path): Path = ???
 }
 final class MCError(attributes: AttributesRO, val cd: String, val name: String, val args: Any*) extends MutableCMathML(attributes) {
   assert(CMathML.isNCName(cd))
@@ -546,6 +595,11 @@ final class MCError(attributes: AttributesRO, val cd: String, val name: String, 
     replaceInAttributes(a,b)
 
   override def copy(): MutableCMathML = ???
+
+  /** with promise that path!=empty and path.head >= 0 */
+  override protected def subterm$(path: Path): MutableCMathML = ???
+
+  override private[cmathml] def extendPath(child: MutableCMathML, childPath: Path): Path = ???
 }
 object MCError {
   def unapplySeq(that:MCError) = Some((that.cd,that.name,that.args))
@@ -560,4 +614,8 @@ final class MCNone(attributes: AttributesRO = MNoAttr) extends MutableCMathML(at
     replaceInAttributes(a,b)
 
   override def copy(): MutableCMathML = ???
+
+  override protected def subterm$(path: Path): MutableCMathML = ???
+
+  override private[cmathml] def extendPath(child: MutableCMathML, childPath: Path): Path = ???
 }
