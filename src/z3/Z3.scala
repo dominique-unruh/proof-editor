@@ -12,6 +12,26 @@ import com.microsoft.z3.enumerations.Z3_decl_kind._
 
 
 final class Z3(config:Map[String,String]) {
+  def doesImply(a: CMathML, b: CMathML) : Option[Boolean] = synchronized {
+    val a$ = fromCMathML_(a).asInstanceOf[BoolExpr]
+    val b$ = fromCMathML_(b).asInstanceOf[BoolExpr]
+    val solver = context.mkSolver()
+    try {
+      solver.add(a$)
+      solver.add(context.mkNot(b$))
+      val status = solver.check
+      status match {
+        case Status.SATISFIABLE => Some(false)
+        case Status.UNKNOWN => None
+        case Status.UNSATISFIABLE => Some(true)
+      }
+    } finally {
+      solver.dispose()
+      a$.dispose()
+      b$.dispose()
+    }
+  }
+
   def isEqual(a: CMathML, b: CMathML) : Option[Boolean] = synchronized {
     val a$ = fromCMathML_(a)
     val b$ = fromCMathML_(b)
@@ -19,12 +39,18 @@ final class Z3(config:Map[String,String]) {
       catch { case _ : Z3Exception => return Some(false) } // Happens if the sorts of a,b do not even match
     val neq = context.mkNot(equal)
     val solver = context.mkSolver()
-    solver.add(neq)
-    val status = solver.check
-    status match {
-      case Status.SATISFIABLE => Some(false)
-      case Status.UNKNOWN => None
-      case Status.UNSATISFIABLE => Some(true)
+    try {
+      solver.add(neq)
+      val status = solver.check
+      status match {
+        case Status.SATISFIABLE => Some(false)
+        case Status.UNKNOWN => None
+        case Status.UNSATISFIABLE => Some(true)
+      }
+    } finally {
+      solver.dispose()
+      a$.dispose()
+      b$.dispose()
     }
   }
 

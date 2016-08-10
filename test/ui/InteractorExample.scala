@@ -21,7 +21,7 @@ object InteractorExample {
 
       val int = for {i <- ask("int", new IntQ(<span>Nr 1?</span>))
                      strs <- manyQ(i)
-                     _ <- if (strs.contains("")) fail else returnval()
+                     _ <- if (strs.contains("")) fail else returnval(())
       } yield ""+i+"#"+strs.mkString(",")
 
       val actor = new Interactor(int)
