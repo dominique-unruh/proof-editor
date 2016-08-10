@@ -1,3 +1,4 @@
 Included projects (for license issues):
 - jQuery
 - MathQuill
+- Z3
