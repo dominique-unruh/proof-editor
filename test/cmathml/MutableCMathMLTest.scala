@@ -47,11 +47,11 @@ class MutableCMathMLTest extends UnitSpec {
   }
 
   test("getPath") {
-    for ((m, p, s) <- CMathMLTest.subtermTests) {
+    for (((m, p, s),i) <- CMathMLTest.subtermTests.zipWithIndex) {
       val mm = new MutableCMathMLDocument(m)
       val ms = mm.subterm(p)
       val p2 = ms.getPath
-      assert(p2 == p)
+      assert(p2 == p,(i,m,s))
     }
   }
 }

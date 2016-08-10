@@ -233,6 +233,7 @@ class TestApp extends JFXApp {
     private var _selection : Path = Path.empty
     val line = new ConnectingLine(this, overlay)
     line.setLeft(mathedit)
+    val focusOnPick = false
 
     def formulaChanged()
     def selectionChanged() = {}
@@ -241,6 +242,7 @@ class TestApp extends JFXApp {
       case None =>
         _formula = None
         mathedit.setVisible(false)
+        mathedit.setMath(CNone())
         line.rightProperty.set(null)
       case Some(form) =>
         _formula = value
@@ -261,7 +263,7 @@ class TestApp extends JFXApp {
       }
     }
 
-    mathedit.selection.onChange { (_,_,sel) => sel match {
+    mathedit.selection.onChange { (_,_,newValue) => newValue match {
       case None =>
       case Some(sel) =>
         if (!_updatingSelection) {
@@ -284,6 +286,7 @@ class TestApp extends JFXApp {
         case Some(form) =>
           formula = Some(form)
           selection = Path.empty
+          if (focusOnPick) mathedit.requestFocus()
       }
       formulaChanged()
     })
@@ -303,6 +306,7 @@ class TestApp extends JFXApp {
   class FormulaSubtermEditor extends GenericFormulaEditor with Editor[Option[(Formula,Path)]] {
     override val editedType = typeTag[Option[(Formula,Path)]]
     override val questionType = typeTag[FormulaSubtermQ]
+    override val focusOnPick = true
 
     override val valueProperty: GetterSetterProperty[Option[(Formula,Path)]] = new GetterSetterProperty[Option[(Formula,Path)]] {
       override protected def getter = formula.map((_,selection))

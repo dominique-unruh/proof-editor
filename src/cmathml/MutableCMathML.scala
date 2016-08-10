@@ -327,7 +327,7 @@ final class MApply private (attributes:AttributesRO) extends MutableCMathML(attr
     if (_head eq child) childPath.prepend(0)
     else {
       val i = _args.indexOf(child)
-      if (i>=0) childPath.prepend(i+1)
+      if (i>=0) parent.extendPath(this,childPath.prepend(i+1))
       else ??? // in attributes
     }
 }
