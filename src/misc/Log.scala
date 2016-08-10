@@ -3,7 +3,7 @@ package misc
 import java.io.File
 
 object Log {
-  private val pfxlen = 12
+  private val pfxlen = 13
   private def mkPfx(line:sourcecode.Line, file:sourcecode.File) : String = {
     val filebase = new File(file.value).getName.stripSuffix(".scala")
     val linestr = line.value.toString

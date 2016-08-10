@@ -68,12 +68,13 @@ class Interactor[T]() extends layout.VBox {
     }
 
     def setQuestion[U<:AnyRef](q : Question[U]): Unit = {
-      if (question == null || q.questionType!=question.questionType) {
+      Log.debug("Cell.setQuestion",idx,q)
+      if (question == null || question!=q) {
         if (edit != null) getChildren.remove(edit)
         edit = null
         question = null
         val edit0: Interactor.Editor[U] = editorFactory.create(q)
-        edit0.setQuestion(q)
+//        edit0.setQuestion(q)
         question = q
         edit = edit0
         edit0.valueProperty.addListener(new ChangeListener[U] {
@@ -83,12 +84,12 @@ class Interactor[T]() extends layout.VBox {
         if (edit0.valueProperty.getValue!=null)
           setAnswer(idx, edit0.valueProperty.getValue, fromEditor=true)
         this.getChildren.add(edit0)
-      } else {
+      } /*else {
         if (question!=q) {
           assert(edit.questionType==q.questionType)
           edit.asInstanceOf[Editor[U]].setQuestion(q)
         }
-      }
+      }*/
     }
     getChildren.addAll(label)
   }
@@ -161,7 +162,7 @@ object Interactor {
     val valueProperty : Property[T]
     val editedType : TypeTag[T]
     val questionType : TypeTag[_ <: Question[T]]
-    def setQuestion(question : Question[T]) : Unit = {}
+//    def setQuestion(question : Question[T]) : Unit = {}
     def setValue(v:T) : Unit = {
 //      assert(editedType.isInstance(v),
 //        "v: "+v+", editedType: "+editedType)
