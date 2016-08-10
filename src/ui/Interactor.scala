@@ -23,13 +23,14 @@ import scalafx.scene.layout
 
 
 
-
-class Interactor[T]() extends layout.VBox {
-  def this(interaction : Interaction[T]) = { this(); setInteraction(interaction) }
-  private val interactions = new mutable.ArrayBuffer[Interaction[T]]
-  private val answers = new mutable.HashMap[String, AnyRef]()
-  private var interaction : Interaction[T] = _
-  private val result_ = ReadOnlyObjectWrapper(None : Option[T])
+/** @tparam R result type */
+class Interactor[R]() extends layout.VBox {
+  def this(interaction : Interaction[R]) = { this(); setInteraction(interaction) }
+  private val interactions = new mutable.ArrayBuffer[Interaction[R]]
+  private case class QAPair[A](question:Question[A], answer:A)
+  private val previousAnswers = new mutable.HashMap[String, QAPair[_]]()
+  private var interaction : Interaction[R] = _
+  private val result_ = ReadOnlyObjectWrapper(None : Option[R])
   val result = result_.readOnlyProperty
 
   private var editorFactory : Interactor.EditorFactory = Interactor.defaultEditorFactory
@@ -40,12 +41,12 @@ class Interactor[T]() extends layout.VBox {
   def clearInteraction() : Unit = {
     children.clear()
     interactions.clear()
-    answers.clear()
+    previousAnswers.clear()
     interaction = null
     result_.set(None)
   }
 
-  def setInteraction(interaction : Interaction[T]) : Unit = {
+  def setInteraction(interaction : Interaction[R]) : Unit = {
     if (this.interaction!=null) clearInteraction()
     this.interaction = interaction
     updateInteraction(0, interaction)
@@ -68,13 +69,11 @@ class Interactor[T]() extends layout.VBox {
     }
 
     def setQuestion[U<:AnyRef](q : Question[U]): Unit = {
-//      Log.debug("Cell.setQuestion",idx,q)
       if (question == null || question!=q) {
         if (edit != null) getChildren.remove(edit)
         edit = null
         question = null
         val edit0: Interactor.Editor[U] = editorFactory.create(q)
-//        edit0.setQuestion(q)
         question = q
         edit = edit0
         edit0.valueProperty.addListener(new ChangeListener[U] {
@@ -94,7 +93,16 @@ class Interactor[T]() extends layout.VBox {
     getChildren.addAll(label)
   }
 
-  private final def updateInteraction(idx: Int, int: Interaction[T]): Unit = {
+  def currentAnswer[A](id:String, question:Question[A]) : A = {
+    previousAnswers.get(id) match {
+      case None => question.default
+      case Some(qa) =>
+        if (qa.question==question) qa.answer.asInstanceOf[A]
+        else question.default
+    }
+  }
+
+  private final def updateInteraction(idx: Int, int: Interaction[R]): Unit = {
     if (idx == interactions.length) interactions += int else interactions.update(idx, int)
     updateGUI(idx)
     recompute(idx + 1)
@@ -113,25 +121,31 @@ class Interactor[T]() extends layout.VBox {
         children.remove(idx-1, children.size)
         result_.set(None)
       case InteractionRunning(id,question,answer) =>
-        val a = answers.getOrElse(id,question.default)
+        val a = currentAnswer(id,question) // answers.getOrElse(id,question.default)
         val int2 =
           try { answer(a) }
-        catch { case e:Throwable =>
+          catch { case e:Throwable =>
             Log.stackTrace("uncaught exception in Interaction",e)
             Interaction.failWith("internal-error-"+System.identityHashCode(this),
               <span>internal error: {e.toString}</span>)
-        }
+          }
         updateInteraction(idx, int2)
     }
   }
 
+  /** Provide the answer to a question in the interaction.
+    *
+    * Type safety: answer must be of the correct type for the question
+    *
+    * @param idx Index of the question in the current interaction
+    * @param fromEditor true if setAnswer is called due to editing via the associated Editor.
+    *                   This makes sure the editor is not updated to show the new answer.
+    */
   def setAnswer(idx: Int, answer: AnyRef, fromEditor:Boolean=false) : Unit = interactions(idx) match {
     case InteractionRunning(id, question, _) =>
-        if (answers.get(id)!=answer) {
-          answers.update(id, answer)
-          if (!fromEditor) updateGUI(idx)
-          recompute(idx + 1)
-        }
+      previousAnswers.update(id, QAPair[answer.type](question.asInstanceOf[Question[answer.type]],answer))
+      if (!fromEditor) updateGUI(idx)
+      recompute(idx + 1)
     case InteractionFinished(_) | InteractionFailed() =>
       throw new IndexOutOfBoundsException("setAnswer(" + idx + ",...)")
   }
@@ -150,7 +164,7 @@ class Interactor[T]() extends layout.VBox {
       case InteractionRunning(id,question,answer) =>
         cell.setQuestion(question)
         cell.setHtml(<span>{question.message.text} <i>#{id}</i></span>)
-        val answer : AnyRef = answers.getOrElse(id,question.default)
+        val answer = currentAnswer(id,question) // answers.getOrElse(id,question.default)
         // TODO: add typetag check
         cell.edit.asInstanceOf[Editor[answer.type]].setValue(answer)
     }

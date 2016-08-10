@@ -21,12 +21,15 @@ object InteractorExample {
 
       val int = for {i <- ask("int", new IntQ(<span>Nr 1?</span>))
                      strs <- manyQ(i)
-        } yield ""+i+"#"+strs.mkString(",")
+                     _ <- if (strs.contains("")) fail else returnval()
+      } yield ""+i+"#"+strs.mkString(",")
 
       val actor = new Interactor(int)
 //      actor.setAnswer(0,"hello")
 
       actor.setAnswer(0,-1.asInstanceOf[Integer])
+
+      actor.result.onChange { (_,_,res) => println(res) }
 
       val timeline = new Timeline(
         new KeyFrame(util.Duration.millis(1000), {(_:ActionEvent) => actor.setAnswer(0,1.asInstanceOf[Integer])}),
