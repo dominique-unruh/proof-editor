@@ -68,7 +68,7 @@ class Interactor[T]() extends layout.VBox {
     }
 
     def setQuestion[U<:AnyRef](q : Question[U]): Unit = {
-      Log.debug("Cell.setQuestion",idx,q)
+//      Log.debug("Cell.setQuestion",idx,q)
       if (question == null || question!=q) {
         if (edit != null) getChildren.remove(edit)
         edit = null
@@ -106,11 +106,11 @@ class Interactor[T]() extends layout.VBox {
     int match {
       case InteractionFinished(res) =>
         interactions.remove(idx, interactions.length - idx)
-        children.remove(idx, children.size)
+        children.remove(idx-1, children.size)
         result_.set(Some(res))
       case InteractionFailed() =>
         interactions.remove(idx, interactions.length - idx)
-        children.remove(idx, children.size)
+        children.remove(idx-1, children.size)
         result_.set(None)
       case InteractionRunning(id,question,answer) =>
         val a = answers.getOrElse(id,question.default)

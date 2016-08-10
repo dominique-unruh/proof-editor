@@ -130,7 +130,7 @@ class TestApp extends JFXApp {
     )}
 
   private lazy val transformations = ObservableBuffer(
-    TrafoChoice("Extract subterm", new SubtermTrafo),
+    TrafoChoice("Test: Extract subterm", new SubtermTrafo),
     TrafoChoice("Edit formula", new EditFormulaTrafo),
     TrafoChoice("Simplify formula", new SimplifyTrafo)
   )
@@ -320,6 +320,8 @@ class TestApp extends JFXApp {
 
     override def formulaChanged() = valueProperty.fireValueChangedEvent()
     override def selectionChanged() = valueProperty.fireValueChangedEvent()
+
+    mathedit.focused.onChange { (_,_,focused) => if (!focused) mathedit.selection.value = Some(mathedit.mathDoc.subterm(selection)) }
   }
 
   class MathEditor extends HBox with Editor[CMathML] {
