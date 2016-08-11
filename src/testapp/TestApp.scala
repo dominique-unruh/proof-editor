@@ -23,7 +23,7 @@ import scala.runtime.BoxedUnit
 import scala.util.control.Breaks
 import scala.xml.XML
 import scalafx.Includes._
-import scalafx.application.JFXApp
+import scalafx.application.{JFXApp, Platform}
 import scalafx.application.JFXApp.PrimaryStage
 import scalafx.collections.ObservableBuffer
 import scalafx.scene.input.KeyCombination
@@ -132,9 +132,9 @@ class TestApp extends JFXApp {
 
   lazy val toolbar = new control.ToolBar {
     content = List(
-      new control.Button("New from selection") {
-        onAction = handle(newFromSelection())
-      },
+//      new control.Button("New from selection") {
+//        onAction = handle(newFromSelection())
+//      },
       new control.Button("Delete") {
         onAction = handle(deleteFormula())
       }
@@ -195,18 +195,18 @@ class TestApp extends JFXApp {
     theoryView.theory.addTrafoInstance(interactor.result.get.get)
   }
 
-  private def newFromSelection(): Unit = {
-    theoryView.selectedMathEdit match {
-      case None =>
-      case Some(math) =>
-        val sel = math.selection.value
-        if (sel.isEmpty) {
-          return
-        }
-        val m = math.selection.value.get.toCMathML
-        theoryView.theory.addFormula(Formula(m))
-    }
-  }
+//  private def newFromSelection(): Unit = {
+//    theoryView.selectedMathEdit match {
+//      case None =>
+//      case Some(math) =>
+//        val sel = math.selection.value
+//        if (sel.isEmpty) {
+//          return
+//        }
+//        val m = math.selection.value.get.toCMathML
+//        theoryView.theory.addFormula(Formula(m))
+//    }
+//  }
 
   //  private val z3 = new Z3(Map())
 
@@ -264,6 +264,9 @@ class TestApp extends JFXApp {
 
     private var _selection :Path = Path.empty
     val line = new ConnectingLine(this, overlay)
+    // We have to delay the next line, otherwise we have a circular dependency between
+    // the GenericFormulaEditors and the initialization of the interactorPane
+    Platform.runLater { line.leftScrollPane.value = interactorPane }
     line.setLeft(mathedit)
     val focusOnPick = false
 
