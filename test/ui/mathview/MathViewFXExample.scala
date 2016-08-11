@@ -2,6 +2,7 @@ package ui.mathview
 
 import javafx.animation.{KeyFrame, Timeline}
 import javafx.event.ActionEvent
+import javafx.scene.input.MouseEvent
 import javafx.util
 
 import cmathml.CMathML._
@@ -42,6 +43,8 @@ object MathViewFXExample {
       mw.cursorPos.value = CursorPos(mw.editable.value.get,CursorRight)
 
       val box = new VBox(new Label("X"),new Label("I"),mw)
+
+      mw.onMouseClicked = { e:MouseEvent => println("mouse click",e) }
 
       box
     }

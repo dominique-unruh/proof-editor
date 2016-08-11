@@ -20,6 +20,7 @@ import z3.Z3
 
 import scala.reflect.runtime.universe._
 import scala.runtime.BoxedUnit
+import scala.util.control.Breaks
 import scala.xml.XML
 import scalafx.Includes._
 import scalafx.application.JFXApp
@@ -60,7 +61,8 @@ class TestApp extends JFXApp {
         children = List(
           menubar,
           toolbar,
-          new control.SplitPane { // dividerPositions="0.33, 0.66" VBox.vgrow="ALWAYS">
+          new control.SplitPane {
+            // dividerPositions="0.33, 0.66" VBox.vgrow="ALWAYS">
             vgrow = Priority.Always
             items += interactorPane
             items += theoryPane
@@ -73,9 +75,10 @@ class TestApp extends JFXApp {
 
 
   lazy val newFormulaEdit = new MathEdit {
-    editable.value = Some(mathDoc.root) }
+    editable.value = Some(mathDoc.root)
+  }
 
-  def insertNewFormula() : Unit = {
+  def insertNewFormula(): Unit = {
     val math = newFormulaEdit.mathDoc.root.toCMathML
     if (!math.isValidMath) {
       errorPopup("The formula you entered is not valid math")
@@ -94,7 +97,8 @@ class TestApp extends JFXApp {
           newFormulaEdit,
           new control.Button("Insert") {
             onAction = handle(insertNewFormula())
-          })},
+          })
+      },
       new control.ScrollPane {
         fitToWidth = true
         content = theoryView
@@ -111,7 +115,9 @@ class TestApp extends JFXApp {
 
   lazy val useButton = new control.Button("Use") {
     disable = true
-    onAction = handle {useButtonClicked()}
+    onAction = handle {
+      useButtonClicked()
+    }
   }
 
 
@@ -121,13 +127,19 @@ class TestApp extends JFXApp {
         onAction = handle(stage.hide())
         accelerator = KeyCombination("Shortcut+Q") //new KeyCodeCombination(KeyCode.Q,KeyCombination.ShortcutDown)
       })
-    })}
+    })
+  }
 
   lazy val toolbar = new control.ToolBar {
     content = List(
-      new control.Button("New from selection") { onAction = handle(newFromSelection()) },
-      new control.Button("Delete") { onAction = handle(deleteFormula()) }
-    )}
+      new control.Button("New from selection") {
+        onAction = handle(newFromSelection())
+      },
+      new control.Button("Delete") {
+        onAction = handle(deleteFormula())
+      }
+    )
+  }
 
   private lazy val transformations = ObservableBuffer(
     TrafoChoice("Modus ponens", new ModusPonensTrafo),
@@ -137,23 +149,38 @@ class TestApp extends JFXApp {
   )
 
 
-
   private lazy val interactor = new Interactor[TrafoInstance] {
-  setEditorFactory(editorFactory)
-  result.addListener(new ChangeListener[Option[TrafoInstance]] {
-    override def changed(observable: ObservableValue[_ <: Option[TrafoInstance]], oldValue: Option[TrafoInstance], newValue: Option[TrafoInstance]): Unit = {
-      useButton.setDisable(newValue.isEmpty)
-    }})
+    setEditorFactory(editorFactory)
+    result.addListener(new ChangeListener[Option[TrafoInstance]] {
+      override def changed(observable: ObservableValue[_ <: Option[TrafoInstance]], oldValue: Option[TrafoInstance], newValue: Option[TrafoInstance]): Unit = {
+        useButton.setDisable(newValue.isEmpty)
+      }
+    })
   }
-  private lazy val overlay = new Pane() { mouseTransparent = true }
+  private lazy val overlay = new Pane() {
+    mouseTransparent = true
+  }
 
-  private lazy val theoryView = new TheoryView
+  private lazy val theoryView = new TheoryView {
+    addDoubleClickListener { formula => Breaks.breakable {
+      Log.debug("formula offered", formula)
+      val editors = interactor.editors
+      for (e <- editors) e match {
+        case e: EditorExtras => if (e.offerFormula(formula)) Breaks.break()
+        case _ =>
+      }
+      for (e <- editors.reverse) e match {
+        case e: EditorExtras => if (e.offerFormula(formula, force = true)) Breaks.break()
+        case _ =>
+      }
+    }}}
 
   private lazy val trafoChoice = new control.ChoiceBox[TrafoChoice] {
     items = transformations
     selectionModel.value.selectedItemProperty.addListener(new ChangeListener[TrafoChoice] {
       override def changed(observable: ObservableValue[_ <: TrafoChoice], oldValue: TrafoChoice, newValue: TrafoChoice): Unit =
-        interactor.setInteraction(newValue.trafo.createInteractive)})
+        interactor.setInteraction(newValue.trafo.createInteractive)
+    })
     selectionModel.value.select(0)
   }
 
@@ -164,7 +191,7 @@ class TestApp extends JFXApp {
   private def okCancelPopup(msg: String): Boolean =
     new Alert(Alert.AlertType.CONFIRMATION, msg).showAndWait().get == ButtonType.OK
 
-  private def useButtonClicked() : Unit = {
+  private def useButtonClicked(): Unit = {
     theoryView.theory.addTrafoInstance(interactor.result.get.get)
   }
 
@@ -181,13 +208,14 @@ class TestApp extends JFXApp {
     }
   }
 
-//  private val z3 = new Z3(Map())
+  //  private val z3 = new Z3(Map())
 
   private def deleteFormula(): Unit = {
     theoryView.selectedFormula match {
       case None => errorPopup("No formula selected")
       case Some(formula) => theoryView.theory.deleteFormula(formula)
-  }}
+    }
+  }
 
   def actualException(e: Throwable): Throwable =
     if (e.getCause != null) actualException(e.getCause) else e
@@ -195,7 +223,7 @@ class TestApp extends JFXApp {
   def saveTheory(): Unit = {
     Log.info("saving theory")
     val xml = theoryView.theory.getTheory.toXML
-    XML.save("theory.xml",xml,enc="UTF-8",xmlDecl=true)
+    XML.save("theory.xml", xml, enc = "UTF-8", xmlDecl = true)
   }
 
   def loadTheory(): Unit = {
@@ -203,14 +231,15 @@ class TestApp extends JFXApp {
       val xml = XML.loadFile("theory.xml")
       val thy = Theory.fromXML(xml)
       theoryView.theory.setTheory(thy)
-    } catch { case e:Exception =>
-      e.printStackTrace()
-      val newThy = okCancelPopup(
-        """Loading the theory from the previous session failed.
+    } catch {
+      case e: Exception =>
+        e.printStackTrace()
+        val newThy = okCancelPopup(
+          """Loading the theory from the previous session failed.
           |Start with a fresh theory?
           |(Looses the data from the previous session.)""".stripMargin)
       if (!newThy) sys.exit(1)
-      for (m <- TestApp.examples) theoryView.theory.addFormula(Formula(m))
+        for (m <- TestApp.examples) theoryView.theory.addFormula(Formula(m))
     }
   }
 
@@ -223,23 +252,26 @@ class TestApp extends JFXApp {
 
   loadTheory()
 
-  abstract class GenericFormulaEditor extends HBox {
+  abstract class GenericFormulaEditor extends HBox with EditorExtras {
     val pickButton = new Button("Pick")
     pickButton.setPadding(Insets.EMPTY)
     val clearButton = new Button("Clear")
     clearButton.setPadding(Insets.EMPTY)
     val mathedit = new MathEdit()
-    private var _formula : Option[Formula] = None
-    def formula : Option[Formula] = _formula
-    private var _selection : Path = Path.empty
+    private var _formula :Option[Formula] = None
+
+    def formula :Option[Formula] = _formula
+
+    private var _selection :Path = Path.empty
     val line = new ConnectingLine(this, overlay)
     line.setLeft(mathedit)
     val focusOnPick = false
 
     def formulaChanged()
+
     def selectionChanged() = {}
 
-    def formula_=(value : Option[Formula]) = value match {
+    def formula_=(value :Option[Formula]) = value match {
       case None =>
         _formula = None
         mathedit.setVisible(false)
@@ -249,11 +281,13 @@ class TestApp extends JFXApp {
         _formula = value
         mathedit.setVisible(true)
         mathedit.setMath(form.math)
-        line.setRight(theoryView.selectedMathEdit.get)
+        for (e <- theoryView.getMathEditForFormula(form)) { line.rightProperty.set(e) }
     }
 
     def selection = _selection
+
     var _updatingSelection = false
+
     def selection_=(sel: Path) = {
       _selection = sel
       try {
@@ -264,7 +298,7 @@ class TestApp extends JFXApp {
       }
     }
 
-    mathedit.selection.onChange { (_,_,newValue) => newValue match {
+    mathedit.selection.onChange { (_, _, newValue) => newValue match {
       case None =>
       case Some(sel) =>
         if (!_updatingSelection) {
@@ -274,13 +308,13 @@ class TestApp extends JFXApp {
     }}
 
     mathedit.setVisible(false)
-    getChildren.addAll(new VBox(1,pickButton,clearButton),mathedit)
+    getChildren.addAll(new VBox(1, pickButton, clearButton), mathedit)
     clearButton.addEventHandler(ActionEvent.ACTION, {
-      (_:ActionEvent) =>
+      (_: ActionEvent) =>
         formula = None
         formulaChanged()
     })
-    pickButton.addEventHandler(ActionEvent.ACTION, { (_:ActionEvent) =>
+    pickButton.addEventHandler(ActionEvent.ACTION, { (_: ActionEvent) =>
       theoryView.selectedFormula match {
         case None =>
           formula = None
@@ -291,6 +325,23 @@ class TestApp extends JFXApp {
       }
       formulaChanged()
     })
+    override def offerFormula(formula: Formula, forced: Boolean): Boolean =
+      if (forced || this.formula.isEmpty) {
+        this.formula = Some(formula)
+        formulaChanged()
+        true
+      } else
+        false
+  }
+
+  trait EditorExtras {
+    /** Sets the content of this editor to formula, if this editor is an editor that accepts formulas, and
+      * if it does not alreay contain one
+      *
+      * @param force set the formula even if there is alreay one
+      * @return whether the offered formula was used
+      */
+    def offerFormula(formula:Formula, force: Boolean=false) : Boolean
   }
 
   class FormulaEditor extends GenericFormulaEditor with Editor[Option[Formula]] {
@@ -298,13 +349,15 @@ class TestApp extends JFXApp {
     override val questionType = typeTag[FormulaQ]
     override val valueProperty: GetterSetterProperty[Option[Formula]] = new GetterSetterProperty[Option[Formula]] {
       override protected def getter: Option[Formula] = formula
+
       override protected def setter(value: Option[Formula]): Unit = formula = value
     }
 
     override def formulaChanged() = valueProperty.fireValueChangedEvent()
   }
 
-  class FormulaSubtermEditor extends GenericFormulaEditor with Editor[Option[(Formula,Path)]] {
+
+  class FormulaSubtermEditor extends GenericFormulaEditor with Editor[Option[(Formula,Path)]] with EditorExtras {
     override val editedType = typeTag[Option[(Formula,Path)]]
     override val questionType = typeTag[FormulaSubtermQ]
     override val focusOnPick = true

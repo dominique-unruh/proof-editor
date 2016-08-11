@@ -21,7 +21,7 @@ import scalafx.beans.property.{ObjectProperty, ReadOnlyObjectWrapper}
 import scalafx.{Includes, scene}
 import scalafx.scene.layout
 
-
+import scalafx.Includes._
 
 /** @tparam R result type */
 class Interactor[R]() extends layout.VBox {
@@ -37,6 +37,9 @@ class Interactor[R]() extends layout.VBox {
 
   def setEditorFactory(factory : Interactor.EditorFactory) : Unit =
     editorFactory = factory
+
+  object Typed { @inline def unapply[T](x:T) = Some(x) }
+  def editors : Seq[Editor[_]] = for { Typed(c : Cell) <- children } yield c.edit
 
   def clearInteraction() : Unit = {
     children.clear()
