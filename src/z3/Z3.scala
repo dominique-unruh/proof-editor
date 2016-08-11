@@ -113,7 +113,9 @@ final class Z3(config:Map[String,String]) {
   /** Not thread safe */
   private def fromCMathML_(m: CMathML) : Expr = m match {
     case CN(_, i) => context.mkNumeral(i.toString, realSort_)
-    case CI(_, n) => context.mkConst(n, realSort_)
+    case CI(_, n) =>
+      val sort = if (n.charAt(0).isUpper) boolSort_ else realSort_
+      context.mkConst(n, sort)
     case Apply(_, CMathML.plus,x,y) => context.mkAdd(fromCMathML_(x).asInstanceOf[ArithExpr],
                                                      fromCMathML_(y).asInstanceOf[ArithExpr])
     case Apply(_, CMathML.minus,x,y) => context.mkSub(fromCMathML_(x).asInstanceOf[ArithExpr],

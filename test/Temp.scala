@@ -6,13 +6,9 @@ import ui.TestFxApp
 
 object Temp {
   def main(args: Array[String]) = {
-    TestFxApp.run {
-      val clip = Clipboard.getSystemClipboard
-      val types = clip.getContentTypes
-//      println(types)
-      for (t <- types)
-        println(s"$t: ${clip.getContent(t)}")
-      sys.exit()
-    }
+    val x : AnyRef = null
+    val y : AnyRef = null
+    val _ @ (x2:AnyRef) = x
+    println(x2)
   }
 }
