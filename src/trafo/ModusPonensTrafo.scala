@@ -23,7 +23,7 @@ class ModusPonensTrafo extends Transformation {
             Interaction.failWith("no-p", <span>The second formula must be P=>... where P is the first one</span>)
         case _ => Interaction.failWith("not-pq", <span>The second formula must be of the form P=>Q</span>)
       }
-      _ <- ask("res", new ShowFormulaQ(<span>This will be the result:</span>, instance.q))
+      _ <- ask("res", new ShowFormulaQ(<span>This will tempbe the result:</span>, instance.q))
     } yield instance
 }
 

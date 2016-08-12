@@ -32,6 +32,10 @@ libraryDependencies += "org.antlr" % "antlr-runtime" % "3.0.1" // Needed for ope
 //libraryDependencies += "ch.qos.logback" %  "logback-classic" % "1.1.7"
 libraryDependencies += "com.lihaoyi" %% "sourcecode" % "0.1.2"
 
+libraryDependencies += "com.thoughtworks.each" %% "each" % "2.0.0"
+//libraryDependencies += "org.pelotom" %% "effectful" % "1.0.1"
+
+
 scalaSource in Compile := baseDirectory.value / "src"
 scalaSource in Test := baseDirectory.value / "test"
 
