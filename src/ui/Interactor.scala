@@ -221,7 +221,7 @@ object Interactor {
         case _:NumberFormatException => /*valueProperty.setValue(None)*/ ()
       })
     valueProperty.addListener({ (newVal:Integer) =>
-      println("change: ",newVal)
+      Log.debug("change: ",newVal)
       textProperty.setValue(newVal.toString)})
   }
 

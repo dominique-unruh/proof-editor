@@ -45,12 +45,12 @@ class InteractionTest extends UnitSpec {
   }
 
   test("fail in for (last step)") {
-    val int : Interaction[Integer] = for { i <- Interaction.fail[Integer] } yield i
+    val int : Interaction[Integer] = for { i <- Interaction.fail } yield i
     assert(isFailed(int))
   }
 
   test("fail in for (prev step)") {
-    val int = for { i <- Interaction.fail[String]; j <- returnval(3 : Integer) } yield j
+    val int = for { i <- Interaction.fail; j <- returnval(3 : Integer) } yield j
     assert(isFailed(int))
   }
 

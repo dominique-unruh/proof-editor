@@ -1,6 +1,7 @@
 package trafo
 import scala.language.existentials
 import cmathml.{CMathML, CNone, Path}
+import com.thoughtworks.each.Monadic
 import misc.Pure
 import theory.Formula
 
@@ -11,6 +12,7 @@ import scala.util.control.Breaks
 import scala.runtime.BoxedUnit
 import scala.xml.Elem
 import scala.reflect.runtime.universe._
+import scalaz.Monad
 
 
 abstract class Question[T] {
@@ -94,12 +96,12 @@ final case class InteractionFinished[T](result: T) extends Interaction[T] {
   override def withFilter(p: (T) => Boolean): Interaction[T] =
     if (p(result)) this else InteractionFailed()
 }
-final case class InteractionFailed[T]() extends Interaction[T] {
-  override def resultMaybe: Option[T] = None
+final case class InteractionFailed() extends Interaction[Nothing] {
+  override def resultMaybe: Option[Nothing] = None
   override def isDone: Boolean = false
   override def isRunning: Boolean = false
   override def isFailed: Boolean = true
-  override def withFilter(p: (T) => Boolean): Interaction[T] = this
+  override def withFilter(p: Nothing => Boolean) = this
 }
 
 sealed trait Interaction[+T] {
@@ -152,7 +154,8 @@ sealed trait Interaction[+T] {
 }
 
 object Interaction {
-  def fail[T] = new InteractionFailed[T]()
+  def fail = new InteractionFailed()
+  def failU : Interaction[Unit] = fail
   def returnval[T](res : T) = new InteractionFinished[T](res)
   def ask[T<:AnyRef](id : String, question : Question[T]) =
     new InteractionRunning[T](id,question, { a =>
@@ -162,7 +165,16 @@ object Interaction {
     })
   def error(id:String,err:Elem) : Interaction[Unit] =
     new InteractionRunning[Unit](id,MessageQ.Error(err),{a=>returnval(())})
-  def failWith[T](id:String, err:Elem) : Interaction[T] =
-    for { _ <- error(id, err); res <- fail[T] } yield res
+  def failWith(id:String, err:Elem) : Interaction[Nothing] =
+    for { _ <- error(id, err); res <- fail } yield res
+  def failWithU(id:String, err:Elem) : Interaction[Unit] = failWith(id,err)
   val skip : Interaction[Unit] = returnval(())
+
+  implicit object interactionInstance extends Monad[Interaction] {
+    override def bind[A, B](fa: Interaction[A])(f: (A) => Interaction[B]): Interaction[B] = fa.flatMap(f)
+    override def point[A](a: => A): Interaction[A] = returnval(a)
+  }
+
+  val interaction = Monadic.monadic[Interaction]
 }
+
