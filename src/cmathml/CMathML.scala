@@ -139,14 +139,14 @@ object CMathML {
     case n : OMFloat => CN(n.getDec)
     case s : OMSymbol =>
       CSymbol(s.getCd,s.getName) match {
-        case CSymbol(attr,holeSymbol.cd,holeSymbol.name) => CNone(attr)
+        case CSymbol(attr,internal.holeSymbol.cd,internal.holeSymbol.name) => CNone(attr)
         case m => m
       }
     case s : OMString => CS(s.getValue)
     case x : OMVariable => CI(x.getName)
     case a : OMApply =>
       Apply(fromSymcomp(a.getHead),a.getParams.map(fromSymcomp) : _*) match {
-        case Apply(attr,CSymbol(_,decimalFractionSymbol.cd,decimalFractionSymbol.name),CS(_,str)) =>
+        case Apply(attr,CSymbol(_,internal.decimalFractionSymbol.cd,internal.decimalFractionSymbol.name),CS(_,str)) =>
           CN(attr,str)
         case m => m
       }
@@ -157,65 +157,74 @@ object CMathML {
   type Attributes = Map[(String,String),Any]
   val NoAttr : Attributes = Map.empty
 
-  val holeSymbol = CSymbol("internal","hole")
-  val decimalFractionSymbol = CSymbol("internal","decimal_fraction")
-
   /** Is it an NCName in the sense of [[https://www.w3.org/TR/xmlschema-2/#NCName]]? */
   private[cmathml] def isNCName(name: String): Boolean =
     XMLChar.isValidNCName(name) // This is not public api, but should be easy to reimplement if needed
 
+
+  object internal {
+    val cd = "internal"
+    val holeSymbol = CSymbol(cd,"hole")
+    val decimalFractionSymbol = CSymbol(cd,"decimal_fraction")
+  }
+
+
   object relation1 {
-    val equal = CSymbol("relation1","eq") // eq is used by Scala
+    val cd = "relation1"
+    val equal = CSymbol(cd,"eq") // eq is used by Scala
     def equal(a: CMathML, b: CMathML) : Apply = Apply(equal,a,b)
-    val neq = CSymbol("relation1","neq")
+    val neq = CSymbol(cd,"neq")
     def neq(a: CMathML, b: CMathML) : Apply = Apply(neq,a,b)
-    val leq = CSymbol("relation1","leq")
+    val leq = CSymbol(cd,"leq")
     def leq(a: CMathML, b: CMathML) : Apply = Apply(leq,a,b)
-    val geq = CSymbol("relation1","geq")
+    val geq = CSymbol(cd,"geq")
     def geq(a: CMathML, b: CMathML) : Apply = Apply(geq,a,b)
-    val lt = CSymbol("relation1","lt")
+    val lt = CSymbol(cd,"lt")
     def lt(a: CMathML, b: CMathML) : Apply = Apply(lt,a,b)
-    val gt = CSymbol("relation1","gt")
+    val gt = CSymbol(cd,"gt")
     def gt(a: CMathML, b: CMathML) : Apply = Apply(gt,a,b)
   }
 
   object arith1 {
-    val plus = CSymbol("arith1","plus")
+    val cd = "arith1"
+    val plus = CSymbol(cd,"plus")
     def plus(x:CMathML,y:CMathML) : Apply = Apply(plus,x,y)
-    val abs = CSymbol("arith1","abs")
+    val abs = CSymbol(cd,"abs")
     def abs(x:CMathML) : Apply = Apply(abs,x)
-    val minus = CSymbol("arith1","minus")
+    val minus = CSymbol(cd,"minus")
     def minus(x:CMathML,y:CMathML) : Apply = Apply(minus,x,y)
-    val times = CSymbol("arith1","times")
+    val times = CSymbol(cd,"times")
     def times(x:CMathML,y:CMathML) : Apply = Apply(times,x,y)
-    val divide = CSymbol("arith1","divide")
+    val divide = CSymbol(cd,"divide")
     def divide(x:CMathML,y:CMathML) : Apply = Apply(divide,x,y)
-    val power = CSymbol("arith1","power")
+    val power = CSymbol(cd,"power")
     def power(x:CMathML, y:CMathML) : Apply = Apply(power,x,y)
-    val root = CSymbol("arith1","root")
+    val root = CSymbol(cd,"root")
     def root(x:CMathML, y:CMathML) : Apply = Apply(root,x,y)
-    val sum = CSymbol("arith1","sum")
+    val sum = CSymbol(cd,"sum")
     def sum(x:CMathML, y:CMathML) : Apply = Apply(sum,x,y)
-    val product = CSymbol("arith1","product")
+    val product = CSymbol(cd,"product")
     def product(x:CMathML, y:CMathML) : Apply = Apply(product,x,y)
-    val uminus = CSymbol("arith1","unary_minus")
+    val uminus = CSymbol(cd,"unary_minus")
     def uminus(x:CMathML) : Apply = Apply(uminus,x)
   }
 
   object calculus1 {
-    val diff = CSymbol("calculus1","diff")
+    val cd = "calculus1"
+    val diff = CSymbol(cd,"diff")
     def diff(x:CMathML) : Apply = Apply(diff,x)
-    val int = CSymbol("calculus1","int")
+    val int = CSymbol(cd,"int")
     def int(x:CMathML) : Apply = Apply(int,x)
-    val defint = CSymbol("calculus1","defint")
+    val defint = CSymbol(cd,"defint")
     def defint(x:CMathML, y:CMathML) : Apply = Apply(defint,x,y)
   }
 
   object nums1 {
-    val pi = CSymbol("nums1","pi")
-    val e = CSymbol("nums1","e")
-    val i = CSymbol("nums1","i")
-    val infinity = CSymbol("nums1","infinity")
+    val cd = "nums1"
+    val pi = CSymbol(cd,"pi")
+    val e = CSymbol(cd,"e")
+    val i = CSymbol(cd,"i")
+    val infinity = CSymbol(cd,"infinity")
   }
 
   object minmax1 {
@@ -246,55 +255,58 @@ object CMathML {
   }
   
   object logic1 {
-    val and = CSymbol("logic1","and")
+    val cd = "logic1"
+    val and = CSymbol(cd,"and")
     def and(x:CMathML, y:CMathML) : Apply = Apply(and,x,y)
-    val equivalent = CSymbol("logic1","equivalent")
+    val equivalent = CSymbol(cd,"equivalent")
     def equivalent(x:CMathML, y:CMathML) : Apply = Apply(equivalent,x,y)
-    val falseSym = CSymbol("logic1","false")
-    val trueSym = CSymbol("logic1","true")
-    val implies = CSymbol("logic1","implies")
+    val falseSym = CSymbol(cd,"false")
+    val trueSym = CSymbol(cd,"true")
+    val implies = CSymbol(cd,"implies")
     def implies(x:CMathML, y:CMathML) : Apply = Apply(implies,x,y)
-    val not = CSymbol("logic1","not")
+    val not = CSymbol(cd,"not")
     def not(x:CMathML) : Apply = Apply(not,x)
-    val or = CSymbol("logic1","or")
+    val or = CSymbol(cd,"or")
     def or(x:CMathML, y:CMathML) : Apply = Apply(or,x,y)
-    val xor = CSymbol("logic1","xor")
+    val xor = CSymbol(cd,"xor")
     def xor(x:CMathML, y:CMathML) : Apply = Apply(xor,x,y)
   }
 
   object quant1 {
-    val forall = CSymbol("quant1","forall")
+    val cd = "quant1"
+    val forall = CSymbol(cd,"forall")
     def forall(vars:Seq[CILike],body:CMathML) : Bind = Bind(forall,vars,body)
-    val exists = CSymbol("quant1","exists")
+    val exists = CSymbol(cd,"exists")
     def exists(vars:Seq[CILike],body:CMathML) : Bind = Bind(exists,vars,body)
   }
 
   object transc1 {
-    val cos = CSymbol("transc1","cos")
+    val cd = "transc1"
+    val cos = CSymbol(cd,"cos")
     def cos(x:CMathML) : Apply = Apply(cos,x)
-    val cosh = CSymbol("transc1","cosh")
+    val cosh = CSymbol(cd,"cosh")
     def cosh(x:CMathML) : Apply = Apply(cosh,x)
-    val cot = CSymbol("transc1","cot")
+    val cot = CSymbol(cd,"cot")
     def cot(x:CMathML) : Apply = Apply(cot,x)
-    val coth = CSymbol("transc1","coth")
+    val coth = CSymbol(cd,"coth")
     def coth(x:CMathML) : Apply = Apply(coth,x)
-    val csc = CSymbol("transc1","csc")
+    val csc = CSymbol(cd,"csc")
     def csc(x:CMathML) : Apply = Apply(csc,x)
-    val csch = CSymbol("transc1","csch")
+    val csch = CSymbol(cd,"csch")
     def csch(x:CMathML) : Apply = Apply(csch,x)
-    val exp = CSymbol("transc1","exp")
+    val exp = CSymbol(cd,"exp")
     def exp(x:CMathML) : Apply = Apply(exp,x)
-    val sec = CSymbol("transc1","sec")
+    val sec = CSymbol(cd,"sec")
     def sec(x:CMathML) : Apply = Apply(sec,x)
-    val sech = CSymbol("transc1","sech")
+    val sech = CSymbol(cd,"sech")
     def sech(x:CMathML) : Apply = Apply(sech,x)
-    val sin = CSymbol("transc1","sin")
+    val sin = CSymbol(cd,"sin")
     def sin(x:CMathML) : Apply = Apply(sin,x)
-    val sinh = CSymbol("transc1","sinh")
+    val sinh = CSymbol(cd,"sinh")
     def sinh(x:CMathML) : Apply = Apply(sinh,x)
-    val tan = CSymbol("transc1","tan")
+    val tan = CSymbol(cd,"tan")
     def tan(x:CMathML) : Apply = Apply(tan,x)
-    val tanh = CSymbol("transc1","tanh")
+    val tanh = CSymbol(cd,"tanh")
     def tanh(x:CMathML) : Apply = Apply(tanh,x)
   }
 
@@ -303,6 +315,7 @@ object CMathML {
     case "csymbol" => CSymbol.fromXML(xml)
     case "cn" => CN.fromXML(xml)
     case "ci" => CI.fromXML(xml)
+    case "cs" => CS.fromXML(xml)
     case "apply" => Apply.fromXML(xml)
     case "bind" => Bind.fromXML(xml)
   }
@@ -523,7 +536,7 @@ final case class CN(attributes : Attributes = NoAttr, n: BigDecimal) extends CMa
 
   override protected def toPopcorn$(sb: StringBuilder, priority: Int): Unit = {
     if (n.isExactDouble) sb ++= n.toString
-    else Apply(decimalFractionSymbol,CS(n.toString)).toPopcorn(sb,priority)
+    else Apply(internal.decimalFractionSymbol,CS(n.toString)).toPopcorn(sb,priority)
   }
 
   @Pure override protected
@@ -531,7 +544,7 @@ final case class CN(attributes : Attributes = NoAttr, n: BigDecimal) extends CMa
     if (n.isWhole)
       new OMInteger(n.toBigIntExact.get.bigInteger)
     else
-      new OMApply(decimalFractionSymbol.cd,decimalFractionSymbol.name,
+      new OMApply(internal.decimalFractionSymbol.cd,internal.decimalFractionSymbol.name,
         new OMString(n.toString))
 //        new OMInteger(n.bigDecimal.unscaledValue),new OMInteger(n.scale))
 }
@@ -598,7 +611,7 @@ object CSymbol {
 
   private def makePopcornAbbrevs(mappings: (CSymbol,String)*) =
     Map(mappings.map { case (sym:CSymbol,abbr:String) => ((sym.cd,sym.name),abbr) } : _*)
-  val popcornAbbrevs = makePopcornAbbrevs(
+  lazy val popcornAbbrevs = makePopcornAbbrevs(
     transc1.cos -> "cos",
     transc1.cosh -> "cosh",
     transc1.cot -> "cot",
@@ -662,7 +675,7 @@ final case class CError(attributes : Attributes, cd: String, name: String, args:
 final case class CNone(attributes : Attributes = NoAttr) extends CMathML with Leaf with CILike {
   override protected def toPopcorn$(sb: StringBuilder, priority: Int): Unit =
 //    sb += '\u25a2'
-    CMathML.holeSymbol.toPopcorn(sb,priority)
+    CMathML.internal.holeSymbol.toPopcorn(sb,priority)
 
   override def toString = toPopcorn
 
@@ -670,7 +683,7 @@ final case class CNone(attributes : Attributes = NoAttr) extends CMathML with Le
   override def toXML$: Elem = <cerror><csymbol cd="moreerrors">encodingError</csymbol><cs>Cannot encode "hole" in formula</cs></cerror>
 
   @Pure override protected
-  def toSymcomp$: OpenMathBase = CMathML.holeSymbol.toSymcomp
+  def toSymcomp$: OpenMathBase = CMathML.internal.holeSymbol.toSymcomp
 }
 
 object Path {

@@ -44,6 +44,14 @@ class CMathMLTest extends UnitSpec {
 //    assertResult("0.5") { CN(0.5).toPopcorn }  // Not supported yet
   }
 
+  test("xml roundtrip") {
+    for (e <- CMathMLTest.cMathMLRoundtrips) {
+      val x = e.toXML
+      val e2 = CMathML.fromXML(x)
+      assertResult(e) { e2 }
+    }
+  }
+
   test("popcorn roundtrip") {
     for (e <- CMathMLTest.cMathMLRoundtrips) {
       Log.debug("e",e.toXML)
