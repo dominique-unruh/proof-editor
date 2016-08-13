@@ -1,6 +1,6 @@
 package trafo
 
-import cmathml.CMathML.implies
+import cmathml.CMathML.logic1.implies
 import cmathml.{Apply, CMathML}
 import theory.Formula
 import trafo.Interaction.{ask, returnval}

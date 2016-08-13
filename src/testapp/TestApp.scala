@@ -41,8 +41,9 @@ object TestApp {
     override def toString = label
   }
 
+  import CMathML._
   val examples = List(
-    CMathML.equal(CMathML.plus(CI("x"), CI("y")), CMathML.plus(CI("y"), CN(-1))),
+    relation1.equal(CI("x") + CI("y"), CI("y") + CN(-1)),
     CI("x").negate()
   )
 }

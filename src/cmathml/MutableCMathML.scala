@@ -208,10 +208,11 @@ object MutableCMathML {
     case Apply(att, hd, args @ _*) => new MApply(att,fromCMathML(hd),args.map(fromCMathML) : _*)
     case CI(att, v) => new MCI(att,v)
     case CN(att, n) => new MCN(att,n)
+    case CS(att, str) => new MCS(att,str)
     case CSymbol(att, cd, name) => new MCSymbol(att,cd,name)
     case CError(att, cd, name, args @ _*) => new MCError(att,cd,name,args)
     case CNone(att) => new MCNone(att)
-    case Bind(att, hd, vars, arg) => new MBind(att,fromCMathML(hd),vars.map(fromCMathML(_).asInstanceOf[MCI]),fromCMathML(arg))
+    case Bind(att, hd, vars, arg) => new  MBind(att,fromCMathML(hd),vars.map(fromCMathML(_).asInstanceOf[MCI]),fromCMathML(arg))
   }
 }
 
@@ -550,6 +551,28 @@ final class MCN(attributes: AttributesRO, private var _n:BigDecimal) extends Mut
 object MCN {
   def unapply(that:MCN) = Some(that.n)
 }
+
+final class MCS(attributes: AttributesRO, private var _str:String) extends MutableCMathML(attributes) with MLeaf {
+  override def toCMathML: CMathML = CS(attributesToCMathML,_str)
+
+  def this(str:String) = this(MNoAttr,str)
+
+  def str = _str
+  def str_=(str:String): Unit = {
+    _str = str
+    fireChange()
+  }
+
+  override def replace(a: MutableCMathML, b: MutableCMathML): Unit =
+    replaceInAttributes(a,b)
+
+  override def copy(): MutableCMathML = ???
+}
+object MCS {
+  def unapply(that:MCS) = Some(that.str)
+}
+
+
 object MCSymbol {
   def unapply(that:MCSymbol) = Some((that._cd,that._name))
   def apply(cd:String, name:String) = new MCSymbol(MNoAttr,cd,name)

@@ -29,11 +29,11 @@ object MathViewFXExample {
 
       val x = new MCI("x")
       val y = new MCI("y")
-      val xToY = new MApply(power,x,y)
+      val xToY = new MApply(arith1.power,x,y)
       val a = new MCI("a")
       val b = new MCI("b")
-      val aDivB = new MApply(divide,a,b)
-      val xyPlusAb = new MApply(plus,xToY,aDivB)
+      val aDivB = new MApply(arith1.divide,a,b)
+      val xyPlusAb = new MApply(arith1.plus,xToY,aDivB)
 
       val root = xyPlusAb
       if (root.isAttached) root.replaceWith(new MCNone)

@@ -2,6 +2,7 @@ package z3
 
 import java.math.BigInteger
 
+import cmathml.CMathML.{arith1, relation1}
 import cmathml._
 import com.microsoft.z3.{Expr, RatNum, Version}
 import test.UnitSpec
@@ -37,8 +38,7 @@ class Z3Test extends UnitSpec {
 
   test("convert CMathML to Expr") {
     val z3 = new Z3(Map())
-    val cmathml = CMathML.equal(CMathML.plus(CN(1),CN(2)),
-                                CMathML.plus(CN(4),CN(-1)))
+    val cmathml = relation1.equal(CN(1)+CN(2), CN(4) + CN(-1))
     assertResult("(= (+ 1.0 2.0) (+ 4.0 (- 1.0)))") {
       z3.fromCMathML(cmathml).toString
     }

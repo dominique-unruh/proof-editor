@@ -9,7 +9,7 @@ import misc.{Pure, Utils}
 //import org.objectweb.asm.{ClassReader, ClassVisitor, ClassWriter, Opcodes}
 import scala.collection.{JavaConversions, JavaConverters}
 import com.microsoft.z3.enumerations.Z3_decl_kind._
-
+import CMathML._
 
 final class Z3(config:Map[String,String]) {
   def doesImply(a: CMathML, b: CMathML) : Option[Boolean] = synchronized {
@@ -57,16 +57,18 @@ final class Z3(config:Map[String,String]) {
   def this() = this(Map())
   /** Not thread safe */
   private def toCMathML(expr: Expr) : CMathML = expr match {
+    case e if e.getSort==stringSort_ && e.isConst && e.getFuncDecl.getName.toString.startsWith("string@") =>
+      CS(e.getFuncDecl.getName.toString.stripPrefix("string@"))
     case e: ArithExpr if e.isConst => CI(e.getFuncDecl.getName.toString)
     case e: ArithExpr if e.isApp =>
       (e.getFuncDecl.getDeclKind,e.getNumArgs) match {
-        case (Z3_OP_ADD,2) => Apply(CMathML.plus, e.getArgs map toCMathML: _*)
-        case (Z3_OP_MUL,2) => Apply(CMathML.times, e.getArgs map toCMathML: _*)
-        case (Z3_OP_SUB,2) => Apply(CMathML.minus, e.getArgs map toCMathML: _*)
-        case (Z3_OP_DIV,2) => Apply(CMathML.divide, e.getArgs map toCMathML: _*)
-        case (Z3_OP_UMINUS,1)=> Apply(CMathML.uminus, e.getArgs map toCMathML: _*)
-        case (Z3_OP_EQ,2) => Apply(CMathML.equal, e.getArgs map toCMathML: _*)
-        case (Z3_OP_POWER,2) => Apply(CMathML.power, e.getArgs map toCMathML: _*)
+        case (Z3_OP_ADD,2) => Apply(arith1.plus, e.getArgs map toCMathML: _*)
+        case (Z3_OP_MUL,2) => Apply(arith1.times, e.getArgs map toCMathML: _*)
+        case (Z3_OP_SUB,2) => Apply(arith1.minus, e.getArgs map toCMathML: _*)
+        case (Z3_OP_DIV,2) => Apply(arith1.divide, e.getArgs map toCMathML: _*)
+        case (Z3_OP_UMINUS,1)=> Apply(arith1.uminus, e.getArgs map toCMathML: _*)
+        case (Z3_OP_EQ,2) => Apply(relation1.equal, e.getArgs map toCMathML: _*)
+        case (Z3_OP_POWER,2) => Apply(arith1.power, e.getArgs map toCMathML: _*)
         case k => throw new MathException(s"cannot convert arith expr from Z3 to CMathML: $e (unkown decl kind $k)")
       }
     case e: Quantifier => // Must be before "case e:BoolExpr" because Quantifier <: BoolExpr
@@ -76,21 +78,21 @@ final class Z3(config:Map[String,String]) {
       val body1 = e.getBody.substituteVars(vars2.toArray)
       val body2 = toCMathML(body1)
       var sym : CSymbol =
-        if (e.isUniversal) CMathML.forall
-        else if (e.isExistential) CMathML.exists
+        if (e.isUniversal) quant1.forall
+        else if (e.isExistential) quant1.exists
         else throw new MathException("Z3 quantifier is neither universal nor existential",e)
       Bind(sym,vars3,body2)
     case e: BoolExpr if e.isApp =>
       (e.getFuncDecl.getDeclKind,e.getNumArgs) match {
-        case (Z3_OP_EQ,2) => Apply(CMathML.equal, e.getArgs map toCMathML: _*)
-        case (Z3_OP_TRUE,0) => CMathML.trueSym
-        case (Z3_OP_FALSE,0) => CMathML.falseSym
-        case (Z3_OP_AND,2) => Apply(CMathML.and, e.getArgs map toCMathML: _*)
-        case (Z3_OP_OR,2) => Apply(CMathML.or, e.getArgs map toCMathML: _*)
-        case (Z3_OP_IFF,2) => Apply(CMathML.equivalent, e.getArgs map toCMathML: _*)
-        case (Z3_OP_IMPLIES,2) => Apply(CMathML.implies, e.getArgs map toCMathML: _*)
-        case (Z3_OP_XOR,2) => Apply(CMathML.xor, e.getArgs map toCMathML: _*)
-        case (Z3_OP_NOT,1) => Apply(CMathML.not, e.getArgs map toCMathML: _*)
+        case (Z3_OP_EQ,2) => Apply(relation1.equal, e.getArgs map toCMathML: _*)
+        case (Z3_OP_TRUE,0) => logic1.trueSym
+        case (Z3_OP_FALSE,0) => logic1.falseSym
+        case (Z3_OP_AND,2) => Apply(logic1.and, e.getArgs map toCMathML: _*)
+        case (Z3_OP_OR,2) => Apply(logic1.or, e.getArgs map toCMathML: _*)
+        case (Z3_OP_IFF,2) => Apply(logic1.equivalent, e.getArgs map toCMathML: _*)
+        case (Z3_OP_IMPLIES,2) => Apply(logic1.implies, e.getArgs map toCMathML: _*)
+        case (Z3_OP_XOR,2) => Apply(logic1.xor, e.getArgs map toCMathML: _*)
+        case (Z3_OP_NOT,1) => Apply(logic1.not, e.getArgs map toCMathML: _*)
         case k => throw new MathException(s"cannot convert bool expr from Z3 to CMathML: $e (unkown decl kind $k)")
       }
     case e: RatNum =>
@@ -102,13 +104,15 @@ final class Z3(config:Map[String,String]) {
         val denom2 = BigDecimal(denom, CN.MATHCONTEXT)
         try CN(num2 / denom2)
         catch {
-          case _: ArithmeticException => CMathML.divide(CN(num2), CN(denom2))
+          case _: ArithmeticException => arith1.divide(CN(num2), CN(denom2))
         }
       }
-    case e => throw new MathException("cannot convert from Z3 to CMathML: "+e)
+
+    case e => throw new MathException(s"cannot convert from Z3 to CMathML (${e.getClass}): "+e)
   }
 
   def fromCMathML(m: CMathML) = synchronized { new Z3.Expr(this, fromCMathML_(m)) }
+
 
   /** Not thread safe */
   private def fromCMathML_(m: CMathML) : Expr = m match {
@@ -116,33 +120,39 @@ final class Z3(config:Map[String,String]) {
     case CI(_, n) =>
       val sort = if (n.charAt(0).isUpper) boolSort_ else realSort_
       context.mkConst(n, sort)
-    case Apply(_, CMathML.plus,x,y) => context.mkAdd(fromCMathML_(x).asInstanceOf[ArithExpr],
+    case CS(_, s) => context.mkConst("string@"+s,stringSort_)
+    case Apply(_, arith1.plus,x,y) => context.mkAdd(fromCMathML_(x).asInstanceOf[ArithExpr],
                                                      fromCMathML_(y).asInstanceOf[ArithExpr])
-    case Apply(_, CMathML.minus,x,y) => context.mkSub(fromCMathML_(x).asInstanceOf[ArithExpr],
+    case Apply(_, arith1.minus,x,y) => context.mkSub(fromCMathML_(x).asInstanceOf[ArithExpr],
                                                       fromCMathML_(y).asInstanceOf[ArithExpr])
-    case Apply(_, CMathML.times,x,y) => context.mkMul(fromCMathML_(x).asInstanceOf[ArithExpr],
+    case Apply(_, arith1.times,x,y) => context.mkMul(fromCMathML_(x).asInstanceOf[ArithExpr],
                                                       fromCMathML_(y).asInstanceOf[ArithExpr])
-    case Apply(_, CMathML.divide,x,y) => context.mkDiv(fromCMathML_(x).asInstanceOf[ArithExpr],
+    case Apply(_, arith1.divide,x,y) => context.mkDiv(fromCMathML_(x).asInstanceOf[ArithExpr],
                                                        fromCMathML_(y).asInstanceOf[ArithExpr])
-    case Apply(_, CMathML.equal,x,y) => context.mkEq(fromCMathML_(x),fromCMathML_(y))
-    case Apply(_, CMathML.uminus,x) => context.mkUnaryMinus(fromCMathML_(x).asInstanceOf[ArithExpr])
-    case Apply(_, CMathML.power,x,y) => context.mkPower(fromCMathML_(x).asInstanceOf[ArithExpr],
+    case Apply(_, relation1.equal,x,y) => context.mkEq(fromCMathML_(x),fromCMathML_(y))
+    case Apply(_, arith1.uminus,x) => context.mkUnaryMinus(fromCMathML_(x).asInstanceOf[ArithExpr])
+    case Apply(_, arith1.power,x,y) => context.mkPower(fromCMathML_(x).asInstanceOf[ArithExpr],
                                                         fromCMathML_(y).asInstanceOf[ArithExpr])
-    case Apply(_, CMathML.or,x,y) => context.mkOr(fromCMathML_(x).asInstanceOf[BoolExpr],
+    case Apply(_, logic1.or,x,y) => context.mkOr(fromCMathML_(x).asInstanceOf[BoolExpr],
                                                   fromCMathML_(y).asInstanceOf[BoolExpr])
-    case Apply(_, CMathML.and,x,y) => context.mkAnd(fromCMathML_(x).asInstanceOf[BoolExpr],
+    case Apply(_, logic1.and,x,y) => context.mkAnd(fromCMathML_(x).asInstanceOf[BoolExpr],
                                                     fromCMathML_(y).asInstanceOf[BoolExpr])
-    case Apply(_, CMathML.equivalent,x,y) => context.mkIff(fromCMathML_(x).asInstanceOf[BoolExpr],
+    case Apply(_, logic1.equivalent,x,y) => context.mkIff(fromCMathML_(x).asInstanceOf[BoolExpr],
                                                            fromCMathML_(y).asInstanceOf[BoolExpr])
-    case Apply(_, CMathML.implies,x,y) => context.mkImplies(fromCMathML_(x).asInstanceOf[BoolExpr],
+    case Apply(_, logic1.implies,x,y) => context.mkImplies(fromCMathML_(x).asInstanceOf[BoolExpr],
                                                             fromCMathML_(y).asInstanceOf[BoolExpr])
-    case Apply(_, CMathML.xor,x,y) => context.mkXor(fromCMathML_(x).asInstanceOf[BoolExpr],
+    case Apply(_, logic1.xor,x,y) => context.mkXor(fromCMathML_(x).asInstanceOf[BoolExpr],
                                                     fromCMathML_(y).asInstanceOf[BoolExpr])
-    case Apply(_, CMathML.not,x) => context.mkNot(fromCMathML_(x).asInstanceOf[BoolExpr])
-    case CMathML.trueSym => context.mkTrue()
-    case CMathML.falseSym => context.mkFalse()
-    case Bind(_, CMathML.forall,vs,body) =>
+    case Apply(_, logic1.not,x) => context.mkNot(fromCMathML_(x).asInstanceOf[BoolExpr])
+    case logic1.trueSym => context.mkTrue()
+    case logic1.falseSym => context.mkFalse()
+    case Bind(_, quant1.forall,vs,body) =>
       context.mkForall(
+        vs.map(fromCMathML_(_)).toArray,
+        fromCMathML_(body),
+        0, null, null,null,null)
+    case Bind(_, quant1.exists,vs,body) =>
+      context.mkExists(
         vs.map(fromCMathML_(_)).toArray,
         fromCMathML_(body),
         0, null, null,null,null)
@@ -156,6 +166,7 @@ final class Z3(config:Map[String,String]) {
   private lazy val boolSort_ = context.mkBoolSort()
   private lazy val intSort_ = context.mkIntSort()
   private lazy val realSort_ = context.mkRealSort()
+  private lazy val stringSort_ = context.mkUninterpretedSort("unicodeString")
 
 //  /** Declares a new function. Note: the range of the function is given <b>first</b>!
 //    * (Hence the suffix RD)

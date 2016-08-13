@@ -4,7 +4,7 @@ import javafx.geometry.Bounds
 import javafx.scene.control.Alert
 import javafx.scene.input
 
-import cmathml.CMathML.{plus, times}
+import cmathml.CMathML._
 import cmathml.MutableCMathML.fromCMathML
 import cmathml._
 import misc.Utils.ImplicitConversions._
@@ -171,12 +171,12 @@ class MathEdit extends MathViewFX {
 //    println("Key typed: "+e)
     var processed = true
     e.character match {
-      case "+" => insertBinaryOp(plus)
-      case "-" => insertBinaryOp(CMathML.minus)
-      case "*" => insertBinaryOp(times)
-      case "/" => insertBinaryOp(CMathML.divide)
-      case "=" => insertBinaryOp(CMathML.equal)
-      case "^" => insertBinaryOp(CMathML.power)
+      case "+" => insertBinaryOp(arith1.plus)
+      case "-" => insertBinaryOp(arith1.minus)
+      case "*" => insertBinaryOp(arith1.times)
+      case "/" => insertBinaryOp(arith1.divide)
+      case "=" => insertBinaryOp(relation1.equal)
+      case "^" => insertBinaryOp(arith1.power)
       case AlphaChar(c) => insertMath(CI(c))
       case NumChar(c) => insertDigit(c(0)-'0')
       case _ => processed = false
@@ -221,8 +221,8 @@ class MathEdit extends MathViewFX {
           case _ =>
             val hole = new MCNone
             cursorPos.value.side match {
-              case CursorLeft => replaceWith(target, new MApply(fromCMathML(times), mmath, hole))
-              case CursorRight => replaceWith(target, new MApply(fromCMathML(times), hole, mmath)) }
+              case CursorLeft => replaceWith(target, new MApply(fromCMathML(arith1.times), mmath, hole))
+              case CursorRight => replaceWith(target, new MApply(fromCMathML(arith1.times), hole, mmath)) }
             hole.replaceWith(target)
           }
         }
