@@ -5,6 +5,9 @@ import com.thoughtworks.each.Monadic
 import misc.Pure
 import theory.Formula
 
+import scala.language.higherKinds
+import scala.language.implicitConversions
+
 import scala.annotation.tailrec
 import scala.collection.generic.FilterMonadic
 import scala.reflect.api.TypeTags
@@ -53,13 +56,14 @@ class StringQ(val message:Elem) extends Question[String] {
   val default = ""
 }
 
-class ShowFormulaQ(val message:Elem, val formula : Formula) extends Question[BoxedUnit] {
+class ShowFormulaQ(val message:Elem, val formula : Formula, val highlight : Option[Path] = None)
+  extends Question[BoxedUnit] {
   import scala.reflect.runtime.universe._
-  //  super(typeTag[BoxedUnit])
   val answerType = typeTag[BoxedUnit]
   val questionType = typeTag[ShowFormulaQ]
   val default = BoxedUnit.UNIT
-  override def toString = s"[MSG: $message, $formula]"
+  override def toString =
+    s"[MSG: $message, $formula${highlight.map(" "+_.toString).getOrElse("")}]"
 }
 
 
@@ -154,7 +158,7 @@ sealed trait Interaction[+T] {
 }
 
 object Interaction {
-  def fail = new InteractionFailed()
+  def fail[T] : Interaction[T] = InteractionFailed()
   def failU : Interaction[Unit] = fail
   def returnval[T](res : T) = new InteractionFinished[T](res)
   def ask[T<:AnyRef](id : String, question : Question[T]) =
@@ -165,8 +169,8 @@ object Interaction {
     })
   def error(id:String,err:Elem) : Interaction[Unit] =
     new InteractionRunning[Unit](id,MessageQ.Error(err),{a=>returnval(())})
-  def failWith(id:String, err:Elem) : Interaction[Nothing] =
-    for { _ <- error(id, err); res <- fail } yield res
+  def failWith[T](id:String, err:Elem) : Interaction[T] =
+    for { _ <- error(id, err); res <- fail[T] } yield res
   def failWithU(id:String, err:Elem) : Interaction[Unit] = failWith(id,err)
   val skip : Interaction[Unit] = returnval(())
 
@@ -176,5 +180,15 @@ object Interaction {
   }
 
   val interaction = Monadic.monadic[Interaction]
+  implicit def toEachOps[F[_], A](v: F[A]) : Monadic.EachOps[F,A] = Monadic.toEachOps(v)
+  class OptionI[A](v : Interaction[Option[A]]) {
+    def getOrElseI(default: Interaction[A]): Interaction[A] =
+      v.flatMap {
+        case Some(x) => returnval(x)
+        case None => default
+      }
+  }
+  implicit def toOptionI1[A](s:Option[A]) : OptionI[A] = new OptionI(returnval(s))
+  implicit def toOptionI2[A](s:Interaction[Option[A]]) : OptionI[A] = new OptionI(s)
 }
 

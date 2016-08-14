@@ -1,6 +1,6 @@
 package theory
 
-import cmathml.CMathML
+import cmathml.{CMathML, Path}
 import trafo.TrafoInstance
 
 import scala.collection.mutable.ListBuffer

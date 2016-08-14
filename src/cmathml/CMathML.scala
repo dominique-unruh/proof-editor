@@ -717,8 +717,14 @@ final case class Path(path : List[Int]) extends AnyVal {
   def toPath = this
   def toPathRev = new PathRev(path.reverse)
   def isEmpty = path.isEmpty
+  /** O(n) */
+  def splitLast : (Path,Int) = {
+    val (rest,last) = toPathRev.splitLast
+    (rest.toPath,last)
+  }
 }
 final case class PathRev(path : List[Int]) extends AnyVal {
+  def splitLast : (PathRev,Int) = (new PathRev(path.tail),path.head)
   def append(i: Int) = new PathRev(i :: path)
   def toPath = new Path(path.reverse)
   def toPathRev = this

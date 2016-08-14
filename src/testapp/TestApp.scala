@@ -414,6 +414,7 @@ class TestApp extends JFXApp {
     var formula : Option[Formula] = None
     override val valueProperty = new SimpleObjectProperty[BoxedUnit](BoxedUnit.UNIT)
     mathedit.setMath(q.formula.math)
+    mathedit.selection.value = q.highlight.map(mathedit.mathDoc.subterm)
     getChildren.add(mathedit)
   }
 
