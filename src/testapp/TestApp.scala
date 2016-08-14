@@ -367,10 +367,14 @@ class TestApp extends JFXApp {
     override val focusOnPick = true
 
     override val valueProperty: GetterSetterProperty[Option[(Formula,Path)]] = new GetterSetterProperty[Option[(Formula,Path)]] {
-      override protected def getter = formula.map((_,selection))
+      override protected def getter = {
+        assert(formula.forall(_.math.isValidPath(selection)))
+        formula.map((_,selection))
+      }
       override protected def setter(value: Option[(Formula,Path)]): Unit = value match {
         case None => formula = None
         case Some((form,path)) =>
+          assert(form.math.isValidPath(path))
           formula = Some(form)
           selection = path
       }
@@ -379,7 +383,8 @@ class TestApp extends JFXApp {
     override def formulaChanged() = valueProperty.fireValueChangedEvent()
     override def selectionChanged() = valueProperty.fireValueChangedEvent()
 
-    mathedit.focused.onChange { (_,_,focused) => if (!focused) mathedit.selection.value = Some(mathedit.mathDoc.subterm(selection)) }
+    mathedit.focused.onChange { (_,_,focused) =>
+      if (!focused) mathedit.selection.value = Some(mathedit.mathDoc.subterm(selection)) }
   }
 
   class MathEditor extends HBox with Editor[CMathML] {

@@ -20,8 +20,8 @@ object Logic {
     math match {
       case _ if path.isEmpty => Variance(covariant=true)
       case _ if path.head<=0 => Variance()
-      case Apply(_, logic1.implies, p, q) if path.head==1 => variance(p, path.tail)
-      case Apply(_, logic1.implies, p, q) if path.head==2 => variance(q, path.tail).flip
+      case Apply(_, logic1.implies, p, q) if path.head==1 => variance(p, path.tail).flip
+      case Apply(_, logic1.implies, p, q) if path.head==2 => variance(q, path.tail)
       case Apply(_, logic1.and, args @ _*) => variance(args(path.head), path.tail)
       case Apply(_, logic1.or, args @ _*) => variance(args(path.head), path.tail)
       case Apply(_, logic1.not, x) => variance(x, path.tail).flip

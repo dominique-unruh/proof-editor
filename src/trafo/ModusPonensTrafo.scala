@@ -32,9 +32,9 @@ class ModusPonensTrafo extends Transformation {
   //      _ <- ask("res", new ShowFormulaQ(<span>This will tempbe the result:</span>, instance.q))
   //    } yield instance
   override val createInteractive = interaction {
+    val bOpt = ask("b", new FormulaSubtermQ(<span>Formula in which P should be eliminated (e.g., P=>Q)</span>)).each
     val aOpt = ask("a", new FormulaQ(<span>Antecedent to be eliminated (e.g., P)</span>)).each
-    val (b,path) = ask("b", new FormulaSubtermQ(<span>Formula in which P should be eliminated (e.g., P=>Q)</span>)).
-      getOrElseI(fail).each
+    val (b,path) = bOpt.getOrElseI(fail).each
     val a = aOpt.getOrElseI(fail).each
 
     val (implPath,implChild) =
@@ -44,30 +44,29 @@ class ModusPonensTrafo extends Transformation {
     if (implChild!=1)
       failWith[Unit]("not-pq1", <span>You have to select a term P inside a subterm P=>Q</span>).each
 
-    val implSubterm = b.math.subterm(implPath)
-
     Log.debug("path",path)
     Log.debug("implPath",implPath)
+
+    val implSubterm = b.math.subterm(implPath)
+
     Log.debug("implSubterm",implSubterm)
 
     val (p:CMathML,q:CMathML) = implSubterm match {
-      case Apply(_, `implies`, p$, q$) => (p$,q$)
+      case Apply(_, `implies`, p2, q2) => (p2,q2)
       case _ => failWith[Null]("not-pq", <span>You have to select a term P inside a subterm P=>Q</span>).each
     }
-
-    // TODO: check whether the subterm is in a co- or contravariant position
 
     if (!Z3.default.doesImply(a.math, p).contains(true))
       failWithU("no-p", <span>The first formula must equal (or imply) the selected subterm</span>).each
 
-    if (Logic.variance(b.math,implPath).covariant)
+    if (!Logic.variance(b.math,implPath).covariant)
       failWithU("not-covariant", <span>The selected implication must be in a covariant position</span>).each
 
     val res = b.math.replace(implPath,q)
 
     val instance = new Instance(a, b, implPath, Formula(res))
 
-    ask("res", new ShowFormulaQ(<span>This will tempbe the result:</span>, instance.res, highlight=Some(implPath))).each
+    ask("res", new ShowFormulaQ(<span>This will be the result:</span>, instance.res, highlight=Some(implPath))).each
 
     assert(instance.isValid,(a,b,implPath,res))
 
@@ -83,7 +82,7 @@ object ModusPonensTrafo {
       impl match {
         case Apply(_,`implies`,p,q) =>
           Logic.variance(b.math,path).covariant &&
-            Z3.default.doesImply(a.math, p).contains(true) &&
+          Z3.default.doesImply(a.math, p).contains(true) &&
             Z3.default.isEqual(b.math.replace(path,q), res.math).contains(true)
         case _ => false
       }

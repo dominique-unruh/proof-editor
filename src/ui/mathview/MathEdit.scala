@@ -210,6 +210,10 @@ class MathEdit extends MathViewFX {
       case "<" => extendOrInsertBinop("<",relation1.lt)
       case "=" => extendOrInsertBinop("=",relation1.equal)
       case "^" => extendOrInsertBinop("^",arith1.power)
+      case "|" => extendOrInsertBinop("|",logic1.or)
+      case "&" => extendOrInsertBinop("&",logic1.and)
+      case "T" => insertMath(logic1.trueSym)
+      case "F" => insertMath(logic1.falseSym)
       case AlphaChar(c) => insertMath(CI(c))
       case NumChar(c) => insertDigit(c(0)-'0')
       case _ => processed = false

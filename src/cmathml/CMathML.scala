@@ -16,6 +16,11 @@ class InvalidType(message: String, args:Any*) extends MathException(message,args
 
 /** Represents mathematical formulas in Strict Content MathML encoding */
 sealed trait CMathML {
+  def isValidPath(path: Path): Boolean =
+    try { subterm(path); true }
+    catch { case _:InvalidPath => false }
+
+  /** Throw InvalidPath if the path points to a nonexisting position */
   def subterm(p: Path) : CMathML
   /** Replaces the subterm x at path p by f(x) */
   @Pure def mapAt(p:Path, f:CMathML=>CMathML) : CMathML
