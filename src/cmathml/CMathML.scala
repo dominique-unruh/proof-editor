@@ -185,6 +185,12 @@ object CMathML {
     def gt(a: CMathML, b: CMathML) : Apply = Apply(gt,a,b)
   }
 
+  object complex1 {
+    val cd = "complex1"
+    val complex_cartesian = CSymbol(cd,"complex_cartesian")
+    def complex_cartesian(x:CMathML, y:CMathML) : Apply = Apply(complex_cartesian,x,y)
+  }
+
   object arith1 {
     val cd = "arith1"
     val plus = CSymbol(cd,"plus")
@@ -355,38 +361,45 @@ final case class Apply(attributes : Attributes, hd: CMathML, args: CMathML*) ext
   }
 
   override protected def toPopcorn$(sb: StringBuilder, priority: Int): Unit = this match {
+    case Apply(_,arith1.`power`,x,y)    => popcornBinop(sb,priority,90,"^",x,y)
+    case Apply(_,arith1.`times`,x,y)    => popcornBinop(sb,priority,80,"*",x,y)
+    case Apply(_,arith1.`plus`,x,y)     => popcornBinop(sb,priority,70,"+",x,y)
+    case Apply(_,arith1.`minus`,x,y)    => popcornBinop(sb,priority,75,"-",x,y)
+    case Apply(_,arith1.`uminus`,x,y)   => popcornPrefixOp(sb,priority,65,"!",x)
     case Apply(_,relation1.`equal`,x,y) => popcornBinop(sb,priority,60,"=",x,y)
-    case Apply(_,relation1.`neq`,x,y) => popcornBinop(sb,priority,60,"!=",x,y)
-    case Apply(_,relation1.`gt`,x,y) => popcornBinop(sb,priority,60,">",x,y)
-    case Apply(_,relation1.`geq`,x,y) => popcornBinop(sb,priority,60,">=",x,y)
-    case Apply(_,relation1.`lt`,x,y) => popcornBinop(sb,priority,60,"<",x,y)
-    case Apply(_,relation1.`leq`,x,y) => popcornBinop(sb,priority,60,"<=",x,y)
-    case Apply(_,arith1.`plus`,x,y) => popcornBinop(sb,priority,70,"+",x,y)
-    case Apply(_,arith1.`minus`,x,y) => popcornBinop(sb,priority,75,"-",x,y)
-    case Apply(_,arith1.`times`,x,y) => popcornBinop(sb,priority,80,"*",x,y)
-    case Apply(_,arith1.`divide`,x,y) => popcornBinop(sb,priority,85,"/",x,y)
-    case Apply(_,arith1.`uminus`,x,y) => popcornPrefixOp(sb,priority,65,"!",x)
+    case Apply(_,relation1.`neq`,x,y)   => popcornBinop(sb,priority,60,"!=",x,y)
+    case Apply(_,relation1.`gt`,x,y)    => popcornBinop(sb,priority,60,">",x,y)
+    case Apply(_,relation1.`geq`,x,y)   => popcornBinop(sb,priority,60,">=",x,y)
+    case Apply(_,relation1.`lt`,x,y)    => popcornBinop(sb,priority,60,"<",x,y)
+    case Apply(_,relation1.`leq`,x,y)   => popcornBinop(sb,priority,60,"<=",x,y)
+    case Apply(_,arith1.`divide`,x,y)   => popcornBinop(sb,priority,85,"/",x,y)
+    case Apply(_,complex1.complex_cartesian,x,y)   => popcornBinop(sb,priority,100,"|",x,y)
+    case Apply(_,logic1.implies,x,y)    => popcornBinop(sb,priority,30,"==>",x,y)
+    case Apply(_,logic1.equivalent,x,y) => popcornBinop(sb,priority,30,"<=>",x,y)
+    case Apply(_,logic1.or,x,y)   => popcornBinop(sb,priority,40," or ",x,y)
+    case Apply(_,logic1.and,x,y)   => popcornBinop(sb,priority,50," and ",x,y)
 
-      /*
-      // From http://java.symcomp.org/download/org.symcomp-1.5.0-src.zip
-      public int prec_unary_minus() { return 65; }
-      public int prec_power() { return 90; }
-      public int prec_complex_cartesian() { return 100; }
-      public int prec_interval() { return 65; }
-      public int prec_integer_interval() { return 65; }
-      public int prec_list() { return 65; }
-      public int prec_implies() { return 30; }
-      public int prec_equivalent() { return 30; }
-      public int prec_or() { return 40; }
-      public int prec_and() { return 50; }
-      public int prec_true_() { return 40; }
-      public int prec_false_() { return 40; }
-      public int prec_rational() { return 110; }
-      public int prec_block() { return 10; }
-      public int prec_assign() { return 20; }
-      public int Relation2.prec_approx() { return 60; } // NOT IN THE "STANDARD"!
-      public int prec_set() { return 65; }
-      */
+
+    /*
+    // From http://java.symcomp.org/download/org.symcomp-1.5.0-src.zip
+    public int prec_unary_minus() { return 65; }
+    public int prec_power() { return 90; }
+    public int prec_complex_cartesian() { return 100; }
+    public int prec_interval() { return 65; }
+    public int prec_integer_interval() { return 65; }
+    public int prec_list() { return 65; }
+    public int prec_implies() { return 30; }
+    public int prec_equivalent() { return 30; }
+    public int prec_or() { return 40; }
+    public int prec_and() { return 50; }
+    public int prec_true_() { return 40; }
+    public int prec_false_() { return 40; }
+    public int prec_rational() { return 110; }
+    public int prec_block() { return 10; }
+    public int prec_assign() { return 20; }
+    public int Relation2.prec_approx() { return 60; } // NOT IN THE "STANDARD"!
+    public int prec_set() { return 65; }
+    */
 
     case _ =>
       hd.toPopcorn(sb,1000)

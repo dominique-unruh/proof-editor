@@ -71,7 +71,7 @@ class ConnectingLine(val owner : Node, val overlay : Pane) {
           viewBounds <- Option(leftScrollViewportBounds.value)
           scrollTrafo <- Option(leftScrollTransform.value)
           trafoedViewBounds = scrollTrafo.transform(viewBounds)
-          _ = Log.debug("leftPoint",trafoedBounds, trafoedViewBounds)
+//          _ = Log.debug("leftPoint",trafoedBounds, trafoedViewBounds)
         } yield intersection(trafoedBounds, trafoedViewBounds)).getOrElse(trafoedBounds)
       } yield new Point2D(clippedBounds.getMaxX,clippedBounds.getMinY+clippedBounds.getHeight/2)
 

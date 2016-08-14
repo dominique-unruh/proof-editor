@@ -167,16 +167,49 @@ class MathEdit extends MathViewFX {
     cursorPos.value = CursorPos(selection.value.get, CursorRight)
   }
 
+  // TODO static
+  private def makeExtendBinopCombinations(entries : ((CSymbol,String),CSymbol)*) =
+    Map(entries.map { case ((sym,op),newSym) => (sym.cd,sym.name,op) -> (newSym.cd,newSym.name) } : _*)
+  // TODO static
+  private lazy val extendBinopCombinations = makeExtendBinopCombinations(
+    relation1.equal -> ">" -> logic1.implies,
+    relation1.gt -> "=" -> relation1.geq,
+    relation1.lt -> "=" -> relation1.leq,
+    relation1.leq -> ">" -> logic1.equivalent
+  )
+  private def extendBinop(char:String) : Boolean = {
+    cursorPos.value match {
+      case CursorPos (none @ MCNone(), CursorLeft) =>
+        none.parent match {
+          case MApply(hd @ MCSymbol(cd,name),_*) =>
+            extendBinopCombinations.get(cd,name,char) match {
+              case Some((newCd,newName)) =>
+                hd.replaceWith(MCSymbol(newCd,newName))
+                true
+              case None => false
+            }
+          case _ => false
+        }
+      case _ => false
+    }
+  }
+
+  private def extendOrInsertBinop(char:String, op:CMathML) =
+    if (!extendBinop(char))
+      insertBinaryOp(op)
+
   private def handleKeyTyped(e:KeyEvent) = {
 //    println("Key typed: "+e)
     var processed = true
     e.character match {
-      case "+" => insertBinaryOp(arith1.plus)
-      case "-" => insertBinaryOp(arith1.minus)
-      case "*" => insertBinaryOp(arith1.times)
-      case "/" => insertBinaryOp(arith1.divide)
-      case "=" => insertBinaryOp(relation1.equal)
-      case "^" => insertBinaryOp(arith1.power)
+      case "+" => extendOrInsertBinop("+",arith1.plus)
+      case "-" => extendOrInsertBinop("-",arith1.minus)
+      case "*" => extendOrInsertBinop("*",arith1.times)
+      case "/" => extendOrInsertBinop("/",arith1.divide)
+      case ">" => extendOrInsertBinop(">",relation1.gt)
+      case "<" => extendOrInsertBinop("<",relation1.lt)
+      case "=" => extendOrInsertBinop("=",relation1.equal)
+      case "^" => extendOrInsertBinop("^",arith1.power)
       case AlphaChar(c) => insertMath(CI(c))
       case NumChar(c) => insertDigit(c(0)-'0')
       case _ => processed = false

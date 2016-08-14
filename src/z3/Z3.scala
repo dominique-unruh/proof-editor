@@ -67,7 +67,7 @@ final class Z3(config:Map[String,String]) {
         case (Z3_OP_SUB,2) => Apply(arith1.minus, e.getArgs map toCMathML: _*)
         case (Z3_OP_DIV,2) => Apply(arith1.divide, e.getArgs map toCMathML: _*)
         case (Z3_OP_UMINUS,1)=> Apply(arith1.uminus, e.getArgs map toCMathML: _*)
-        case (Z3_OP_EQ,2) => Apply(relation1.equal, e.getArgs map toCMathML: _*)
+//        case (Z3_OP_EQ,2) => Apply(relation1.equal, e.getArgs map toCMathML: _*)
         case (Z3_OP_POWER,2) => Apply(arith1.power, e.getArgs map toCMathML: _*)
         case k => throw new MathException(s"cannot convert arith expr from Z3 to CMathML: $e (unkown decl kind $k)")
       }
@@ -85,10 +85,14 @@ final class Z3(config:Map[String,String]) {
     case e: BoolExpr if e.isApp =>
       (e.getFuncDecl.getDeclKind,e.getNumArgs) match {
         case (Z3_OP_EQ,2) => Apply(relation1.equal, e.getArgs map toCMathML: _*)
+        case (Z3_OP_LE,2) => Apply(relation1.leq, e.getArgs map toCMathML: _*)
+        case (Z3_OP_LT,2) => Apply(relation1.lt, e.getArgs map toCMathML: _*)
+        case (Z3_OP_GE,2) => Apply(relation1.geq, e.getArgs map toCMathML: _*)
+        case (Z3_OP_GT,2) => Apply(relation1.gt, e.getArgs map toCMathML: _*)
         case (Z3_OP_TRUE,0) => logic1.trueSym
         case (Z3_OP_FALSE,0) => logic1.falseSym
-        case (Z3_OP_AND,2) => Apply(logic1.and, e.getArgs map toCMathML: _*)
-        case (Z3_OP_OR,2) => Apply(logic1.or, e.getArgs map toCMathML: _*)
+        case (Z3_OP_AND,_) => Apply(logic1.and, e.getArgs map toCMathML: _*)
+        case (Z3_OP_OR,_) => Apply(logic1.or, e.getArgs map toCMathML: _*)
         case (Z3_OP_IFF,2) => Apply(logic1.equivalent, e.getArgs map toCMathML: _*)
         case (Z3_OP_IMPLIES,2) => Apply(logic1.implies, e.getArgs map toCMathML: _*)
         case (Z3_OP_XOR,2) => Apply(logic1.xor, e.getArgs map toCMathML: _*)
@@ -130,6 +134,15 @@ final class Z3(config:Map[String,String]) {
     case Apply(_, arith1.divide,x,y) => context.mkDiv(fromCMathML_(x).asInstanceOf[ArithExpr],
                                                        fromCMathML_(y).asInstanceOf[ArithExpr])
     case Apply(_, relation1.equal,x,y) => context.mkEq(fromCMathML_(x),fromCMathML_(y))
+    case Apply(_, relation1.neq,x,y) => context.mkNot(context.mkEq(fromCMathML_(x),fromCMathML_(y)))
+    case Apply(_, relation1.lt,x,y) => context.mkLt(fromCMathML_(x).asInstanceOf[ArithExpr],
+      fromCMathML_(y).asInstanceOf[ArithExpr])
+    case Apply(_, relation1.leq,x,y) => context.mkLe(fromCMathML_(x).asInstanceOf[ArithExpr],
+      fromCMathML_(y).asInstanceOf[ArithExpr])
+    case Apply(_, relation1.gt,x,y) => context.mkGt(fromCMathML_(x).asInstanceOf[ArithExpr],
+      fromCMathML_(y).asInstanceOf[ArithExpr])
+    case Apply(_, relation1.geq,x,y) => context.mkGe(fromCMathML_(x).asInstanceOf[ArithExpr],
+      fromCMathML_(y).asInstanceOf[ArithExpr])
     case Apply(_, arith1.uminus,x) => context.mkUnaryMinus(fromCMathML_(x).asInstanceOf[ArithExpr])
     case Apply(_, arith1.power,x,y) => context.mkPower(fromCMathML_(x).asInstanceOf[ArithExpr],
                                                         fromCMathML_(y).asInstanceOf[ArithExpr])
