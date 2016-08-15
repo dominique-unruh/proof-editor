@@ -24,5 +24,5 @@ abstract class TrafoInstance {
   val relation : Relation
   /** Returns as a mathemtical formula the relation expressed by this TrafoInstance */
   def relationFormula : CMathML =
-  Logic.instantiateLambda(relation.relatingFormula, formulas.map(_.math))
+  Logic.instantiateLambda(relation.relatingFormula, formulas.map(_.math) :_*)
 }

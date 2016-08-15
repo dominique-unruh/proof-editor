@@ -6,7 +6,7 @@ import cmathml.CMathML.{fns1, logic1, quant1}
   * Created by unruh on 8/14/16.
   */
 object Logic {
-  def instantiateLambda(lambda: CMathML, arguments: Seq[CMathML]): CMathML = {
+  def instantiateLambda(lambda: CMathML, arguments: CMathML*): CMathML = {
     lambda match {
       case fns1.lambdaE(vars,body) =>
         val freeVars = Set(arguments:_*).flatMap(_.freeVariables)

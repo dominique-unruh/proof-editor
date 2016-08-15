@@ -12,6 +12,8 @@ import javafx.event.Event
 import javafx.scene.shape.Rectangle
 import javafx.scene.web.{HTMLEditor, WebView}
 
+import cmathml.CMathML
+
 import scala.reflect.runtime.universe.TypeTag
 import com.sun.javafx.webkit.WebConsoleListener
 
@@ -154,6 +156,11 @@ object Utils {
       override def test(t: E): Boolean = pred(t)
     }
   }
+
+  object Typed {
+    def unapply[T](t:T) = Some(t)
+  }
+
 }
 
 /** A simple way of implementing properties. To implement a property, subclass [[GetterSetterProperty]]
