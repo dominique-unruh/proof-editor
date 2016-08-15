@@ -69,4 +69,3 @@ class TheoryView extends VBox {
     children.add(mathedit)
   }
 }
-

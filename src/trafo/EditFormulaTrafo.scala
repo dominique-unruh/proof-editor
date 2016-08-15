@@ -2,10 +2,14 @@ package trafo
 
 
 import Interaction._
-import theory.Formula
+import theory.{Formula, Theory}
 import EditFormulaTrafo._
 import cmathml.CMathML
+import theory.Theory.NO_ID
 import z3.Z3
+
+import scala.collection.mutable.ListBuffer
+import scala.xml.Elem
 
 // TODO: remove eventually
 
@@ -26,8 +30,13 @@ class EditFormulaTrafo() extends Transformation {
 }
 
 object EditFormulaTrafo {
-  class Instance(a: Formula, b: Formula) extends TrafoInstance {
+  class Instance(a: Formula, b: Formula, val id : Int = NO_ID) extends TrafoInstance {
     override val formulas = Vector(a, b)
     override lazy val isValid = Z3.default.isEqual(a.math, b.math).contains(true) //a.math == b.math
+    override def toXML: Elem = ???
+    override def update(id: Int, formulas: Seq[Formula]): TrafoInstance = formulas match {
+      case Seq(a2,b2) => new Instance(a2,b2,id)
+      case _ => sys.error("update with wrong number of formulas")
+    }
   }
 }

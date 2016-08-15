@@ -28,10 +28,15 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="SBT: org.scala-lang:scala-library:2.11.8:jar" level="project" />
-    <orderEntry type="library" name="SBT: org.scala-lang.modules:scala-xml_2.11:1.0.5:jar" level="project" />
-    <orderEntry type="library" name="SBT: org.antlr:stringtemplate:3.1-b1:jar" level="project" />
-    <orderEntry type="library" name="SBT: org.antlr:antlr-runtime:3.0.1:jar" level="project" />
-    <orderEntry type="library" name="SBT: com.lihaoyi:sourcecode_2.11:0.1.2:jar" level="project" />
+    <orderEntry type="library" name="SBT: org.typelevel:macro-compat_2.11:1.1.1:jar" level="project" />
+    <orderEntry type="library" name="SBT: org.scalaz:scalaz-effect_2.11:7.2.3:jar" level="project" />
+    <orderEntry type="library" name="SBT: org.scalaz:scalaz-core_2.11:7.2.3:jar" level="project" />
+    <orderEntry type="library" name="SBT: com.thoughtworks.sde:core_2.11:2.0.0:jar" level="project" />
+    <orderEntry type="library" name="SBT: com.thoughtworks.sde:comprehension-monad_2.11:2.0.0:jar" level="project" />
+    <orderEntry type="library" name="SBT: com.thoughtworks.each:each_2.11:2.0.0:jar" level="project" />
+    <orderEntry type="library" scope="TEST" name="SBT: org.scalatest:scalatest_2.11:2.2.6:jar" level="project" />
+    <orderEntry type="library" name="SBT: org.scala-lang:scala-reflect:2.11.8:jar" level="project" />
+    <orderEntry type="library" name="SBT: org.scalafx:scalafx_2.11:8.0.92-R10:jar" level="project" />
     <orderEntry type="module-library">
       <library name="SBT: unmanaged-jars">
         <CLASSES>
@@ -42,14 +47,9 @@
         <SOURCES />
       </library>
     </orderEntry>
-    <orderEntry type="library" name="SBT: org.scalafx:scalafx_2.11:8.0.92-R10:jar" level="project" />
-    <orderEntry type="library" name="SBT: org.scala-lang:scala-reflect:2.11.8:jar" level="project" />
-    <orderEntry type="library" scope="TEST" name="SBT: org.scalatest:scalatest_2.11:2.2.6:jar" level="project" />
-    <orderEntry type="library" name="SBT: com.thoughtworks.each:each_2.11:2.0.0:jar" level="project" />
-    <orderEntry type="library" name="SBT: com.thoughtworks.sde:comprehension-monad_2.11:2.0.0:jar" level="project" />
-    <orderEntry type="library" name="SBT: com.thoughtworks.sde:core_2.11:2.0.0:jar" level="project" />
-    <orderEntry type="library" name="SBT: org.scalaz:scalaz-core_2.11:7.2.3:jar" level="project" />
-    <orderEntry type="library" name="SBT: org.scalaz:scalaz-effect_2.11:7.2.3:jar" level="project" />
-    <orderEntry type="library" name="SBT: org.typelevel:macro-compat_2.11:1.1.1:jar" level="project" />
+    <orderEntry type="library" name="SBT: com.lihaoyi:sourcecode_2.11:0.1.2:jar" level="project" />
+    <orderEntry type="library" name="SBT: org.antlr:antlr-runtime:3.0.1:jar" level="project" />
+    <orderEntry type="library" name="SBT: org.antlr:stringtemplate:3.1-b1:jar" level="project" />
+    <orderEntry type="library" name="SBT: org.scala-lang.modules:scala-xml_2.11:1.0.5:jar" level="project" />
   </component>
 </module>

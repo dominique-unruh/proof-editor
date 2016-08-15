@@ -222,7 +222,7 @@ class TestApp extends JFXApp {
     if (e.getCause != null) actualException(e.getCause) else e
 
   def saveTheory(): Unit = {
-    Log.info("saving theory")
+    Log.info("saving theory",theoryView.theory.getTheory)
     val xml = theoryView.theory.getTheory.toXML
     XML.save("theory.xml", xml, enc = "UTF-8", xmlDecl = true)
   }
