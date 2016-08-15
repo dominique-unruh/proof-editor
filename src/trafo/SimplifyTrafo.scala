@@ -2,6 +2,7 @@ package trafo
 
 import Interaction._
 import SimplifyTrafo._
+import relation.{Equality, Implication, Relation}
 import theory.Formula
 import z3.Z3
 
@@ -28,6 +29,7 @@ object SimplifyTrafo {
   class Instance(a: Formula, b: Formula) extends TrafoInstance {
     override val formulas = Vector(a, b)
     override lazy val isValid = a.math == b.math
+    override val relation: Relation = Equality
   }
 
 }

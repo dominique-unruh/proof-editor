@@ -1,12 +1,12 @@
 package theory
 
+import misc.Log
 import trafo.TrafoInstance
 
 /**
   * Created by unruh on 7/18/16.
   */
 class MutableTheory {
-
   import MutableTheory._
 
   import scala.collection.JavaConversions._
@@ -33,6 +33,7 @@ class MutableTheory {
     val (thy2,formulas) = theory.addTrafoInstance(trafo)
     theory = thy2
     for (f <- formulas) for (l <- listeners) l.formulaAdded(f)
+    Log.debug("Added trafo", trafo, trafo.relationFormula)
     formulas
   }
 

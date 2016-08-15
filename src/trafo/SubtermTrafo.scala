@@ -1,6 +1,7 @@
 package trafo
 
 import cmathml.Path
+import relation.{Relation, Unrelated}
 import theory.Formula
 import trafo.Interaction._
 import trafo.SubtermTrafo.Instance
@@ -13,11 +14,11 @@ class SubtermTrafo extends Transformation {
     } yield inst
 }
 
-
 object SubtermTrafo {
   class Instance(path : Path, a: Formula, b: Formula) extends TrafoInstance {
     override val formulas = Vector(a, b)
     override lazy val isValid = a.math.subterm(path) == b.math
-    def outFormula = b
+    val outFormula = b
+    override val relation: Relation = Unrelated(2)
   }
 }

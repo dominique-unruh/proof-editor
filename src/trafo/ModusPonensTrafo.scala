@@ -4,6 +4,7 @@ import scalaz.Scalaz._
 import cmathml.{Apply, CMathML, Logic, Path}
 import cmathml.CMathML.logic1.implies
 import misc.Log
+import relation.{Implication, Relation}
 import sun.java2d.cmm.kcms.CMM
 import theory.Formula
 import trafo.Interaction._
@@ -87,6 +88,7 @@ object ModusPonensTrafo {
         case _ => false
       }
     }
+    override val relation: Relation = Implication(2,1)
   }
 }
 

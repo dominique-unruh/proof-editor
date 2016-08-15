@@ -1,11 +1,14 @@
 package cmathml
 
 import cmathml.CMathML.{logic1, quant1}
+import theory.Formula
 
 /**
   * Created by unruh on 8/14/16.
   */
 object Logic {
+  def instantiateLambda(lambda: CMathML, arguments: Seq[Formula]): CMathML = ???
+
   final case class Variance(contravariant : Boolean = false, covariant : Boolean = false) {
     def flip = Variance(contravariant=covariant, covariant=contravariant)
   }

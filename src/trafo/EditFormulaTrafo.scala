@@ -5,6 +5,7 @@ import Interaction._
 import theory.Formula
 import EditFormulaTrafo._
 import cmathml.CMathML
+import relation.{Equality, Implication, Relation}
 import z3.Z3
 
 // TODO: remove eventually
@@ -29,5 +30,6 @@ object EditFormulaTrafo {
   class Instance(a: Formula, b: Formula) extends TrafoInstance {
     override val formulas = Vector(a, b)
     override lazy val isValid = Z3.default.isEqual(a.math, b.math).contains(true) //a.math == b.math
+    override val relation: Relation = Equality
   }
 }

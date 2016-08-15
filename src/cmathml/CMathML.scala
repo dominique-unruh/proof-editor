@@ -268,7 +268,7 @@ object CMathML {
   object logic1 {
     val cd = "logic1"
     val and = CSymbol(cd,"and")
-    def and(x:CMathML, y:CMathML) : Apply = Apply(and,x,y)
+    def and(args:CMathML*) : Apply = Apply(and,args:_*)
     val equivalent = CSymbol(cd,"equivalent")
     def equivalent(x:CMathML, y:CMathML) : Apply = Apply(equivalent,x,y)
     val falseSym = CSymbol(cd,"false")
@@ -278,9 +278,9 @@ object CMathML {
     val not = CSymbol(cd,"not")
     def not(x:CMathML) : Apply = Apply(not,x)
     val or = CSymbol(cd,"or")
-    def or(x:CMathML, y:CMathML) : Apply = Apply(or,x,y)
+    def or(args:CMathML*) : Apply = Apply(or,args:_*)
     val xor = CSymbol(cd,"xor")
-    def xor(x:CMathML, y:CMathML) : Apply = Apply(xor,x,y)
+    def xor(args:CMathML*) : Apply = Apply(xor,args:_*)
   }
 
   object quant1 {
