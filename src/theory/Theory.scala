@@ -22,7 +22,8 @@ final case class Theory(counter : Int,
     val sortedFormulas = formulas.values.toSeq.sortBy(_.id)
     <theory xmlns="http://unruh.de/proof-editor" counter={counter.toString}>
       <formulas>
-        {sortedFormulas.flatMap(formulaNL)}</formulas>
+        {sortedFormulas.map(formulaNL)}
+      </formulas>
     </theory>
   }
 

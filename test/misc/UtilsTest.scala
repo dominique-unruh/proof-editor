@@ -6,6 +6,24 @@ import javafx.beans.value.{ChangeListener, ObservableValue}
 import test.UnitSpec
 
 class UtilsTest extends UnitSpec {
+  test("prettyXML") {
+    import Utils.prettyXML
+    assert(prettyXML(<x xml:space="preserve">
+    </x>) == <x xml:space="preserve">
+    </x>)
+
+    assert(prettyXML(<x>Bla</x>) == <x>Bla</x>)
+
+    assert(prettyXML(<x>
+    <y></y></x>) ==
+<x>
+  <y></y>
+</x>)
+
+    assert(prettyXML(<x>{"\n"}{"\n"}</x>) == <x>
+</x>)
+  }
+
   test("GetterSetterProperty") {
 //    import scala.language.reflectiveCalls
     var setCount = 0

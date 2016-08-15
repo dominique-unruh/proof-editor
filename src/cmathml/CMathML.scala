@@ -322,7 +322,7 @@ object CMathML {
   }
 
   def fromXML(xml: Elem) : CMathML = xml.label match {
-    case "math" => fromXML(xml.child.head.asInstanceOf[Elem])
+    case "math" => fromXML(Utils.firstElementIn(xml))
     case "csymbol" => CSymbol.fromXML(xml)
     case "cn" => CN.fromXML(xml)
     case "ci" => CI.fromXML(xml)
@@ -532,7 +532,7 @@ final case class CI(attributes : Attributes = NoAttr, name : String) extends CMa
   def toSymcomp$: OpenMathBase = new OMVariable(name)
 }
 object CI {
-  def fromXML(xml: Elem) = CI(xml.text)
+  def fromXML(xml: Elem) = CI(xml.text.trim)
 
   def apply(name:String) = new CI(NoAttr,name)
 }
@@ -567,7 +567,7 @@ final case class CN(attributes : Attributes = NoAttr, n: BigDecimal) extends CMa
 //        new OMInteger(n.bigDecimal.unscaledValue),new OMInteger(n.scale))
 }
 object CN {
-  def fromXML(xml: Elem) = CN(xml.text)
+  def fromXML(xml: Elem) = CN(xml.text.trim)
 
   def apply(d:BigDecimal) = new CN(NoAttr,d)
   def apply(i:BigInteger) = new CN(NoAttr,BigDecimal(i,MATHCONTEXT))
@@ -625,7 +625,7 @@ final case class CSymbol(attributes : Attributes = NoAttr, cd: String, name: Str
   def toSymcomp$: OpenMathBase = new OMSymbol(cd,name)
 }
 object CSymbol {
-  def fromXML(xml: Elem) = CSymbol(xml.attribute("cd").get.text, xml.text)
+  def fromXML(xml: Elem) = CSymbol(xml.attribute("cd").get.text, xml.text.trim)
 
   private def makePopcornAbbrevs(mappings: (CSymbol,String)*) =
     Map(mappings.map { case (sym:CSymbol,abbr:String) => ((sym.cd,sym.name),abbr) } : _*)
