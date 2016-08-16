@@ -60,6 +60,7 @@ object MutableTheory {
     def formulaDeleted(formula: Formula) : Unit
     def theoryCleared() : Unit
     def formulaAdded(formula:Formula) : Unit
+//    def transformationAdded(trafo:TrafoInstance, newFormulas:Seq[Formula]) : Unit
     def formulaUpdated(newFormula:Formula, oldFormula:Formula) : Unit
   }
 }

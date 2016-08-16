@@ -4,6 +4,10 @@ import java.io.File
 
 import scala.xml.Node
 
+/** Simple logger.
+  * Currently, all lines are prefixed with filename and line number of the caller, as well as with a severity level
+  * (WARN/INFO/DEBUG).
+  */
 object Log {
   private val pfxlen = 19
   private def mkPfx(line:sourcecode.Line, file:sourcecode.File) : String = {
