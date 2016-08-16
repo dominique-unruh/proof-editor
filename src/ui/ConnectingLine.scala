@@ -15,6 +15,77 @@ import scalafx.scene.{Node, paint}
 import scalafx.scene.layout.Pane
 import scalafx.scene.shape.Line
 
+class VisibleBox {
+  val node = ObjectProperty[Node](initialValue=null)
+  private val bounds = ObjectProperty[Bounds](initialValue=null)
+  private val trafo = ObjectProperty[Transform](null)
+  private val scrollViewportBounds = ObjectProperty[Bounds](null)
+  private val scrollTransform = ObjectProperty[Transform](null)
+  val scrollPane = ObjectProperty[ScrollPane](initialValue=null)
+
+  scrollPane.onChange { (_, _, scroll) =>
+    if (scroll==null) {
+      scrollTransform.unbind; scrollTransform.value = null
+      scrollViewportBounds.unbind; scrollViewportBounds.value = null
+    } else {
+      scrollTransform <== scroll.localToSceneTransformProperty
+      scrollViewportBounds <== scroll.viewportBoundsProperty
+    }
+  }
+
+  // Clipped bounding box in Scene coordinates
+  val box = Bindings.createObjectBinding[Option[Bounds]](
+    {() => for {
+        bounds: Bounds <- Option(bounds.get)
+        trafo: Transform <- Option(trafo.get)
+        trafoedBounds: Bounds = trafo.transform(bounds)
+        clippedBounds: Bounds = (for {
+        //          scroll <- Option(leftScrollPane.value)
+          viewBounds <- Option(scrollViewportBounds.value)
+          scrollTrafo <- Option(scrollTransform.value)
+          trafoedViewBounds = scrollTrafo.transform(viewBounds)
+        //          _ = Log.debug("leftPoint",trafoedBounds, trafoedViewBounds)
+        } yield intersection(trafoedBounds, trafoedViewBounds)).getOrElse(trafoedBounds)
+      } yield clippedBounds},
+    bounds, trafo, scrollViewportBounds, scrollTransform)
+
+
+//  val connectingPoint = Bindings.createObjectBinding[Point2D](
+//    {() => box.value match {
+//        case Some(b) => new Point2D(b.getMaxX,b.getMinY+b.getHeight/2)
+//        case None => Point2D.ZERO }},
+//    box)
+
+  node.onChange { (_, oldValue, newValue) =>
+    if (oldValue eq newValue) ()
+    else if (newValue==null) {
+      bounds.unbind()
+      trafo.unbind()
+    } else {
+      bounds <== newValue.boundsInLocal
+      trafo <== newValue.localToSceneTransformProperty
+    }}
+
+
+  /** Intersection of a and b. If the intersection is empty, a zero-area box at the border of b is returned. */
+  private def intersection(a:Bounds, b:Bounds) = {
+    val minX = math.min(math.max(a.getMinX,b.getMinX),b.getMaxX)
+    val minY = math.min(math.max(a.getMinY,b.getMinY),b.getMaxY)
+    val maxX = math.max(math.min(a.getMaxX,b.getMaxX),b.getMinX)
+    val maxY = math.max(math.min(a.getMaxY,b.getMaxY),b.getMinY)
+    //    val minZ = a.getMinZ
+    //    val depth = a.getDepth
+    val width = maxX-minX
+    val height = maxY-minY
+
+    val res = new BoundingBox(minX,minY,width,height)
+    Log.debug("Intersect:",a,b,res)
+    res
+  }
+
+
+}
+
 /** Displays a connecting line between two components.
   * [[setLeft(node:scalafx\.scene\.Node):Unit* setLeft]] and [[setRight(node:scalafx\.scene\.Node):Unit* setRight]]
   * set those two components.
@@ -31,76 +102,49 @@ class ConnectingLine(val owner : Node, val overlay : Pane) {
 
   val line = new Line()
   //    private var lineAdded = true
-  val leftProperty = ObjectProperty[Node](initialValue=null)
-  val rightProperty = ObjectProperty[Node](initialValue=null)
+//  val rightProperty = ObjectProperty[Node](initialValue=null)
+
+  private val left = new VisibleBox
+  val leftProperty = left.node
+  val leftScrollPane = left.scrollPane
+
+  private val right = new VisibleBox
+  val rightProperty = right.node
+  val rightScrollPane = right.scrollPane
+
+  left.box.onChange { (observable, oldValue, bounds) => bounds match {
+    case Some(b) =>
+      line.setStartX(b.getMaxX)
+      line.setStartY(b.getMinY+b.getHeight/2)
+    case None =>
+  }}
+
+  right.box.onChange { (observable, oldValue, bounds) => bounds match {
+    case Some(b) =>
+      line.setEndX(b.getMinX)
+      line.setEndY(b.getMinY+b.getHeight/2)
+    case None =>
+  }}
 
   /** Property is true when the line should be added to the overlay */
   private val addedProperty = Bindings.createBooleanBinding(
     () => owner.sceneProperty.get!=null && rightProperty.get!=null && leftProperty.get!=null,
     owner.sceneProperty, leftProperty, rightProperty)
 
-  private def intersection(a:Bounds, b:Bounds) = {
-    val minX = math.max(a.getMinX,b.getMinX)
-    val minY = math.max(a.getMinY,b.getMinY)
-    val maxX = math.min(a.getMaxX,b.getMaxX)
-    val maxY = math.min(a.getMaxY,b.getMaxY)
-//    val minZ = a.getMinZ
-//    val depth = a.getDepth
-    val width = maxX-minX
-    val height = maxY-minY
-
-    new BoundingBox(minX,minY,width,height)
-  }
-
   val visibleProperty = BooleanProperty(true)
-  val leftScrollPane = ObjectProperty[ScrollPane](initialValue=null)
-  private val leftBoundsProperty = ObjectProperty[Bounds](initialValue=null)
-  private val leftTrafoProperty = ObjectProperty[Transform](null)
-  private val rightBoundsProperty = ObjectProperty[Bounds](initialValue=null)
-  private val rightTrafoProperty = ObjectProperty[Transform](null)
-  private val leftScrollViewportBounds = ObjectProperty[Bounds](null)
-  private val leftScrollTransform = ObjectProperty[Transform](null)
-  private val leftPointProperty = Bindings.createObjectBinding[Point2D](
-    {() =>
-      val leftPoint = for {
-        bounds: Bounds <- Option(leftBoundsProperty.get)
-        trafo: Transform <- Option(leftTrafoProperty.get)
-        trafoedBounds: Bounds = trafo.transform(bounds)
-        clippedBounds: Bounds = (for {
-//          scroll <- Option(leftScrollPane.value)
-          viewBounds <- Option(leftScrollViewportBounds.value)
-          scrollTrafo <- Option(leftScrollTransform.value)
-          trafoedViewBounds = scrollTrafo.transform(viewBounds)
-//          _ = Log.debug("leftPoint",trafoedBounds, trafoedViewBounds)
-        } yield intersection(trafoedBounds, trafoedViewBounds)).getOrElse(trafoedBounds)
-      } yield new Point2D(clippedBounds.getMaxX,clippedBounds.getMinY+clippedBounds.getHeight/2)
-
-      leftPoint.getOrElse(Point2D.ZERO)},
-    leftBoundsProperty, leftTrafoProperty, leftScrollViewportBounds, leftScrollTransform)
-
-  private val rightPointProperty = Bindings.createObjectBinding[Point2D](
-    {() =>
-      val bounds = rightBoundsProperty.get
-      val trafo = rightTrafoProperty.get
-      if (bounds==null || trafo==null) Point2D.ZERO
-      else trafo.transform(bounds.getMinX,bounds.getMinY+bounds.getHeight/2) },
-    rightBoundsProperty, rightTrafoProperty)
-
-  leftScrollPane.onChange { (_,_,scroll) =>
-    if (scroll==null) {
-      leftScrollTransform.unbind; leftScrollTransform.value = null
-      leftScrollViewportBounds.unbind; leftScrollViewportBounds.value = null
-    } else {
-      leftScrollTransform <== scroll.localToSceneTransformProperty
-      leftScrollViewportBounds <== scroll.viewportBoundsProperty
-    }
-  }
-
-  leftPointProperty.onChange
-    { (observable, oldValue, p) => line.setStartX(p.getX); line.setStartY(p.getY) }
-
-  rightPointProperty.onChange
-    { (observable, oldValue, p) => line.setEndX(p.getX); line.setEndY(p.getY) }
+//  private val rightBoundsProperty = ObjectProperty[Bounds](initialValue=null)
+//  private val rightTrafoProperty = ObjectProperty[Transform](null)
+//
+//  private val rightPointProperty = Bindings.createObjectBinding[Point2D](
+//    {() =>
+//      val bounds = rightBoundsProperty.get
+//      val trafo = rightTrafoProperty.get
+//      if (bounds==null || trafo==null) Point2D.ZERO
+//      else trafo.transform(bounds.getMinX,bounds.getMinY+bounds.getHeight/2) },
+//    rightBoundsProperty, rightTrafoProperty)
+//
+//  rightPointProperty.onChange
+//    { (observable, oldValue, p) => line.setEndX(p.getX); line.setEndY(p.getY) }
 
   line.setStrokeWidth(4)
   line.setStroke(Color.BLUE.opacity(.3))
@@ -114,25 +158,15 @@ class ConnectingLine(val owner : Node, val overlay : Pane) {
 
   assert(!addedProperty.get) // If it would be true, we would have missed that we need to add the line
 
-  leftProperty.onChange { (_, oldValue, newValue) =>
-      if (oldValue eq newValue) ()
-      else if (newValue==null) {
-        leftBoundsProperty.unbind()
-        leftTrafoProperty.unbind()
-      } else {
-        leftBoundsProperty <== newValue.boundsInLocal
-        leftTrafoProperty <== newValue.localToSceneTransformProperty
-      }}
-
-  rightProperty.onChange { (_, oldValue, newValue) =>
-      if (oldValue eq newValue) ()
-      else if (newValue==null) {
-        rightBoundsProperty.unbind()
-        rightTrafoProperty.unbind()
-      } else {
-        rightBoundsProperty.bind(newValue.boundsInLocalProperty)
-        rightTrafoProperty.bind(newValue.localToSceneTransformProperty)
-      }}
+//  rightProperty.onChange { (_, oldValue, newValue) =>
+//      if (oldValue eq newValue) ()
+//      else if (newValue==null) {
+//        rightBoundsProperty.unbind()
+//        rightTrafoProperty.unbind()
+//      } else {
+//        rightBoundsProperty.bind(newValue.boundsInLocalProperty)
+//        rightTrafoProperty.bind(newValue.localToSceneTransformProperty)
+//      }}
 
 
   def setLeft(node : Node) = leftProperty.set(node)

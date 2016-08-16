@@ -91,6 +91,7 @@ class TestApp extends JFXApp {
   private val z3 = new Z3
 
   lazy val theoryPane = new layout.VBox {
+    vgrow = Priority.Always
     children = List(
       new layout.HBox {
         this.children = List(
@@ -100,11 +101,16 @@ class TestApp extends JFXApp {
             onAction = handle(insertNewFormula())
           })
       },
-      new control.ScrollPane {
-        fitToWidth = true
-        content = theoryView
-      })
+       theoryViewScrollPane)
   }
+
+  lazy val theoryViewScrollPane = new control.ScrollPane {
+    vgrow = Priority.Always
+    fitToWidth = true
+    //        fitToHeight = true
+    content = theoryView
+  }
+
 
   lazy val interactorPane = new control.ScrollPane {
     fitToWidth = true
@@ -267,7 +273,10 @@ class TestApp extends JFXApp {
     val line = new ConnectingLine(this, overlay)
     // We have to delay the next line, otherwise we have a circular dependency between
     // the GenericFormulaEditors and the initialization of the interactorPane
-    Platform.runLater { line.leftScrollPane.value = interactorPane }
+    Platform.runLater {
+      line.leftScrollPane.value = interactorPane
+      line.rightScrollPane.value = theoryViewScrollPane
+    }
     line.setLeft(mathedit)
     val focusOnPick = false
 
