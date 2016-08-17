@@ -3,6 +3,8 @@ package trafo
 import cmathml.Path
 import theory.Theory.NO_ID
 import theory.{Formula, Theory}
+import relation.{Relation, Unrelated}
+import theory.Formula
 import trafo.Interaction._
 import trafo.SubtermTrafo.Instance
 
@@ -16,7 +18,6 @@ class SubtermTrafo extends Transformation {
     } yield inst
 }
 
-
 object SubtermTrafo {
   case class Instance(path : Path, a: Formula, b: Formula, id:Int=NO_ID) extends TrafoInstance {
     override val formulas = Vector(a, b)
@@ -27,5 +28,7 @@ object SubtermTrafo {
       case Seq(a2,b2) => Instance(path,a2,b2,id)
       case _ => sys.error("update with wrong number of formulas")
     }
+    val outFormula = b
+    override val relation: Relation = Unrelated(2)
   }
 }

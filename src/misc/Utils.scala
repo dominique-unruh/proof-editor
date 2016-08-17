@@ -4,6 +4,7 @@ import java.io.FileNotFoundException
 import java.lang.Thread.UncaughtExceptionHandler
 import java.security.{AccessController, PrivilegedAction}
 import java.util.function.Predicate
+import java.util.regex.Pattern
 import javafx.beans.property.{ObjectProperty, ObjectPropertyBase, Property, SimpleObjectProperty}
 import javafx.beans.property.adapter.JavaBeanObjectProperty
 import javafx.beans.value.{ChangeListener, ObservableValue}
@@ -11,11 +12,15 @@ import javafx.event.Event
 import javafx.scene.shape.Rectangle
 import javafx.scene.web.{HTMLEditor, WebView}
 
+import cmathml.CMathML
+
 import scala.reflect.runtime.universe.TypeTag
 import com.sun.javafx.webkit.WebConsoleListener
 
 import scala.collection.mutable
-import scala.xml.Elem
+import scala.collection.mutable.ArrayBuffer
+import scala.util.matching.Regex
+import scala.xml.{Atom, Comment, Elem, Text}
 
 
 object Utils {
@@ -32,6 +37,71 @@ object Utils {
 
   def elementsIn(xml: Elem) : Seq[Elem] =
     xml.child.filter(_.isInstanceOf[Elem]).map(_.asInstanceOf[Elem])
+
+  private def normalizeNodeList(nodes : Seq[scala.xml.Node]) : Seq[scala.xml.Node] = {
+    var result = Nil : List[scala.xml.Node]
+    for (node <- nodes) {
+      node match {
+        case a : Atom[_] =>
+          val str = a.text
+          if (str!="")
+            result match {
+              case Text(prev)::rest => result = Text(prev+str) :: rest
+              case _ => result = Text(str) :: result
+            }
+        case _ =>
+          result = node :: result
+      }
+    }
+    result.reverse
+  }
+
+  private val startsWithNL = """(?s)\s*\n.*""".r
+  private val lineStartSpace = """\n\s*""".r
+  private val finalNL = """(?s)\s*$""".r
+  def prettyXML(xml: Elem, indent : Int = 0) : Elem = {
+    if (xml.attribute("http://www.w3.org/XML/1998/namespace", "space").map(_.text).contains("preserve"))
+      return xml
+    if (xml.child.isEmpty) return xml
+    lazy val indentStr = "\n"+"  "*(indent+1)
+    val children = ArrayBuffer(normalizeNodeList(xml.child) :_*)
+    val startsWithNewline =
+      children.head match { case Text(`startsWithNL`()) => true; case _ => false }
+
+//    if (xml.label=="formulas")
+//      for (c <- children)
+//        Log.debug("child",c.getClass,c)
+
+    for (i <- children.indices) {
+      children(i) match {
+        case Text(str) =>
+          val newText = Text(lineStartSpace.replaceAllIn(str, indentStr))
+          children.update(i, newText)
+        case e : Elem => children.update(i, prettyXML(e,indent+1))
+        case c : Comment =>
+        case n => Log.warn("Don't know how to handle: ",n,n.getClass); ???
+      }
+    }
+
+    val last = children.length-1
+    if (startsWithNewline) {
+      children(last) match {
+        case Text(str) =>
+          val newText = Text(finalNL.replaceFirstIn(str,"\n"+"  "*indent))
+          children.update(last, newText)
+        case c => children.append(Text("\n"+"  "*indent))
+      }
+    } else {
+      children(last) match {
+        case Text(str) =>
+          val newText = Text(finalNL.replaceFirstIn(str,""))
+          children.update(last, newText)
+        case _ =>
+      }
+    }
+
+    xml.copy(child=children.toList)
+  }
 
   /** Makes a copy of xs with sep interspersed. E.g., intersperse(ArrayBuffer(x,y),sep) = List(x,sep,y). */
   @Pure
@@ -86,6 +156,11 @@ object Utils {
       override def test(t: E): Boolean = pred(t)
     }
   }
+
+  object Typed {
+    def unapply[T](t:T) = Some(t)
+  }
+
 }
 
 /** A simple way of implementing properties. To implement a property, subclass [[GetterSetterProperty]]

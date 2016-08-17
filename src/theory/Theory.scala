@@ -28,9 +28,11 @@ final case class Theory(counter : Int,
     val sortedTrafos = transformations.values.toSeq.sortBy(_.id)
     <theory xmlns="http://unruh.de/proof-editor" counter={counter.toString}>
       <formulas>
-        {sortedFormulas.flatMap(formulaNL)}</formulas>
+        {sortedFormulas.flatMap(formulaNL)}
+      </formulas>
       <transformations>
-        {sortedTrafos.flatMap(trafoNL)}</transformations>
+        {sortedTrafos.flatMap(trafoNL)}
+      </transformations>
     </theory>
   }
 

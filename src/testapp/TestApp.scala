@@ -9,7 +9,7 @@ import javafx.scene.layout.{HBox, StackPane, VBox}
 
 import cmathml._
 import misc.Utils.ImplicitConversions._
-import misc.{GetterSetterProperty, Log}
+import misc.{GetterSetterProperty, Log, Utils}
 import testapp.TestApp.TrafoChoice
 import theory.{Formula, Theory}
 import trafo._
@@ -222,8 +222,8 @@ class TestApp extends JFXApp {
     if (e.getCause != null) actualException(e.getCause) else e
 
   def saveTheory(): Unit = {
-    Log.info("saving theory",theoryView.theory.getTheory)
-    val xml = theoryView.theory.getTheory.toXML
+    Log.info("saving theory")
+    val xml = Utils.prettyXML(theoryView.theory.getTheory.toXML)
     XML.save("theory.xml", xml, enc = "UTF-8", xmlDecl = true)
   }
 

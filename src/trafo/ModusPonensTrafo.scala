@@ -4,6 +4,8 @@ import scalaz.Scalaz._
 import cmathml.{Apply, CMathML, Logic, Path}
 import cmathml.CMathML.logic1.implies
 import misc.{Log, Utils}
+import misc.Log
+import relation.{Implication, Relation}
 import sun.java2d.cmm.kcms.CMM
 import theory.{Formula, Theory}
 import trafo.Interaction._
@@ -106,6 +108,7 @@ object ModusPonensTrafo {
       case Seq(a2,b2,res2) => Instance(a2,b2,path,res2,id)
       case _ => sys.error("update with wrong number of formulas")
     }
+    override val relation: Relation = Implication(2,1)
   }
 }
 

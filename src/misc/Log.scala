@@ -2,6 +2,8 @@ package misc
 
 import java.io.File
 
+import scala.xml.Node
+
 object Log {
   private val pfxlen = 19
   private def mkPfx(line:sourcecode.Line, file:sourcecode.File) : String = {

@@ -6,6 +6,7 @@ import theory.{Formula, Theory}
 import EditFormulaTrafo._
 import cmathml.CMathML
 import theory.Theory.NO_ID
+import relation.{Equality, Implication, Relation}
 import z3.Z3
 
 import scala.collection.mutable.ListBuffer
@@ -38,5 +39,6 @@ object EditFormulaTrafo {
       case Seq(a2,b2) => new Instance(a2,b2,id)
       case _ => sys.error("update with wrong number of formulas")
     }
+    override val relation: Relation = Equality
   }
 }

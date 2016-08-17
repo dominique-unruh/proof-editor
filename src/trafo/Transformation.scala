@@ -1,6 +1,7 @@
 package trafo
 
-import cmathml.CMathML
+import cmathml.{CMathML, Logic}
+import relation.Relation
 import theory.Formula
 
 import scala.collection.immutable.Vector
@@ -25,6 +26,10 @@ abstract class TrafoInstance {
   val id: Int
   val formulas : IndexedSeq[Formula]
   val isValid  : Boolean
+  val relation : Relation
+  /** Returns as a mathemtical formula the relation expressed by this TrafoInstance */
+  def relationFormula : CMathML =
+  Logic.instantiateLambda(relation.relatingFormula, formulas.map(_.math) :_*)
   def toXML : Elem
 }
 object TrafoInstance {

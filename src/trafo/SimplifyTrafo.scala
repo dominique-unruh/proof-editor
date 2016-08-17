@@ -4,6 +4,8 @@ import Interaction._
 import SimplifyTrafo._
 import theory.Theory.NO_ID
 import theory.{Formula, Theory}
+import relation.{Equality, Implication, Relation}
+import theory.Formula
 import z3.Z3
 
 import scala.runtime.BoxedUnit
@@ -35,6 +37,7 @@ object SimplifyTrafo {
       case Seq(a2,b2) => Instance(a2,b2,id)
       case _ => sys.error("update with wrong number of formulas")
     }
+    override val relation: Relation = Equality
   }
 
 }

@@ -5,7 +5,6 @@ import trafo.TrafoInstance
 
 /** Thread safe. */
 class MutableTheory {
-
   import MutableTheory._
 
   import scala.collection.JavaConversions._
@@ -35,6 +34,7 @@ class MutableTheory {
     Log.debug("post add TI",theory.transformations)
     Log.debug("trafo added",trafo2.id,trafo2)
     for (f <- formulas) for (l <- listeners) l.formulaAdded(f)
+    Log.debug("Added trafo", trafo, trafo.relationFormula)
     formulas
   }
 

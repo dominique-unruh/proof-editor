@@ -7,7 +7,10 @@ import com.sun.org.apache.xerces.internal.util.XMLChar
 import misc.{Log, Pure, Utils}
 import org.symcomp.openmath.{OMSymbol, _}
 import _root_.z3.Z3
+import com.sun.glass.events.KeyEvent
+import misc.Utils.Typed
 
+import scala.collection.mutable
 import scala.xml.{Elem, Utility}
 
 class MathException(message: String, val args: Any*) extends Exception(message)
@@ -16,6 +19,24 @@ class InvalidType(message: String, args:Any*) extends MathException(message,args
 
 /** Represents mathematical formulas in Strict Content MathML encoding */
 sealed trait CMathML {
+  def substitute(subst: Map[String, CMathML]): CMathML = {
+    val freeVars = subst.values.toSet.flatMap((_:CMathML).freeVariables)
+    substitute$(subst, freeVars)
+  }
+
+  /**
+    * @param subst a substitution to be applied
+    * @param substFrees the free variables on the rhs of subst (to check for collisions with bound names)
+    */
+  private[cmathml] def substitute$(subst: Map[String, CMathML], substFrees: Set[String]) : CMathML
+
+  def freeVariables : Set[String] = {
+    val acc = mutable.Set[String]()
+    freeVariables$(acc,Set())
+    acc.toSet
+  }
+  private[cmathml] def freeVariables$(acc:mutable.Set[String], hidden:Set[String])
+
   def isValidPath(path: Path): Boolean =
     try { subterm(path); true }
     catch { case _:InvalidPath => false }
@@ -121,6 +142,15 @@ sealed trait CMathML {
 
 
 object CMathML {
+  private[cmathml] def freeVariablesInAttributes$(acc: mutable.Set[String], attributes: Attributes, hidden: Set[String]) =
+    for (Utils.Typed(a:CMathML) <- attributes.values) a.freeVariables$(acc,hidden)
+
+  private[cmathml] def substituteInAttribs$(attributes: Attributes, subst: Map[String, CMathML], substFrees: Set[String]) : Attributes =
+    attributes.mapValues {
+      case m : CMathML => m.substitute$(subst, substFrees)
+      case x => x
+    }
+
   def tryFromPopcorn(str: String) : Option[CMathML] = {
     val om = try
       OpenMathBase.parsePopcorn(str.trim)
@@ -251,6 +281,7 @@ object CMathML {
     val lambda = CSymbol(cd,"lambda")
     def lambda(vars:Seq[CILike], body:CMathML) : Bind = Bind(lambda,vars,body)
     def lambda(variable:CILike, body:CMathML) : Bind = Bind(lambda,variable,body)
+    val lambdaE = new Bind.Extractor(lambda)
   }
 
   object combinat1 {
@@ -264,11 +295,11 @@ object CMathML {
     val factorial = CSymbol(cd,"factorial")
     def factorial(x:CMathML) : Apply = Apply(factorial,x)
   }
-  
+
   object logic1 {
     val cd = "logic1"
     val and = CSymbol(cd,"and")
-    def and(x:CMathML, y:CMathML) : Apply = Apply(and,x,y)
+    def and(args:CMathML*) : Apply = Apply(and,args:_*)
     val equivalent = CSymbol(cd,"equivalent")
     def equivalent(x:CMathML, y:CMathML) : Apply = Apply(equivalent,x,y)
     val falseSym = CSymbol(cd,"false")
@@ -278,9 +309,9 @@ object CMathML {
     val not = CSymbol(cd,"not")
     def not(x:CMathML) : Apply = Apply(not,x)
     val or = CSymbol(cd,"or")
-    def or(x:CMathML, y:CMathML) : Apply = Apply(or,x,y)
+    def or(args:CMathML*) : Apply = Apply(or,args:_*)
     val xor = CSymbol(cd,"xor")
-    def xor(x:CMathML, y:CMathML) : Apply = Apply(xor,x,y)
+    def xor(args:CMathML*) : Apply = Apply(xor,args:_*)
   }
 
   object quant1 {
@@ -322,7 +353,7 @@ object CMathML {
   }
 
   def fromXML(xml: Elem) : CMathML = xml.label match {
-    case "math" => fromXML(xml.child.head.asInstanceOf[Elem])
+    case "math" => fromXML(Utils.firstElementIn(xml))
     case "csymbol" => CSymbol.fromXML(xml)
     case "cn" => CN.fromXML(xml)
     case "ci" => CI.fromXML(xml)
@@ -430,6 +461,16 @@ final case class Apply(attributes : Attributes, hd: CMathML, args: CMathML*) ext
 
   @Pure
   override protected def toSymcomp$: OpenMathBase = hd.toSymcomp.apply(Array(args.map(_.toSymcomp) : _*))
+
+  override def substitute$(subst: Map[String, CMathML], substFrees: Set[String]): CMathML =
+    new Apply(substituteInAttribs$(attributes,subst,substFrees),
+      hd.substitute$(subst, substFrees), args.map(_.substitute$(subst, substFrees)) : _*)
+
+  override def freeVariables$(acc: mutable.Set[String], hidden: Set[String]): Unit = {
+    freeVariablesInAttributes$(acc, attributes, hidden)
+    hd.freeVariables$(acc, hidden)
+    args.foreach(_.freeVariables$(acc, hidden))
+  }
 }
 object Apply {
   def fromXML(xml: Elem) : Apply = {
@@ -495,8 +536,28 @@ final case class Bind(attributes : Attributes, hd: CMathML, vars: Seq[CILike], b
     body.toPopcorn(sb, 0)
     sb += ']'
   }
+
+  // Note: if one of the bound variables is in substFrees, we need to rename it (or fail)
+  // And: we need to remove the bound names from subst before continuing
+  override private[cmathml] def substitute$(subst: Map[String, CMathML], substFrees: Set[String]): CMathML = ???
+
+  override private[cmathml] def freeVariables$(acc: mutable.Set[String], hidden: Set[String]): Unit = {
+    freeVariablesInAttributes$(acc, attributes, hidden)
+    val hidden2 = hidden ++ (for { CI(_,n)<-vars } yield n)
+    for (v <- vars) v.freeVariables$(acc,hidden)
+    body.freeVariables$(acc,hidden)
+  }
 }
+
 object Bind {
+  class Extractor(cd:String, name:String) {
+    def this(head:CSymbol) = this(head.cd,head.name)
+    def unapply(bind:Bind) : Option[(Seq[CILike],CMathML)] = bind match {
+      case Bind(_, CSymbol(_,`cd`,`name`), vars, body) => Some((vars,body))
+      case _ => None
+    }
+  }
+
   def fromXML(xml: Elem) : Bind = {
     val elems = Utils.elementsIn(xml)
     val hd = CMathML.fromXML(elems.head)
@@ -530,9 +591,22 @@ final case class CI(attributes : Attributes = NoAttr, name : String) extends CMa
 
   @Pure override protected
   def toSymcomp$: OpenMathBase = new OMVariable(name)
+
+  /**
+    * @param subst      a substitution to be applied
+    * @param substFrees the free variables on the rhs of subst (to check for collisions with bound names)
+    */
+  override private[cmathml] def substitute$(subst: Map[String, CMathML], substFrees: Set[String]): CMathML =
+  subst.getOrElse(name,
+    new CI(substituteInAttribs$(attributes,subst,substFrees), name))
+
+  override private[cmathml] def freeVariables$(acc: mutable.Set[String], hidden: Set[String]): Unit = {
+    freeVariablesInAttributes$(acc, attributes, hidden)
+    if (!hidden.contains(name)) acc += name
+  }
 }
 object CI {
-  def fromXML(xml: Elem) = CI(xml.text)
+  def fromXML(xml: Elem) = CI(xml.text.trim)
 
   def apply(name:String) = new CI(NoAttr,name)
 }
@@ -564,10 +638,15 @@ final case class CN(attributes : Attributes = NoAttr, n: BigDecimal) extends CMa
     else
       new OMApply(internal.decimalFractionSymbol.cd,internal.decimalFractionSymbol.name,
         new OMString(n.toString))
-//        new OMInteger(n.bigDecimal.unscaledValue),new OMInteger(n.scale))
+
+  override private[cmathml] def substitute$(subst: Map[String, CMathML], substFrees: Set[String]): CMathML =
+    new CN(substituteInAttribs$(attributes,subst,substFrees), n)
+
+  override private[cmathml] def freeVariables$(acc: mutable.Set[String], hidden: Set[String]): Unit =
+    freeVariablesInAttributes$(acc, attributes, hidden)
 }
 object CN {
-  def fromXML(xml: Elem) = CN(xml.text)
+  def fromXML(xml: Elem) = CN(xml.text.trim)
 
   def apply(d:BigDecimal) = new CN(NoAttr,d)
   def apply(i:BigInteger) = new CN(NoAttr,BigDecimal(i,MATHCONTEXT))
@@ -597,6 +676,12 @@ final case class CS(attributes : Attributes = NoAttr, str: String) extends CMath
 
   @Pure override protected
   def toSymcomp$: OpenMathBase = ???
+
+  override private[cmathml] def substitute$(subst: Map[String, CMathML], substFrees: Set[String]): CMathML =
+    new CS(substituteInAttribs$(attributes,subst,substFrees), str)
+
+  override private[cmathml] def freeVariables$(acc: mutable.Set[String], hidden: Set[String]): Unit =
+    freeVariablesInAttributes$(acc, attributes, hidden)
 }
 object CS {
   def fromXML(xml: Elem) = CS(xml.text)
@@ -623,9 +708,15 @@ final case class CSymbol(attributes : Attributes = NoAttr, cd: String, name: Str
 
   @Pure override protected
   def toSymcomp$: OpenMathBase = new OMSymbol(cd,name)
+
+  override private[cmathml] def substitute$(subst: Map[String, CMathML], substFrees: Set[String]): CMathML =
+    new CSymbol(substituteInAttribs$(attributes,subst,substFrees), cd, name)
+
+  override private[cmathml] def freeVariables$(acc: mutable.Set[String], hidden: Set[String]): Unit =
+    freeVariablesInAttributes$(acc, attributes, hidden)
 }
 object CSymbol {
-  def fromXML(xml: Elem) = CSymbol(xml.attribute("cd").get.text, xml.text)
+  def fromXML(xml: Elem) = CSymbol(xml.attribute("cd").get.text, xml.text.trim)
 
   private def makePopcornAbbrevs(mappings: (CSymbol,String)*) =
     Map(mappings.map { case (sym:CSymbol,abbr:String) => ((sym.cd,sym.name),abbr) } : _*)
@@ -685,6 +776,13 @@ final case class CError(attributes : Attributes, cd: String, name: String, args:
 
   @Pure override protected
   def toSymcomp$: OpenMathBase = ??? // new OMSymbol(cd,name).error(args.map(_.toSymcomp).toArray)
+
+  override private[cmathml] def substitute$(subst: Map[String, CMathML], substFrees: Set[String]): CMathML = ???
+
+  override private[cmathml] def freeVariables$(acc: mutable.Set[String], hidden: Set[String]): Unit = {
+    freeVariablesInAttributes$(acc, attributes, hidden)
+    for (Typed(m:CMathML) <- args) m.freeVariables$(acc,hidden)
+  }
 }
 
 /** An addition to the Content MathML standard. Represents a missing node.
@@ -702,6 +800,12 @@ final case class CNone(attributes : Attributes = NoAttr) extends CMathML with Le
 
   @Pure override protected
   def toSymcomp$: OpenMathBase = CMathML.internal.holeSymbol.toSymcomp
+
+  override private[cmathml] def substitute$(subst: Map[String, CMathML], substFrees: Set[String]): CMathML =
+    CNone(substituteInAttribs$(attributes, subst, substFrees))
+
+  override private[cmathml] def freeVariables$(acc: mutable.Set[String], hidden: Set[String]): Unit =
+    freeVariablesInAttributes$(acc, attributes, hidden)
 }
 
 object Path {
