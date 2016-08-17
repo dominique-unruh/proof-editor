@@ -20,6 +20,7 @@ class SubtermTrafo extends Transformation {
 
 object SubtermTrafo {
   case class Instance(path : Path, a: Formula, b: Formula, id:Int=NO_ID) extends TrafoInstance {
+    override val shortDescription: String = "nonsense transformation"
     override val formulas = Vector(a, b)
     override lazy val isValid = a.math.subterm(path) == b.math
     override def toXML: Elem = ???

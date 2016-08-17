@@ -24,6 +24,16 @@ import scala.xml.{Atom, Comment, Elem, Text}
 
 
 object Utils {
+  def invokeListeners[T](listeners: Iterable[T], invoke: T => Unit) =
+    for (l <- listeners)
+      try {
+        invoke(l)
+      } catch {
+        case e: Throwable =>
+          Log.warn("Exception in listener", e)
+      }
+
+
   def max(nums: Seq[Double]) = {
     val it = nums.iterator
     var m = it.next()

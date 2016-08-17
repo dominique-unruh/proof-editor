@@ -201,6 +201,9 @@ object CMathML {
     val cd = "internal"
     val holeSymbol = CSymbol(cd,"hole")
     val decimalFractionSymbol = CSymbol(cd,"decimal_fraction")
+    val formulaRef = CSymbol(cd,"formulaRef")
+    def formulaRef(nr : Int): Apply = Apply(formulaRef,CN(nr))
+    def formulaRefE = new Apply.Extractor(formulaRef)
   }
 
 
@@ -473,6 +476,14 @@ final case class Apply(attributes : Attributes, hd: CMathML, args: CMathML*) ext
   }
 }
 object Apply {
+  class Extractor(cd:String, name:String) {
+    def this(head:CSymbol) = this(head.cd,head.name)
+    def unapplySeq(apply:Apply) : Option[Seq[CMathML]] = apply match {
+      case Apply(_, CSymbol(_,`cd`,`name`), args @ _*) => Some(args)
+      case _ => None
+    }
+  }
+
   def fromXML(xml: Elem) : Apply = {
     val elems = Utils.elementsIn(xml)
     val hd = CMathML.fromXML(elems.head)

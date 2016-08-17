@@ -31,6 +31,11 @@ abstract class TrafoInstance {
   def relationFormula : CMathML =
   Logic.instantiateLambda(relation.relatingFormula, formulas.map(_.math) :_*)
   def toXML : Elem
+
+  /** A short human-readable description (name) of this trafo / trafo instance.
+    * E.g., "modus ponens"
+    */
+  val shortDescription : String
 }
 object TrafoInstance {
   private val trafoXMLParsers = mutable.HashMap[String,Elem => TrafoInstance] (

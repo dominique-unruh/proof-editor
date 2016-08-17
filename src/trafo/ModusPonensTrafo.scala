@@ -86,6 +86,7 @@ object ModusPonensTrafo {
   }
 
   case class Instance(a : Formula, b : Formula, path : Path, res : Formula, id : Int = Theory.NO_ID) extends TrafoInstance {
+    override val shortDescription: String = "modus ponens"
     override val formulas = Vector(a,b,res)
     override val isValid: Boolean = {
       val impl = b.math.subterm(path)

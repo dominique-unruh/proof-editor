@@ -129,13 +129,21 @@ class TestApp extends JFXApp {
 
 
   lazy val menubar = new control.MenuBar {
-    menus = List(new control.Menu("_File") {
-      items = List(new control.MenuItem("_Quit") {
-        onAction = handle(stage.hide())
-        accelerator = KeyCombination("Shortcut+Q") //new KeyCodeCombination(KeyCode.Q,KeyCombination.ShortcutDown)
-      })
-    })
+    menus = List(
+      new control.Menu("_File") {
+        items = List(new control.MenuItem("_Quit") {
+          onAction = handle(stage.hide())
+          accelerator = KeyCombination("Shortcut+Q") //new KeyCodeCombination(KeyCode.Q,KeyCombination.ShortcutDown)
+        })},
+      new control.Menu("_Edit") {
+        items = List(new control.MenuItem("_Delete") {
+          onAction = handle(deleteFormula())
+          accelerator = KeyCombination("Shortcut+Shift+D")
+        })
+      }
+    )
   }
+
 
   lazy val toolbar = new control.ToolBar {
     content = List(

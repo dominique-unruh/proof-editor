@@ -15,13 +15,15 @@ abstract class Relation {
 
 case class Implication(premiseNum : Int, conclusionNum : Int = 1) extends Relation {
   assert(conclusionNum>=1)
+  assert(premiseNum>=1)
   val formulaNum = premiseNum + conclusionNum
   lazy val relatingFormula = {
     val premVars = (1 to premiseNum).map(i => CI(s"P$i"))
     val conclVars = (1 to conclusionNum).map(i => CI(s"C$i"))
     val vars = premVars ++ conclVars
     val concl = if (conclusionNum==1) conclVars.head else logic1.and(conclVars:_*)
-    val rule = premVars.foldRight(concl)(logic1.implies(_,_))
+    val prem = if (premiseNum==1) premVars.head else logic1.and(premVars:_*)
+    val rule = logic1.implies(prem,concl)
     fns1.lambda(vars,rule)
   }
 }

@@ -5,10 +5,13 @@ import javafx.scene.control.Label
 import javafx.scene.input.{MouseButton, MouseEvent}
 import javafx.scene.layout.HBox
 
+import cmathml.CMathML.internal
+import cmathml.{CI, CN, Logic}
 import misc.Log
 import misc.Utils.ImplicitConversions._
 import theory.{Formula, MutableTheory}
-import ui.TheoryView.FormulaBox
+import trafo.TrafoInstance
+import ui.TheoryView.{FormulaBox, TrafoBox}
 import ui.mathview.MathEdit
 
 import scala.collection.mutable
@@ -34,6 +37,10 @@ class TheoryView extends VBox {
 
   theory.addListener(new MutableTheory.Listener {
     override def formulaAdded(formula: Formula): Unit = addFormulaToGUI(formula)
+    override def transformationAdded(trafo: TrafoInstance, newFormulas: Seq[Formula]): Unit = {
+      children += new TrafoBox(trafo)
+      for (f <- newFormulas) addFormulaToGUI(f)
+    }
     override def formulaUpdated(newFormula: Formula, oldFormula: Formula): Unit = {
       assert(newFormula.id==oldFormula.id)
       val edit = nodes(newFormula.id)
@@ -79,5 +86,13 @@ object TheoryView {
     val mathEdit = new MathEdit()
     alignmentProperty.setValue(Pos.CenterLeft)
     getChildren.addAll(new Label(s"($id) "),mathEdit)
+  }
+  private[TheoryView] class TrafoBox(val trafo: TrafoInstance) extends HBox {
+    val mathEdit = new MathEdit()
+    alignmentProperty.setValue(Pos.CenterLeft)
+    val ids = trafo.formulas.map(f => internal.formulaRef(f.id))
+    val rel = Logic.instantiateLambda(trafo.relation.relatingFormula, ids :_*)
+    mathEdit.setMath(rel)
+    getChildren.addAll(new Label(s"By ${trafo.shortDescription} we have: "),mathEdit)
   }
 }

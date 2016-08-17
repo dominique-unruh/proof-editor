@@ -1,18 +1,19 @@
 package theory
 
-import misc.Log
+import misc.{Log, Utils}
 import trafo.TrafoInstance
+
+import scala.collection.mutable
 
 /** Thread safe. */
 class MutableTheory {
   import MutableTheory._
 
-  import scala.collection.JavaConversions._
   private var theory = Theory()
-  private var listeners = new java.util.LinkedList[Listener]
+  private var listeners = mutable.ListBuffer[Listener]()
 
-  def addListener(listener : Listener) = synchronized { listeners.add(listener) }
-  def removeListener(listener : Listener) = synchronized { listeners.remove(listener) }
+  def addListener(listener : Listener) = synchronized { listeners += listener }
+  def removeListener(listener : Listener) = synchronized { listeners -= listener }
 
   def addFormula(formula:Formula) : Formula = synchronized {
     val (thy2,form2) = theory.addFormula(formula)
@@ -33,7 +34,8 @@ class MutableTheory {
     theory = thy2
     Log.debug("post add TI",theory.transformations)
     Log.debug("trafo added",trafo2.id,trafo2)
-    for (f <- formulas) for (l <- listeners) l.formulaAdded(f)
+//    for (f <- formulas) for (l <- listeners) l.formulaAdded(f)
+    Utils.invokeListeners[Listener](listeners,_.transformationAdded(trafo2,formulas))
     Log.debug("Added trafo", trafo, trafo.relationFormula)
     formulas
   }
@@ -48,8 +50,9 @@ class MutableTheory {
     theory = thy
     for (l <- listeners) l.theoryCleared()
     for (f <- theory.formulas.values.toSeq.sortBy(_.id))
-      for (l <- listeners)
-        l.formulaAdded(f)
+      Utils.invokeListeners[Listener](listeners,_.formulaAdded(f))
+    for (t <- theory.transformations.values.toSeq.sortBy(_.id))
+      Utils.invokeListeners[Listener](listeners,_.transformationAdded(t,Nil))
   }
 
   /** Returns the current state of the theory as an immutable value */
@@ -61,7 +64,7 @@ object MutableTheory {
     def formulaDeleted(formula: Formula) : Unit
     def theoryCleared() : Unit
     def formulaAdded(formula:Formula) : Unit
-//    def transformationAdded(trafo:TrafoInstance, newFormulas:Seq[Formula]) : Unit
+    def transformationAdded(trafo:TrafoInstance, newFormulas:Seq[Formula]) : Unit
     def formulaUpdated(newFormula:Formula, oldFormula:Formula) : Unit
   }
 }

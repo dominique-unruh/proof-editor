@@ -30,6 +30,7 @@ class SimplifyTrafo extends Transformation {
 object SimplifyTrafo {
 
   case class Instance(a: Formula, b: Formula, id : Int = NO_ID) extends TrafoInstance {
+    override val shortDescription: String = "simplification"
     override val formulas = Vector(a, b)
     override lazy val isValid = a.math == b.math
     override def toXML: Elem = ???

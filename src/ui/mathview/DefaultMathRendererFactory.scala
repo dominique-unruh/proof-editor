@@ -3,6 +3,7 @@ package ui.mathview
 import java.io.IOException
 import javafx.geometry
 
+import cmathml.CMathML.internal
 import cmathml._
 import misc.Utils
 
@@ -55,6 +56,7 @@ object DefaultMathRendererFactory extends MathRendererFactory {
       case MApply(hd@MCSymbol("logic1", "xor"), x, y) => binop(hd, "⊕", x, y)
       case MApply(hd@MCSymbol("logic1", "implies"), x, y) => binop(hd, "⇒", x, y)
       case MApply(hd@MCSymbol("logic1", "not"), x) => prefixop(hd, "¬", x)
+      case MApply(MCSymbol(internal.formulaRef.cd,internal.formulaRef.name),MCN(i)) => new Text(s"($i)")
       case MCSymbol("logic1","true") => new SFSymbol("true")
       case MCSymbol("logic1","false") => new SFSymbol("false")
       case MBind(hd@MCSymbol("quant1","forall"), vs, body) => quant(hd, "∀", vs, body)

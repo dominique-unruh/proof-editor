@@ -59,7 +59,7 @@ final class Z3(config:Map[String,String]) {
   private def toCMathML(expr: Expr) : CMathML = expr match {
     case e if e.getSort==stringSort_ && e.isConst && e.getFuncDecl.getName.toString.startsWith("string@") =>
       CS(e.getFuncDecl.getName.toString.stripPrefix("string@"))
-    case e: ArithExpr if e.isConst => CI(e.getFuncDecl.getName.toString)
+    case e: Expr if e.isConst => CI(e.getFuncDecl.getName.toString)
     case e: ArithExpr if e.isApp =>
       (e.getFuncDecl.getDeclKind,e.getNumArgs) match {
         case (Z3_OP_ADD,2) => Apply(arith1.plus, e.getArgs map toCMathML: _*)
