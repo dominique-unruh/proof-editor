@@ -12,12 +12,12 @@ import com.microsoft.z3.enumerations.Z3_decl_kind._
 import CMathML._
 
 final class Z3(config:Map[String,String]) {
-  def doesImply(a: CMathML, b: CMathML) : Option[Boolean] = synchronized {
-    val a$ = fromCMathML_(a).asInstanceOf[BoolExpr]
+  def doesImply(a: Seq[CMathML], b: CMathML) : Option[Boolean] = synchronized {
+    val a$ = a.map(fromCMathML_(_).asInstanceOf[BoolExpr])
     val b$ = fromCMathML_(b).asInstanceOf[BoolExpr]
     val solver = context.mkSolver()
     try {
-      solver.add(a$)
+      for (aa <- a$) solver.add(aa)
       solver.add(context.mkNot(b$))
       val status = solver.check
       status match {
@@ -27,10 +27,13 @@ final class Z3(config:Map[String,String]) {
       }
     } finally {
       solver.dispose()
-      a$.dispose()
+      a$.foreach(_.dispose())
       b$.dispose()
     }
   }
+
+  def doesImply(a: CMathML, b: CMathML) : Option[Boolean] = doesImply(Seq(a),b)
+  def isTrue(b: CMathML) : Option[Boolean] = doesImply(Nil,b)
 
   def isEqual(a: CMathML, b: CMathML) : Option[Boolean] = synchronized {
     val a$ = fromCMathML_(a)

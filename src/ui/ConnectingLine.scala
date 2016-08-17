@@ -79,7 +79,7 @@ class VisibleBox {
     val height = maxY-minY
 
     val res = new BoundingBox(minX,minY,width,height)
-    Log.debug("Intersect:",a,b,res)
+//    Log.debug("Intersect:",a,b,res)
     res
   }
 

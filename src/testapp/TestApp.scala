@@ -6,6 +6,7 @@ import javafx.event.ActionEvent
 import javafx.geometry.Insets
 import javafx.scene.control._
 import javafx.scene.layout.{HBox, StackPane, VBox}
+import javax.swing.text.html.ObjectView
 
 import cmathml._
 import misc.Utils.ImplicitConversions._
@@ -160,7 +161,8 @@ class TestApp extends JFXApp {
     TrafoChoice("Modus ponens", new ModusPonensTrafo),
     TrafoChoice("Test: Extract subterm", new SubtermTrafo),
     TrafoChoice("Edit formula", new EditFormulaTrafo),
-    TrafoChoice("Simplify formula", new SimplifyTrafo)
+    TrafoChoice("Simplify formula", new SimplifyTrafo),
+    TrafoChoice("Trivial", new TrivialTrafo)
   )
 
 
