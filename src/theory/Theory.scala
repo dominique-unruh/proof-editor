@@ -1,16 +1,20 @@
 package theory
 
 import cmathml.{CMathML, Path}
+import theory.Theory.NO_ID
 import trafo.TrafoInstance
 
 import scala.collection.mutable.ListBuffer
 import scala.xml.{Comment, Elem}
 
+// TODO Should have a private constructor (and private copy/apply methods)
 final case class Theory(counter : Int,
                         /** Invariants:
                     * - for any (i->f) in this map, f.id==i.
                     * - for any (i->f), i<[[Theory!.counter counter]] */
-                        formulas : Map[Int,Formula]) {
+                        formulas : Map[Int,Formula],
+                        transformations : Map[Int,TrafoInstance]
+                       ) {
   def deleteFormula(formula: Formula) : (Theory,Formula) = {
     val form2 = formulas(formula.id)
     val thy2 = copy(formulas = formulas - formula.id)
@@ -19,35 +23,50 @@ final case class Theory(counter : Int,
 
   def toXML = {
     def formulaNL(f:Formula) = Seq(f.toXML,scala.xml.Text("\n"))
+    def trafoNL(t:TrafoInstance) = Seq(t.toXML,scala.xml.Text("\n"))
     val sortedFormulas = formulas.values.toSeq.sortBy(_.id)
+    val sortedTrafos = transformations.values.toSeq.sortBy(_.id)
     <theory xmlns="http://unruh.de/proof-editor" counter={counter.toString}>
       <formulas>
-        {sortedFormulas.map(formulaNL)}
+        {sortedFormulas.flatMap(formulaNL)}
       </formulas>
+      <transformations>
+        {sortedTrafos.flatMap(trafoNL)}
+      </transformations>
     </theory>
   }
 
   def addFormula(formula:Formula) : (Theory,Formula) = {
-    assert(formula.id==Formula.NO_ID)
+    assert(formula.id==NO_ID)
     val formula2 = formula.copy(id=counter)
     val thy = copy(counter = counter+1, formulas = formulas.updated(counter, formula2))
     (thy, formula2)
   }
 
-  def addTrafoInstance(trafo: TrafoInstance) : (Theory,Seq[Formula]) = {
+  def addTrafoInstance(trafo: TrafoInstance) : (Theory,TrafoInstance,Seq[Formula]) = {
+    assert(trafo.id==NO_ID)
+
     val formulas = trafo.formulas
     var theory = this
+    var mappedFormulas = ListBuffer() : ListBuffer[Formula]
     var newFormulas = ListBuffer() : ListBuffer[Formula]
+
     for (f <- formulas) {
-      if (f.id==Formula.NO_ID) {
+      if (f.id==NO_ID) {
         val (thy, newFormula) = theory.addFormula(f)
         newFormulas += newFormula
+        mappedFormulas += newFormula
         theory = thy
       } else {
         assert(isMember(f))
+        mappedFormulas += f
       }
     }
-    (theory,newFormulas.toList)
+
+    val trafo2 = trafo.update(counter,mappedFormulas)
+    theory = theory.copy(counter=counter+1, transformations=transformations.updated(counter,trafo2))
+
+    (theory,trafo2,newFormulas)
   }
 
   def isMember(formula:Formula) : Boolean = {
@@ -70,16 +89,18 @@ final case class Theory(counter : Int,
   }
 }
 object Theory {
-  def apply() : Theory = Theory(0,Map.empty)
+  def apply() : Theory = Theory(0,Map.empty,Map.empty)
+  val NO_ID = -1
   def fromXML(xml:Elem) : Theory = {
     assert(xml.label=="theory")
     val formulas = Map[Int,Formula]((xml \ "formulas" \ "formula").map { x => val f = Formula.fromXML(x.asInstanceOf[Elem]); f.id -> f } : _*)
+    val trafos = Map[Int,TrafoInstance]((xml \ "transformations" \ "_").map { x => val t = TrafoInstance.fromXML(x.asInstanceOf[Elem]); t.id -> t } : _*)
     val counter = xml.attribute("counter").get.text.toInt
-    new Theory(counter,formulas)
+    new Theory(counter,formulas,trafos)
   }
 }
 
-final case class Formula private[theory] (id : Int = Formula.NO_ID, math : CMathML) {
+final case class Formula private[theory] (id : Int = NO_ID, math : CMathML) {
   import Formula._
   def detach: Formula = copy(id=NO_ID)
   def toXML = <formula id={id.toString}>{Comment(" "+math.toPopcorn+" ")}{math.toXMLMath}</formula>
@@ -87,7 +108,6 @@ final case class Formula private[theory] (id : Int = Formula.NO_ID, math : CMath
 
 object Formula {
   def apply(math : CMathML) = new Formula(id=NO_ID, math=math)
-  val NO_ID = -1
   def fromXML(xml:Elem) : Formula = {
     assert(xml.label=="formula")
     val id = xml.attribute("id").get.text.toInt

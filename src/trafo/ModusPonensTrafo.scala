@@ -3,10 +3,11 @@ package trafo
 import scalaz.Scalaz._
 import cmathml.{Apply, CMathML, Logic, Path}
 import cmathml.CMathML.logic1.implies
+import misc.{Log, Utils}
 import misc.Log
 import relation.{Implication, Relation}
 import sun.java2d.cmm.kcms.CMM
-import theory.Formula
+import theory.{Formula, Theory}
 import trafo.Interaction._
 import trafo.ModusPonensTrafo.Instance
 import z3.Z3
@@ -65,7 +66,7 @@ class ModusPonensTrafo extends Transformation {
 
     val res = b.math.replace(implPath,q)
 
-    val instance = new Instance(a, b, implPath, Formula(res))
+    val instance = Instance(a, b, implPath, Formula(res))
 
     ask("res", new ShowFormulaQ(<span>This will be the result:</span>, instance.res, highlight=Some(implPath))).each
 
@@ -76,7 +77,15 @@ class ModusPonensTrafo extends Transformation {
 }
 
 object ModusPonensTrafo {
-  class Instance(val a : Formula, val b : Formula, val path : Path, val res : Formula) extends TrafoInstance {
+  def fromXML(xml:Elem) = {
+    val id = xml.attribute("id").get.text.toInt
+    val path = Path.fromString(xml.attribute("path").get.text)
+    Utils.elementsIn(xml) match {
+      case Seq(a,b,res) => Instance(Formula.fromXML(a),Formula.fromXML(b),path,Formula.fromXML(res),id)
+    }
+  }
+
+  case class Instance(a : Formula, b : Formula, path : Path, res : Formula, id : Int = Theory.NO_ID) extends TrafoInstance {
     override val formulas = Vector(a,b,res)
     override val isValid: Boolean = {
       val impl = b.math.subterm(path)
@@ -87,6 +96,17 @@ object ModusPonensTrafo {
             Z3.default.isEqual(b.math.replace(path,q), res.math).contains(true)
         case _ => false
       }
+    }
+
+    override def toXML: Elem = <modusPonens id={id.toString} path={path.toString}>
+      {a.toXML}
+      {b.toXML}
+      {res.toXML}
+    </modusPonens>
+
+    override def update(id: Int, formulas: Seq[Formula]): TrafoInstance = formulas match {
+      case Seq(a2,b2,res2) => Instance(a2,b2,path,res2,id)
+      case _ => sys.error("update with wrong number of formulas")
     }
     override val relation: Relation = Implication(2,1)
   }

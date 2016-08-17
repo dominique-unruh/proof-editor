@@ -665,7 +665,7 @@ final case class CS(attributes : Attributes = NoAttr, str: String) extends CMath
   override def toString = toPopcorn
 
   /** Same as [[toXML]] but without the outermost attributes */
-  override def toXML$: Elem = <cs>{str}</cs>
+  override def toXML$: Elem = <cs xml:space="preserve">{str}</cs>
 
   /** Same as [[toPopcorn]] but without the outermost attributes */
   override protected def toPopcorn$(sb: StringBuilder, priority: Int): Unit = {
