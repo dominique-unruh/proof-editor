@@ -22,7 +22,6 @@ object SubtermTrafo {
   case class Instance(path : Path, a: Formula, b: Formula, id:Int=NO_ID) extends TrafoInstance {
     override val formulas = Vector(a, b)
     override lazy val isValid = a.math.subterm(path) == b.math
-    def outFormula = b
     override def toXML: Elem = ???
     override def update(id: Int, formulas: Seq[Formula]): TrafoInstance = formulas match {
       case Seq(a2,b2) => Instance(path,a2,b2,id)
