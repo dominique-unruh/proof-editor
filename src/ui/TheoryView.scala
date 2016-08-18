@@ -93,6 +93,6 @@ object TheoryView {
     val ids = trafo.formulas.map(f => internal.formulaRef(f.id))
     val rel = Logic.instantiateLambda(trafo.relation.relatingFormula, ids :_*)
     mathEdit.setMath(rel)
-    getChildren.addAll(new Label(s"By ${trafo.shortDescription} we have: "),mathEdit)
+    getChildren.addAll(new Label(s"By ${trafo.shortDescription} we have (${trafo.id}): "),mathEdit)
   }
 }

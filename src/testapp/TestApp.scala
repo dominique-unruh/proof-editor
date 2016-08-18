@@ -159,7 +159,6 @@ class TestApp extends JFXApp {
 
   private lazy val transformations = ObservableBuffer(
     TrafoChoice("Modus ponens", new ModusPonensTrafo),
-    TrafoChoice("Test: Extract subterm", new SubtermTrafo),
     TrafoChoice("Edit formula", new EditFormulaTrafo),
     TrafoChoice("Simplify formula", new SimplifyTrafo),
     TrafoChoice("Trivial", new TrivialTrafo)
