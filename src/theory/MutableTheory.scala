@@ -29,14 +29,9 @@ class MutableTheory {
   }
 
   def addTrafoInstance(trafo: TrafoInstance) : Seq[Formula] = synchronized {
-    Log.debug("pre add TI",theory.transformations)
     val (thy2,trafo2,formulas) = theory.addTrafoInstance(trafo)
     theory = thy2
-    Log.debug("post add TI",theory.transformations)
-    Log.debug("trafo added",trafo2.id,trafo2)
-//    for (f <- formulas) for (l <- listeners) l.formulaAdded(f)
     Utils.invokeListeners[Listener](listeners,_.transformationAdded(trafo2,formulas))
-    Log.debug("Added trafo", trafo, trafo.relationFormula)
     formulas
   }
 

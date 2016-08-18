@@ -1,7 +1,7 @@
 package trafo
 
-import cmathml.CMathML.logic1
-import relation.{Equality, Relation, Trivial}
+import misc.Utils
+import relation.{Relation, Trivial}
 import theory.Formula
 import theory.Theory._
 import trafo.Interaction._
@@ -24,6 +24,13 @@ class TrivialTrafo() extends Transformation {
 }
 
 object TrivialTrafo {
+  def fromXML(xml:Elem) = {
+    val id = xml.attribute("id").get.text.toInt
+    Utils.elementsIn(xml) match {
+      case Seq(a) => new Instance(Formula.fromXML(a),id)
+    }
+  }
+
   class Instance(a: Formula, val id : Int = NO_ID) extends TrafoInstance {
     override val formulas = Vector(a)
     override lazy val isValid = Z3.default.isTrue(a.math).contains(true)

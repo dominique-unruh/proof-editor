@@ -46,12 +46,7 @@ class ModusPonensTrafo extends Transformation {
     if (implChild!=1)
       failWith[Unit]("not-pq1", <span>You have to select a term P inside a subterm P=>Q</span>).each
 
-    Log.debug("path",path)
-    Log.debug("implPath",implPath)
-
     val implSubterm = b.math.subterm(implPath)
-
-    Log.debug("implSubterm",implSubterm)
 
     val (p:CMathML,q:CMathML) = implSubterm match {
       case Apply(_, `implies`, p2, q2) => (p2,q2)

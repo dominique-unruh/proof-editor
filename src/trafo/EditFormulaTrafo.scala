@@ -5,6 +5,7 @@ import Interaction._
 import theory.{Formula, Theory}
 import EditFormulaTrafo._
 import cmathml.CMathML
+import misc.Utils
 import theory.Theory.NO_ID
 import relation.{Equality, Implication, Relation}
 import z3.Z3
@@ -34,12 +35,24 @@ object EditFormulaTrafo {
   class Instance(a: Formula, b: Formula, val id : Int = NO_ID) extends TrafoInstance {
     override val formulas = Vector(a, b)
     override lazy val isValid = Z3.default.isEqual(a.math, b.math).contains(true) //a.math == b.math
-    override def toXML: Elem = ???
+
+    override def toXML: Elem = <editFormula id={id.toString}>
+      {a.toXML}
+      {b.toXML}
+    </editFormula>
+
     override def update(id: Int, formulas: Seq[Formula]): TrafoInstance = formulas match {
       case Seq(a2,b2) => new Instance(a2,b2,id)
       case _ => sys.error("update with wrong number of formulas")
     }
     override val relation: Relation = Equality
     override val shortDescription: String = "trivial comparison"
+  }
+
+  def fromXML(xml:Elem) = {
+    val id = xml.attribute("id").get.text.toInt
+    Utils.elementsIn(xml) match {
+      case Seq(a,b) => new Instance(Formula.fromXML(a),Formula.fromXML(b),id)
+    }
   }
 }

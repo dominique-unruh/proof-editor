@@ -39,7 +39,9 @@ abstract class TrafoInstance {
 }
 object TrafoInstance {
   private val trafoXMLParsers = mutable.HashMap[String,Elem => TrafoInstance] (
-    "modusPonens" -> ModusPonensTrafo.fromXML
+    "modusPonens" -> ModusPonensTrafo.fromXML,
+    "trivial" -> TrivialTrafo.fromXML,
+    "editFormula" -> EditFormulaTrafo.fromXML
   )
   def fromXML(xml: Elem) = trafoXMLParsers.synchronized {
     trafoXMLParsers.get(xml.label) match {
