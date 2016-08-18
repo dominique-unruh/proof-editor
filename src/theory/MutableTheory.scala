@@ -49,10 +49,30 @@ class MutableTheory {
   def setTheory(thy: Theory): Unit = synchronized {
     theory = thy
     for (l <- listeners) l.theoryCleared()
-    for (f <- theory.formulas.values.toSeq.sortBy(_.id))
-      Utils.invokeListeners[Listener](listeners,_.formulaAdded(f))
-    for (t <- theory.transformations.values.toSeq.sortBy(_.id))
-      Utils.invokeListeners[Listener](listeners,_.transformationAdded(t,Nil))
+    val ids = mutable.HashSet[Int]()
+    ids ++= thy.formulas.values.map(_.id)
+    ids ++= thy.transformations.values.map(_.id)
+    val seenFormulas = mutable.HashSet[Int]()
+    for (id <- ids) {
+      for (t <- thy.transformations.get(id)) {
+        val newFormulas = t.formulas.filter(f => !seenFormulas.contains(f.id))
+        Utils.invokeListeners[Listener](listeners, _.transformationAdded(t, newFormulas))
+        seenFormulas ++= t.formulas.map(_.id)
+      }
+      for (f <- thy.formulas.get(id)) {
+        seenFormulas += id
+        Utils.invokeListeners[Listener](listeners, _.formulaAdded(f))
+      }
+    }
+//    for (t <- theory.transformations.values.toSeq.sortBy(_.id)) {
+//      val newFormulas = t.formulas.filter(f => !seen.contains(f.id))
+//      Utils.invokeListeners[Listener](listeners, _.transformationAdded(t, newFormulas))
+//      seen ++= t.formulas.map(_.id)
+//    }
+//    for (f <- theory.formulas.values.toSeq.sortBy(_.id) if !seen.contains(f.id))
+//      Utils.invokeListeners[Listener](listeners,_.formulaAdded(f))
+//    for (t <- theory.transformations.values.toSeq.sortBy(_.id))
+//      Utils.invokeListeners[Listener](listeners,_.transformationAdded(t,Nil))
   }
 
   /** Returns the current state of the theory as an immutable value */
