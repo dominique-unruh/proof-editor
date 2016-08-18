@@ -10,8 +10,8 @@ import scala.xml.{Comment, Elem}
 // TODO Should have a private constructor (and private copy/apply methods)
 final case class Theory(counter : Int,
                         /** Invariants:
-                    * - for any (i->f) in this map, f.id==i.
-                    * - for any (i->f), i<[[Theory!.counter counter]] */
+                          * - for any (i->f) in this map, f.id==i.
+                          * - for any (i->f), i<[[Theory!.counter counter]] */
                         formulas : Map[Int,Formula],
                         transformations : Map[Int,TrafoInstance]
                        ) {
@@ -48,6 +48,8 @@ final case class Theory(counter : Int,
 
     val formulas = trafo.formulas
     var theory = this
+    val trafoCounter = theory.counter
+    theory = theory.copy(counter=trafoCounter+1)
     var mappedFormulas = ListBuffer() : ListBuffer[Formula]
     var newFormulas = ListBuffer() : ListBuffer[Formula]
 
@@ -63,8 +65,8 @@ final case class Theory(counter : Int,
       }
     }
 
-    val trafo2 = trafo.update(counter,mappedFormulas)
-    theory = theory.copy(counter=counter+1, transformations=transformations.updated(counter,trafo2))
+    val trafo2 = trafo.update(trafoCounter,mappedFormulas)
+    theory = theory.copy(transformations=transformations.updated(trafoCounter,trafo2))
 
     (theory,trafo2,newFormulas)
   }
