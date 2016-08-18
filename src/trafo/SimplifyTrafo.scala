@@ -33,7 +33,12 @@ object SimplifyTrafo {
     override val shortDescription: String = "simplification"
     override val formulas = Vector(a, b)
     override lazy val isValid = a.math == b.math
-    override def toXML: Elem = ???
+
+    override def toXML: Elem = <simplify id={id.toString}>
+      {a.toXML}
+      {b.toXML}
+    </simplify>
+
     override def update(id: Int, formulas: Seq[Formula]): TrafoInstance = formulas match {
       case Seq(a2,b2) => Instance(a2,b2,id)
       case _ => sys.error("update with wrong number of formulas")

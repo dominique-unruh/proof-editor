@@ -27,7 +27,8 @@ object TrivialTrafo {
   class Instance(a: Formula, val id : Int = NO_ID) extends TrafoInstance {
     override val formulas = Vector(a)
     override lazy val isValid = Z3.default.isTrue(a.math).contains(true)
-    override def toXML: Elem = ???
+    override def toXML: Elem = <trivial id={id.toString}>{a.toXML}</trivial>
+
     override def update(id: Int, formulas: Seq[Formula]): TrafoInstance = formulas match {
       case Seq(a2) => new Instance(a2,id)
       case _ => sys.error("update with wrong number of formulas")
