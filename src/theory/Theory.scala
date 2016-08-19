@@ -98,7 +98,10 @@ object Theory {
     val formulas = Map[Int,Formula]((xml \ "formulas" \ "formula").map { x => val f = Formula.fromXML(x.asInstanceOf[Elem]); f.id -> f } : _*)
     val trafos = Map[Int,TrafoInstance]((xml \ "transformations" \ "_").map { x => val t = TrafoInstance.fromXML(x.asInstanceOf[Elem]); t.id -> t } : _*)
     val counter = xml.attribute("counter").get.text.toInt
-    new Theory(counter,formulas,trafos)
+    val thy = new Theory(counter,formulas,trafos)
+    for (t <- trafos.values; f <- t.formulas)
+      assert(thy.isMember(f))
+    thy
   }
 }
 

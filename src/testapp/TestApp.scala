@@ -240,7 +240,7 @@ class TestApp extends JFXApp {
       val thy = Theory.fromXML(xml)
       theoryView.theory.setTheory(thy)
     } catch {
-      case e: Exception =>
+      case e: Throwable =>
         e.printStackTrace()
         val newThy = okCancelPopup(
           """Loading the theory from the previous session failed.
