@@ -202,18 +202,10 @@ class TestApp extends JFXApp {
           interactor.setInteraction(Interaction.failWith("select", <span>Select a transformation on the right</span>))
     })
     selectionModel.value.select(0)
+    val accel = KeyCombination("Shortcut+T")
+    scene.onChange { (_,_,scene) => if (scene!=null) scene.accelerators.put(accel, () => focusFilter()) }
+    promptText.value = s"Filter... (${accel.displayText})"
   }
-
-//
-//    new control.ChoiceBox[TrafoChoice] {
-//    items = transformations
-//    selectionModel.value.selectedItemProperty.addListener(new ChangeListener[TrafoChoice] {
-//      override def changed(observable: ObservableValue[_ <: TrafoChoice], oldValue: TrafoChoice, newValue: TrafoChoice): Unit =
-//        interactor.setInteraction(newValue.trafo.createInteractive)
-//    })
-//    selectionModel.value.select(0)
-//  }
-
 
   private def errorPopup(msg: String): Unit =
     new Alert(Alert.AlertType.ERROR, msg).showAndWait()
@@ -225,20 +217,6 @@ class TestApp extends JFXApp {
     theoryView.theory.addTrafoInstance(interactor.result.get.get)
   }
 
-//  private def newFromSelection(): Unit = {
-//    theoryView.selectedMathEdit match {
-//      case None =>
-//      case Some(math) =>
-//        val sel = math.selection.value
-//        if (sel.isEmpty) {
-//          return
-//        }
-//        val m = math.selection.value.get.toCMathML
-//        theoryView.theory.addFormula(Formula(m))
-//    }
-//  }
-
-  //  private val z3 = new Z3(Map())
 
   private def deleteFormula(): Unit = {
     theoryView.selectedFormula match {

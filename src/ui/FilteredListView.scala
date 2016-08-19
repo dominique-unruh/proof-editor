@@ -20,7 +20,8 @@ class FilteredListView[T](val items: ObservableBuffer[T]) extends VBox {
   listView.vgrow = Priority.Always
   def selectionModel = listView.selectionModel
 
-  filterField.promptText.value = "Filter..."
+  def promptText = filterField.promptText
+
 
   filterField.focused.onChange { (_,_,focused) =>
   if (focused) filterField.selectAll() }
