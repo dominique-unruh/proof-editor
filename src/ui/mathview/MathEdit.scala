@@ -386,7 +386,6 @@ class MathEdit extends MathViewFX {
 
     clip.content(DataFormat.PlainText) match {
       case str: String =>
-        // TODO: ignore if it's not popcorn
         CMathML.tryFromPopcorn(str) match {
           case Some(math) => return Some(math)
           case None =>

@@ -200,7 +200,7 @@ object CMathML {
   object internal {
     val cd = "internal"
     val holeSymbol = CSymbol(cd,"hole")
-    val decimalFractionSymbol = CSymbol(cd,"decimal_fraction")
+    val decimalFractionSymbol = CSymbol(cd,"decimalFraction")
     val formulaRef = CSymbol(cd,"formulaRef")
     def formulaRef(nr : Int): Apply = Apply(formulaRef,CN(nr))
     def formulaRefE = new Apply.Extractor(formulaRef)
@@ -714,8 +714,10 @@ final case class CSymbol(attributes : Attributes = NoAttr, cd: String, name: Str
   override def toXML$: Elem = <csymbol cd={cd}>{name}</csymbol>
 
   /** TODO: Support abbreviated symbols */
-  override protected def toPopcorn$(sb: StringBuilder, priority: Int): Unit = {
-    sb ++= cd; sb += '.'; sb ++= name }
+  override protected def toPopcorn$(sb: StringBuilder, priority: Int): Unit =
+  CSymbol.popcornAbbrevs.get((cd,name)) match {
+    case Some(popcorn) => sb ++= popcorn
+    case None => sb ++= cd; sb += '.'; sb ++= name }
 
   @Pure override protected
   def toSymcomp$: OpenMathBase = new OMSymbol(cd,name)
@@ -761,8 +763,8 @@ object CSymbol {
     fns1.lambda -> "lambda",
     logic1.trueSym -> "true",
     logic1.falseSym -> "false",
-  combinat1.binomial -> "binomial",
-  integer1.factorial -> "factorial"
+    combinat1.binomial -> "binomial",
+    integer1.factorial -> "factorial"
   )
 
   def apply(cd: String, name: String) = new CSymbol(NoAttr,cd,name)
