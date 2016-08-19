@@ -6,6 +6,7 @@ import javafx.event.ActionEvent
 import javafx.geometry.Insets
 import javafx.scene.control._
 import javafx.scene.layout.{HBox, StackPane, VBox}
+import javafx.stage.WindowEvent
 import javax.swing.text.html.ObjectView
 
 import cmathml._
@@ -16,7 +17,7 @@ import theory.{Formula, Theory}
 import trafo._
 import ui.Interactor.{Editor, EditorFactory}
 import ui.mathview.MathEdit
-import ui.{ConnectingLine, Interactor, TheoryView}
+import ui.{ConnectingLine, FilteredListView, Interactor, TheoryView}
 import z3.Z3
 
 import scala.reflect.runtime.universe._
@@ -66,6 +67,7 @@ class TestApp extends JFXApp {
           new control.SplitPane {
             // dividerPositions="0.33, 0.66" VBox.vgrow="ALWAYS">
             vgrow = Priority.Always
+            items += trafoChoice
             items += interactorPane
             items += theoryPane
             dividerPositions = 0.2
@@ -73,8 +75,8 @@ class TestApp extends JFXApp {
       }
       content += overlay
     }
+    onShown = { (_:WindowEvent) => trafoChoice.focusFilter() }
   }
-
 
   lazy val newFormulaEdit = new MathEdit {
     editable.value = Some(mathDoc.root)
@@ -116,7 +118,7 @@ class TestApp extends JFXApp {
   lazy val interactorPane = new control.ScrollPane {
     fitToWidth = true
     content = new layout.VBox(
-      trafoChoice,
+//      trafoChoice,
       interactor,
       useButton)
   }
@@ -191,14 +193,26 @@ class TestApp extends JFXApp {
       }
     }}}
 
-  private lazy val trafoChoice = new control.ChoiceBox[TrafoChoice] {
-    items = transformations
+  private lazy val trafoChoice = new FilteredListView[TrafoChoice](transformations) {
     selectionModel.value.selectedItemProperty.addListener(new ChangeListener[TrafoChoice] {
       override def changed(observable: ObservableValue[_ <: TrafoChoice], oldValue: TrafoChoice, newValue: TrafoChoice): Unit =
-        interactor.setInteraction(newValue.trafo.createInteractive)
+        if (newValue!=null)
+          interactor.setInteraction(newValue.trafo.createInteractive)
+        else
+          interactor.setInteraction(Interaction.failWith("select", <span>Select a transformation on the right</span>))
     })
     selectionModel.value.select(0)
   }
+
+//
+//    new control.ChoiceBox[TrafoChoice] {
+//    items = transformations
+//    selectionModel.value.selectedItemProperty.addListener(new ChangeListener[TrafoChoice] {
+//      override def changed(observable: ObservableValue[_ <: TrafoChoice], oldValue: TrafoChoice, newValue: TrafoChoice): Unit =
+//        interactor.setInteraction(newValue.trafo.createInteractive)
+//    })
+//    selectionModel.value.select(0)
+//  }
 
 
   private def errorPopup(msg: String): Unit =
@@ -462,4 +476,5 @@ class TestApp extends JFXApp {
         Interactor.defaultEditorFactory.create(q)
     }
   }
+
 }

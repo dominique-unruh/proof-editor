@@ -51,13 +51,11 @@ class MutableTheory {
     for (id <- ids.toSeq.sorted) {
       for (t <- thy.transformations.get(id)) {
         val newFormulas = t.formulas.filter(f => !seenFormulas.contains(f.id))
-        Log.debug("trafo",t)
         Utils.invokeListeners[Listener](listeners, _.transformationAdded(t, newFormulas))
         seenFormulas ++= t.formulas.map(_.id)
       }
       for (f <- thy.formulas.get(id) if !seenFormulas.contains(id)) {
         seenFormulas += id
-        Log.debug("formula",f)
         Utils.invokeListeners[Listener](listeners, _.formulaAdded(f))
       }
     }
