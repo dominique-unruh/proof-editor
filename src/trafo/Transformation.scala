@@ -41,12 +41,13 @@ object TrafoInstance {
   private val trafoXMLParsers = mutable.HashMap[String,Elem => TrafoInstance] (
     "modusPonens" -> ModusPonensTrafo.fromXML,
     "trivial" -> TrivialTrafo.fromXML,
-    "editFormula" -> EditFormulaTrafo.fromXML
+    "editFormula" -> EditFormulaTrafo.fromXML,
+    "simplify" -> SimplifyTrafo.fromXML
   )
   def fromXML(xml: Elem) = trafoXMLParsers.synchronized {
     trafoXMLParsers.get(xml.label) match {
       case Some(parser) => parser(xml)
-      case _ => sys.error(s"Don't know how to parser transformations <${xml.label}>")
+      case _ => sys.error(s"Don't know how to parse transformations <${xml.label}>")
     }
   }
 

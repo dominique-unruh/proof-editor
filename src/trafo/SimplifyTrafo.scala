@@ -2,6 +2,7 @@ package trafo
 
 import Interaction._
 import SimplifyTrafo._
+import misc.Utils
 import theory.Theory.NO_ID
 import theory.{Formula, Theory}
 import relation.{Equality, Implication, Relation}
@@ -28,6 +29,13 @@ class SimplifyTrafo extends Transformation {
 
 
 object SimplifyTrafo {
+  def fromXML(xml:Elem) = {
+    val id = xml.attribute("id").get.text.toInt
+    Utils.elementsIn(xml) match {
+      case Seq(a,b) => Instance(Formula.fromXML(a), Formula.fromXML(b), id)
+    }
+  }
+
 
   case class Instance(a: Formula, b: Formula, id : Int = NO_ID) extends TrafoInstance {
     override val shortDescription: String = "simplification"
