@@ -51,6 +51,7 @@ sealed trait CMathML {
   @Pure final def -(b:CMathML) = arith1.minus(this,b)
   @Pure final def *(b:CMathML) = arith1.times(this,b)
   @Pure final def /(b:CMathML) = arith1.divide(this,b)
+  @Pure final def ===(b:CMathML) = relation1.equal(this,b)
 
   /** Negates this expression. If it is a CN, then the number itself is negated.
     * Otherwise arith1.unary_minus is applied.

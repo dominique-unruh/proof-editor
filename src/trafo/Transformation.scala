@@ -42,7 +42,8 @@ object TrafoInstance {
     "modusPonens" -> ModusPonensTrafo.fromXML,
     "trivial" -> TrivialTrafo.fromXML,
     "editFormula" -> EditFormulaTrafo.fromXML,
-    "simplify" -> SimplifyTrafo.fromXML
+    "simplify" -> SimplifyTrafo.fromXML,
+    "caseDistinction" -> CaseDistinction.fromXML
   )
   def fromXML(xml: Elem) = trafoXMLParsers.synchronized {
     trafoXMLParsers.get(xml.label) match {

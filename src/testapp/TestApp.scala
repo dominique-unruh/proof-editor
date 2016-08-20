@@ -7,7 +7,6 @@ import javafx.geometry.Insets
 import javafx.scene.control._
 import javafx.scene.layout.{HBox, StackPane, VBox}
 import javafx.stage.WindowEvent
-import javax.swing.text.html.ObjectView
 
 import cmathml._
 import misc.Utils.ImplicitConversions._
@@ -20,13 +19,14 @@ import ui.mathview.MathEdit
 import ui.{ConnectingLine, FilteredListView, Interactor, TheoryView}
 import z3.Z3
 
+import scala.language.implicitConversions
 import scala.reflect.runtime.universe._
 import scala.runtime.BoxedUnit
 import scala.util.control.Breaks
 import scala.xml.XML
 import scalafx.Includes._
-import scalafx.application.{JFXApp, Platform}
 import scalafx.application.JFXApp.PrimaryStage
+import scalafx.application.{JFXApp, Platform}
 import scalafx.collections.ObservableBuffer
 import scalafx.event
 import scalafx.scene.input.KeyCombination
@@ -49,6 +49,23 @@ object TestApp {
     relation1.equal(CI("x") + CI("y"), CI("y") + CN(-1)),
     CI("x").negate()
   )
+
+  val examples2 : List[(String,CMathML)] = {
+    val a = CI("a")
+    val b = CI("b")
+    val c = CI("c")
+    val x = CI("x")
+    val E = CI("E")
+    val m = CI("m")
+    val v = CI("v")
+    implicit def toCN(i:Int) : CN = CN(i)
+    def square(x:CMathML) = arith1.power(x,2)
+    def sqrt(x:CMathML) = arith1.root(x,2)
+    List(
+      "_Quadratic equation" -> (a*square(x) + b*x + c === 0),
+      "_Energy/mass equivalence" -> (E === m*square(c) / sqrt(1 - square(v)/square(c)))
+    )
+  }
 }
 
 
@@ -149,6 +166,12 @@ class TestApp extends JFXApp {
           onAction = handle(deleteFormula())
           accelerator = KeyCombination("Shortcut+Shift+D")
         })
+      },
+      new control.Menu("E_xamples") {
+        items = for ((name,math) <- TestApp.examples2)
+          yield new control.MenuItem(name) {
+            onAction = handle(theoryView.theory.addFormula(Formula(math)))
+          }
       }
     )
   }
@@ -169,7 +192,8 @@ class TestApp extends JFXApp {
     TrafoChoice("Modus ponens", new ModusPonensTrafo),
     TrafoChoice("Edit formula", new EditFormulaTrafo),
     TrafoChoice("Simplify formula", new SimplifyTrafo),
-    TrafoChoice("Trivial", new TrivialTrafo)
+    TrafoChoice("Trivial", new TrivialTrafo),
+    TrafoChoice("Case distinction", new CaseDistinction)
   )
 
 

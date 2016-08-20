@@ -131,8 +131,7 @@ final class Z3(config:Map[String,String]) {
     case Apply(_, arith1.plus,args @ _*) => context.mkAdd(args.map(fromCMathML_(_).asInstanceOf[ArithExpr]) : _*)
     case Apply(_, arith1.minus,x,y) => context.mkSub(fromCMathML_(x).asInstanceOf[ArithExpr],
                                                       fromCMathML_(y).asInstanceOf[ArithExpr])
-    case Apply(_, arith1.times,x,y) => context.mkMul(fromCMathML_(x).asInstanceOf[ArithExpr],
-                                                      fromCMathML_(y).asInstanceOf[ArithExpr])
+    case Apply(_, arith1.times,args @ _*) => context.mkMul(args.map(fromCMathML_(_).asInstanceOf[ArithExpr]) : _*)
     case Apply(_, arith1.divide,x,y) => context.mkDiv(fromCMathML_(x).asInstanceOf[ArithExpr],
                                                        fromCMathML_(y).asInstanceOf[ArithExpr])
     case Apply(_, relation1.equal,x,y) => context.mkEq(fromCMathML_(x),fromCMathML_(y))
@@ -148,10 +147,8 @@ final class Z3(config:Map[String,String]) {
     case Apply(_, arith1.uminus,x) => context.mkUnaryMinus(fromCMathML_(x).asInstanceOf[ArithExpr])
     case Apply(_, arith1.power,x,y) => context.mkPower(fromCMathML_(x).asInstanceOf[ArithExpr],
                                                         fromCMathML_(y).asInstanceOf[ArithExpr])
-    case Apply(_, logic1.or,x,y) => context.mkOr(fromCMathML_(x).asInstanceOf[BoolExpr],
-                                                  fromCMathML_(y).asInstanceOf[BoolExpr])
-    case Apply(_, logic1.and,x,y) => context.mkAnd(fromCMathML_(x).asInstanceOf[BoolExpr],
-                                                    fromCMathML_(y).asInstanceOf[BoolExpr])
+    case Apply(_, logic1.or,args@_*) => context.mkOr(args.map(fromCMathML_(_).asInstanceOf[BoolExpr]) : _*)
+    case Apply(_, logic1.and,args@_*) => context.mkAnd(args.map(fromCMathML_(_).asInstanceOf[BoolExpr]) : _*)
     case Apply(_, logic1.equivalent,x,y) => context.mkIff(fromCMathML_(x).asInstanceOf[BoolExpr],
                                                            fromCMathML_(y).asInstanceOf[BoolExpr])
     case Apply(_, logic1.implies,x,y) => context.mkImplies(fromCMathML_(x).asInstanceOf[BoolExpr],

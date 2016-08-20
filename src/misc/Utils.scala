@@ -24,6 +24,8 @@ import scala.xml.{Atom, Comment, Elem, Text}
 
 
 object Utils {
+  def xmlAddNewlines(nodes : Seq[scala.xml.Node]) = intersperse(nodes, Text("\n"))
+
   def invokeListeners[T](listeners: Iterable[T], invoke: T => Unit) =
     for (l <- listeners)
       try {

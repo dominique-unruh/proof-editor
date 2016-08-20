@@ -28,6 +28,15 @@ case class Implication(premiseNum : Int, conclusionNum : Int = 1) extends Relati
   }
 }
 
+case class OneOf(formulaNum : Int) extends Relation {
+  assert(formulaNum>=1)
+  lazy val relatingFormula = {
+    val vars = (1 to formulaNum).map(i => CI(s"C$i"))
+    val rule = if (formulaNum==1) vars.head else logic1.or(vars:_*)
+    fns1.lambda(vars,rule)
+  }
+}
+
 
 case object Equality extends Relation {
   val formulaNum = 2

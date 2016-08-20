@@ -173,6 +173,7 @@ class MathEdit extends MathView {
   // TODO static
   private lazy val extendBinopCombinations = makeExtendBinopCombinations(
     relation1.equal -> ">" -> logic1.implies,
+    relation1.equal -> "/" -> relation1.neq,
     relation1.gt -> "=" -> relation1.geq,
     relation1.lt -> "=" -> relation1.leq,
     relation1.leq -> ">" -> logic1.equivalent
