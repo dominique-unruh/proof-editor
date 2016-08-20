@@ -117,7 +117,7 @@ final case class Formula private[theory] (id : Int = NO_ID,
   def detach: Formula = copy(id=NO_ID)
   def toXML = {
     val propXML = for {
-      (prop, value) <- properties
+      (prop, value) <- properties // .asInstanceOf[Iterable[(Property[T],T) forSome {type T}]]
       name : String = prop.name
       text : String = prop.asInstanceOf[Property[Any]].toText(value)
     } yield new UnprefixedAttribute(name, text, scala.xml.Null)
@@ -137,12 +137,11 @@ final case class Formula private[theory] (id : Int = NO_ID,
 }
 
 object Formula {
-  sealed abstract class Property[T](val default : T) {
+  sealed abstract class Property[T](val default : T)(implicit val valueType : TypeTag[T]) {
     val name = Utils.lowerFirst(getClass.getSimpleName.stripSuffix("$"))
     @inline protected def toText$(value : Boolean) : String = value.toString
     def toText(value : T) : String
     def fromText(text: String) : T
-    type ValueType = T
   }
   /*private */val properties = mutable.HashMap[String,Property[_]](findProperties : _*)
 

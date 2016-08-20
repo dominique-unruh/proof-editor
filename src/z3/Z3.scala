@@ -65,8 +65,8 @@ final class Z3(config:Map[String,String]) {
     case e: Expr if e.isConst => CI(e.getFuncDecl.getName.toString)
     case e: ArithExpr if e.isApp =>
       (e.getFuncDecl.getDeclKind,e.getNumArgs) match {
-        case (Z3_OP_ADD,2) => Apply(arith1.plus, e.getArgs map toCMathML: _*)
-        case (Z3_OP_MUL,2) => Apply(arith1.times, e.getArgs map toCMathML: _*)
+        case (Z3_OP_ADD,_) => Apply(arith1.plus, e.getArgs map toCMathML: _*)
+        case (Z3_OP_MUL,_) => Apply(arith1.times, e.getArgs map toCMathML: _*)
         case (Z3_OP_SUB,2) => Apply(arith1.minus, e.getArgs map toCMathML: _*)
         case (Z3_OP_DIV,2) => Apply(arith1.divide, e.getArgs map toCMathML: _*)
         case (Z3_OP_UMINUS,1)=> Apply(arith1.uminus, e.getArgs map toCMathML: _*)

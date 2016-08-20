@@ -278,8 +278,8 @@ class TestApp extends JFXApp {
           """Loading the theory from the previous session failed.
           |Start with a fresh theory?
           |(Looses the data from the previous session.)""".stripMargin)
-      if (!newThy) sys.exit(1)
-        for (m <- TestApp.examples) theoryView.theory.addFormula(Formula(m))
+        if (!newThy) sys.exit(1)
+//        for (m <- TestApp.examples) theoryView.theory.addFormula(Formula(m))
     }
   }
 

@@ -5,7 +5,7 @@ import javafx.scene.input.{MouseButton, MouseEvent}
 import javafx.scene.layout.HBox
 
 import cmathml.CMathML.internal
-import cmathml.Logic
+import cmathml.{CMathML, Logic}
 import misc.Log
 import misc.Utils.ImplicitConversions._
 import theory.{Formula, MutableTheory}
@@ -41,7 +41,7 @@ class TheoryView extends VBox {
     override def formulaUpdated(newFormula: Formula, oldFormula: Formula): Unit = {
       assert(newFormula.id==oldFormula.id)
       val edit = nodes(newFormula.id)
-      edit.mathEdit.setMath(newFormula.math)
+      edit.setFormula(newFormula)
     }
     override def theoryCleared(): Unit = {
       children.clear()
@@ -64,7 +64,7 @@ class TheoryView extends VBox {
     assert(!nodes.contains(id),"formula with id "+id+" added twice")
 //    val mathedit = new MathEdit()
     val formulaBox = new FormulaBox(id)
-    formulaBox.mathEdit.setMath(form.math)
+    formulaBox.setFormula(form)
     formulaBox.mathEdit.focused.onChange { (_, oldVal,newVal) =>
       if (newVal) selectedFormulaId = Some(id) }
     formulaBox.mathEdit.addEventHandler(MouseEvent.MOUSE_CLICKED, { e:MouseEvent =>
@@ -81,8 +81,22 @@ class TheoryView extends VBox {
 object TheoryView {
   private[TheoryView] class FormulaBox(val id:Int) extends HBox {
     val mathEdit = new MathEdit()
+    private val propsLabel = new Label("")
     alignmentProperty.setValue(Pos.CenterLeft)
-    getChildren.addAll(new Label(s"($id) "),mathEdit)
+    getChildren.addAll(new Label(s"($id) "), mathEdit, propsLabel)
+
+    def setFormula(formula: Formula): Unit = {
+      assert(id==formula.id)
+      mathEdit.setMath(formula.math)
+      val props = for {
+        (prop, value) <- formula.properties
+        if value != false
+      } yield if (value==true) prop.name else s"${prop.name}=$value"
+      if (props.isEmpty)
+        propsLabel.setText("")
+      else
+        propsLabel.setText(props.mkString(" (", ", ", ")"))
+    }
   }
   private[TheoryView] class TrafoBox(val trafo: TrafoInstance) extends HBox {
     val mathEdit = new MathView()
