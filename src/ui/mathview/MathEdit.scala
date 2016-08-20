@@ -28,6 +28,7 @@ object MathEdit {
 class MathEdit extends MathViewFX {
   import MathEdit._
 
+  styleClass += "mathedit"
   focusTraversable = true
 
   val editable = ObjectProperty(None : Option[MutableCMathML])
@@ -301,7 +302,6 @@ class MathEdit extends MathViewFX {
             if (selectingFrom.isEmpty)
               selectingFrom = Some(cursorPos.value)
             val selected = encompassingNode(newPos.get.node,selectingFrom.get.node)
-//            println(s"Selection: From ${selectingFrom.get.node} to ${newPos.get.node}: $selected")
             selection.value = Some(selected)
           } else
             clearSelection()

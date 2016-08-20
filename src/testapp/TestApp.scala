@@ -28,6 +28,7 @@ import scalafx.Includes._
 import scalafx.application.{JFXApp, Platform}
 import scalafx.application.JFXApp.PrimaryStage
 import scalafx.collections.ObservableBuffer
+import scalafx.event
 import scalafx.scene.input.KeyCombination
 import scalafx.scene.layout.{Pane, Priority}
 import scalafx.scene.{control, layout}
@@ -205,6 +206,7 @@ class TestApp extends JFXApp {
     val accel = KeyCombination("Shortcut+T")
     scene.onChange { (_,_,scene) => if (scene!=null) scene.accelerators.put(accel, () => focusFilter()) }
     promptText.value = s"Filter... (${accel.displayText})"
+    this.handleEvent(event.ActionEvent.Any) { () => interactor.focusFirst() }
   }
 
   private def errorPopup(msg: String): Unit =
@@ -346,6 +348,13 @@ class TestApp extends JFXApp {
         true
       } else
         false
+
+    val acceptsUserInput = true
+    def focus() =
+      if (formula.isEmpty)
+        pickButton.requestFocus()
+      else
+        mathedit.requestFocus()
   }
 
   trait EditorExtras {
@@ -419,6 +428,11 @@ class TestApp extends JFXApp {
     }
 
     getChildren.addAll(mathedit)
+
+    override def focus(): Unit = mathedit.requestFocus()
+
+    /** Indicates whether this Editor accepts user input (as opposed to, e.g., just being a message) */
+    override def acceptsUserInput: Boolean = true
   }
 
   class ShowFormula(q:ShowFormulaQ) extends HBox with Editor[BoxedUnit] {
@@ -431,6 +445,10 @@ class TestApp extends JFXApp {
     mathedit.setMath(q.formula.math)
     mathedit.selection.value = q.highlight.map(mathedit.mathDoc.subterm)
     getChildren.add(mathedit)
+
+    override def focus(): Unit = mathedit.requestFocus()
+
+    override def acceptsUserInput: Boolean = false
   }
 
 

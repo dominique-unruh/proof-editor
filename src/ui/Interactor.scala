@@ -25,6 +25,8 @@ import scalafx.Includes._
 
 /** @tparam R result type */
 class Interactor[R]() extends layout.VBox {
+  def focusFirst() = editors.find(_.acceptsUserInput).foreach { _.focus() }
+
   def this(interaction : Interaction[R]) = { this(); setInteraction(interaction) }
   private val interactions = new mutable.ArrayBuffer[Interaction[R]]
   private case class QAPair[A](question:Question[A], answer:A)
@@ -176,15 +178,17 @@ class Interactor[R]() extends layout.VBox {
 
 object Interactor {
   trait Editor[T<:AnyRef] extends Node {
+    /** Focusses this editor (or whichever part of it is useful to allow the user to start entering an answer) */
+    def focus(): Unit
+
     val valueProperty : Property[T]
     val editedType : TypeTag[T]
     val questionType : TypeTag[_ <: Question[T]]
-//    def setQuestion(question : Question[T]) : Unit = {}
     def setValue(v:T) : Unit = {
-//      assert(editedType.isInstance(v),
-//        "v: "+v+", editedType: "+editedType)
       valueProperty.setValue(v)
     }
+    /** Indicates whether this Editor accepts user input (as opposed to, e.g., just being a message) */
+    def acceptsUserInput: Boolean
   }
 
   trait EditorFactory {
@@ -199,12 +203,16 @@ object Interactor {
     override val valueProperty: Property[String] = textProperty()
     override val editedType = typeTag[String]
     override val questionType = typeTag[StringQ]
+    override def focus(): Unit = requestFocus()
+    override def acceptsUserInput: Boolean = true
   }
 
   class MessageViewer extends Label with Editor[BoxedUnit] {
     override val valueProperty: Property[BoxedUnit] = new SimpleObjectProperty[BoxedUnit](BoxedUnit.UNIT)
     override val editedType = typeTag[BoxedUnit]
     override val questionType = typeTag[MessageQ]
+    override def focus(): Unit = {}
+    override val acceptsUserInput: Boolean = false
   }
 
   // TODO there should be existing classes for this
@@ -223,6 +231,9 @@ object Interactor {
     valueProperty.addListener({ (newVal:Integer) =>
       Log.debug("change: ",newVal)
       textProperty.setValue(newVal.toString)})
+
+    override def focus(): Unit = requestFocus()
+    override val acceptsUserInput: Boolean = true
   }
 
   val defaultEditorFactory = new EditorFactory {

@@ -12,7 +12,7 @@ import misc.Utils.ImplicitConversions._
 import theory.{Formula, MutableTheory}
 import trafo.TrafoInstance
 import ui.TheoryView.{FormulaBox, TrafoBox}
-import ui.mathview.MathEdit
+import ui.mathview.{MathEdit, MathViewFX}
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
@@ -88,11 +88,12 @@ object TheoryView {
     getChildren.addAll(new Label(s"($id) "),mathEdit)
   }
   private[TheoryView] class TrafoBox(val trafo: TrafoInstance) extends HBox {
-    val mathEdit = new MathEdit()
+    val mathEdit = new MathViewFX()
+//    mathEdit.focusTraversable = false
     alignmentProperty.setValue(Pos.CenterLeft)
     val ids = trafo.formulas.map(f => internal.formulaRef(f.id))
     val rel = Logic.instantiateLambda(trafo.relation.relatingFormula, ids :_*)
     mathEdit.setMath(rel)
-    getChildren.addAll(new Label(s"By ${trafo.shortDescription} we have (${trafo.id}): "),mathEdit)
+    getChildren.addAll(new Label(s"By ${trafo.shortDescription} we have: "),mathEdit)
   }
 }

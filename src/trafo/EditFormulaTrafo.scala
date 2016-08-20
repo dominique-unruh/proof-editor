@@ -46,7 +46,7 @@ object EditFormulaTrafo {
       case _ => sys.error("update with wrong number of formulas")
     }
     override val relation: Relation = Equality
-    override val shortDescription: String = "trivial comparison"
+    override val shortDescription: String = "automated comparison"
   }
 
   def fromXML(xml:Elem) = {

@@ -1,7 +1,9 @@
-.mathview {
+/*
+.mathedit {
   -fx-border-color: black;
   -fx-border-width: 1;
 }
+*/
 
 .mathview:focused {
   -fx-border-color: blue;

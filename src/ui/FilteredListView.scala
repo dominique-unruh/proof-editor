@@ -1,6 +1,7 @@
 package ui
 
 import javafx.collections.transformation.FilteredList
+import javafx.event.ActionEvent
 import javafx.scene.control.{ListView, TextField}
 
 import misc.Log
@@ -20,8 +21,10 @@ class FilteredListView[T](val items: ObservableBuffer[T]) extends VBox {
   listView.vgrow = Priority.Always
   def selectionModel = listView.selectionModel
 
-  def promptText = filterField.promptText
+  filterField.onAction = { e:ActionEvent => fireEvent(e) }
 
+  /** The text to be shown in the filter input field when no input is provided */
+  def promptText = filterField.promptText
 
   filterField.focused.onChange { (_,_,focused) =>
   if (focused) filterField.selectAll() }
