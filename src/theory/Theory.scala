@@ -1,11 +1,16 @@
 package theory
 
 import cmathml.{CMathML, Path}
+import misc.{Log, Utils}
+import theory.Formula.Property
 import theory.Theory.NO_ID
 import trafo.TrafoInstance
 
+import scala.collection.immutable.HashMap
+import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
-import scala.xml.{Comment, Elem}
+import scala.reflect.runtime.universe._
+import scala.xml.{Attribute, Comment, Elem, UnprefixedAttribute}
 
 // TODO Should have a private constructor (and private copy/apply methods)
 final case class Theory(counter : Int,
@@ -105,19 +110,71 @@ object Theory {
   }
 }
 
-final case class Formula private[theory] (id : Int = NO_ID, math : CMathML) {
+final case class Formula private[theory] (id : Int = NO_ID,
+                                          properties : Map[Property[_],Any] = Map.empty,
+                                          math : CMathML) {
   import Formula._
   def detach: Formula = copy(id=NO_ID)
-  def toXML = <formula id={id.toString}>{Comment(" "+math.toPopcorn+" ")}{math.toXMLMath}</formula>
+  def toXML = {
+    val propXML = for {
+      (prop, value) <- properties
+      name : String = prop.name
+      text : String = prop.asInstanceOf[Property[Any]].toText(value)
+    } yield new UnprefixedAttribute(name, text, scala.xml.Null)
+    val tag = <formula id={id.toString}>{Comment(" "+math.toPopcorn+" ")}{math.toXMLMath}</formula>
+    propXML.foldLeft(tag)(_%_)
+  }
+  def apply[T](prop:Property[T]) : T = properties.getOrElse(prop,prop.default).asInstanceOf[T]
+  def setProperty[T](prop:Property[T], value:T) : Formula = {
+    if (apply(prop)==value) this
+    else if (prop.default==value) {
+      val props = properties - prop
+      if (props eq properties) this
+      else this.copy(properties=props)
+    } else
+      this.copy(properties=properties.updated(prop,value))
+  }
 }
 
 object Formula {
+  sealed abstract class Property[T](val default : T) {
+    val name = Utils.lowerFirst(getClass.getSimpleName.stripSuffix("$"))
+    @inline protected def toText$(value : Boolean) : String = value.toString
+    def toText(value : T) : String
+    def fromText(text: String) : T
+    type ValueType = T
+  }
+  /*private */val properties = mutable.HashMap[String,Property[_]](findProperties : _*)
+
+  private def findProperties : Seq[(String,Property[_])] = {
+    val universeMirror = runtimeMirror(getClass.getClassLoader)
+    for { prop <- typeOf[Property[_]].typeSymbol.asClass.knownDirectSubclasses.toSeq
+          module = prop.asClass.module.asModule
+          instance = universeMirror.reflectModule(module).instance.asInstanceOf[Property[_]] }
+      yield instance.name -> instance
+  }
+//  val tt = weakTypeTag[Property[_]]
+//  val tt2 = typeOf[Property[_]].typeSymbol.asClass.knownDirectSubclasses
+
+  case object Axiom extends Property[Boolean](default=false) {
+    override def toText(value: Boolean): String = value.toString
+    override def fromText(str: String) = str.toBoolean
+  }
   def apply(math : CMathML) = new Formula(id=NO_ID, math=math)
+
   def fromXML(xml:Elem) : Formula = {
     assert(xml.label=="formula")
     val id = xml.attribute("id").get.text.toInt
+
+    val props = for {
+      attr <- xml.attributes.toSeq if attr.key!="id"
+      prop = properties(attr.key)
+      valueStr = attr.value.map(_.text).mkString
+      value = prop.fromText(valueStr)
+    } yield prop -> value
+
     val math = CMathML.fromXML((xml \ "math").head.asInstanceOf[Elem])
-    new Formula(id,math)
+    new Formula(id=id,math=math, properties=Map(props:_*))
   }
 }
 

@@ -6,7 +6,7 @@ import cmathml.CMathML._
 import com.sun.org.apache.xerces.internal.util.XMLChar
 import misc.{Log, Pure, Utils}
 import org.symcomp.openmath.{OMSymbol, _}
-import _root_.z3.Z3
+import z3.Z3
 import com.sun.glass.events.KeyEvent
 import misc.Utils.Typed
 
@@ -163,7 +163,7 @@ object CMathML {
     Some(fromSymcomp(om))
   }
 
-  private val z3 = new Z3()
+  private lazy val z3 = new Z3()
 
   def fromPopcorn(str: String) = {
     val om = OpenMathBase.parsePopcorn(str.trim)

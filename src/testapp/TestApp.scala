@@ -12,6 +12,7 @@ import cmathml._
 import misc.Utils.ImplicitConversions._
 import misc.{GetterSetterProperty, Log, Utils}
 import testapp.TestApp.TrafoChoice
+import theory.Formula.Axiom
 import theory.{Formula, Theory}
 import trafo._
 import ui.Interactor.{Editor, EditorFactory}
@@ -106,7 +107,7 @@ class TestApp extends JFXApp {
       errorPopup("The formula you entered is not valid math")
       return
     }
-    theoryView.theory.addFormula(Formula(math))
+    theoryView.theory.addFormula(Formula(math).setProperty(Formula.Axiom,true))
   }
 
   private val z3 = new Z3
@@ -170,7 +171,7 @@ class TestApp extends JFXApp {
       new control.Menu("E_xamples") {
         items = for ((name,math) <- TestApp.examples2)
           yield new control.MenuItem(name) {
-            onAction = handle(theoryView.theory.addFormula(Formula(math)))
+            onAction = handle(theoryView.theory.addFormula(Formula(math).setProperty(Axiom,true)))
           }
       }
     )
