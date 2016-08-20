@@ -60,6 +60,7 @@ class Interactor[R]() extends layout.VBox {
 
   private class Cell(idx:Int) extends VBox {
     private val label = new Label("<initialize me>")
+    label.wrapText = true
     var edit: Interactor.Editor[_] = _
     var question: Question[_] = _
 
@@ -168,7 +169,7 @@ class Interactor[R]() extends layout.VBox {
         cell.setHtml(<b>Failed</b>)
       case InteractionRunning(id,question,answer) =>
         cell.setQuestion(question)
-        cell.setHtml(<span>{question.message.text} <i>#{id}</i></span>)
+        cell.setHtml(question.message)
         val answer = currentAnswer(id,question) // answers.getOrElse(id,question.default)
         // TODO: add typetag check
         cell.edit.asInstanceOf[Editor[answer.type]].setValue(answer)
