@@ -10,8 +10,6 @@ import misc.Utils.ImplicitConversions._
 import scala.annotation.tailrec
 import scala.collection.mutable
 import scala.util.control.Breaks._
-import scalafx.application.Platform
-import scalafx.application.Platform.runLater
 import scalafx.beans.property.ObjectProperty
 import scalafx.collections.ObservableBuffer
 import scalafx.collections.ObservableBuffer.{Add, Remove, Reorder, Update}
@@ -27,7 +25,7 @@ trait MathHighlight extends Node {
 
 /** Invariants:
   *
-  * For every [[cmathml.MutableCMathML]] (short 'math') (not necessarily descendant of [[MathViewFX!.mathDoc mathDoc]].root) there is:
+  * For every [[cmathml.MutableCMathML]] (short 'math') (not necessarily descendant of [[MathView!.mathDoc mathDoc]].root) there is:
   * - potentially an rendering [[MathNodeImpl]]
   * - potentially an owning [[MathNodeImpl]]
   * - potentially an embedding [[MathNodeImpl]]
@@ -48,13 +46,13 @@ trait MathHighlight extends Node {
   * If a valid [[MathNodeImpl]]'s n rendering (excluding the rendering of its descendant [[MathNodeImpl]]s) depends on a math m, then
   * n renders or owns m.
   *
-  * [[MathViewFX!.mathDoc mathDoc]].root is valid.
+  * [[MathView!.mathDoc mathDoc]].root is valid.
   *
   * (there's more...)
   */
-class MathViewFX extends HBox {
+class MathView extends HBox {
   mathView =>
-  import MathViewFX._
+  import MathView._
 
   padding = Insets(2)
 
@@ -402,7 +400,7 @@ class MathViewFX extends HBox {
   }
 }
 
-object MathViewFX {
+object MathView {
   sealed trait CursorSide
   object CursorLeft extends CursorSide
   object CursorRight extends CursorSide

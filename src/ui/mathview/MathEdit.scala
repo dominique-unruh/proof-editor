@@ -2,13 +2,12 @@ package ui.mathview
 
 import javafx.geometry.Bounds
 import javafx.scene.control.Alert
-import javafx.scene.input
 
 import cmathml.CMathML._
 import cmathml.MutableCMathML.fromCMathML
 import cmathml._
 import misc.Utils.ImplicitConversions._
-import ui.mathview.MathViewFX.{CursorLeft, CursorPos, CursorRight, CursorSide}
+import ui.mathview.MathView.{CursorLeft, CursorPos, CursorRight, CursorSide}
 
 import scalafx.Includes._
 import scalafx.beans.property.ObjectProperty
@@ -25,7 +24,7 @@ object MathEdit {
   private val dataformatCMathMLXML = new DataFormat("application/mathml-content+xml")
 }
 
-class MathEdit extends MathViewFX {
+class MathEdit extends MathView {
   import MathEdit._
 
   styleClass += "mathedit"

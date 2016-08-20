@@ -9,7 +9,7 @@ import cmathml.CMathML._
 import cmathml._
 import misc.Utils.ImplicitConversions._
 import ui.TestFxApp
-import ui.mathview.MathViewFX.{CursorPos, CursorRight}
+import ui.mathview.MathView.{CursorPos, CursorRight}
 
 import scalafx.scene.control.Label
 import scalafx.scene.layout.VBox

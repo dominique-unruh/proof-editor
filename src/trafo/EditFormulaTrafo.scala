@@ -13,8 +13,6 @@ import z3.Z3
 import scala.collection.mutable.ListBuffer
 import scala.xml.Elem
 
-// TODO: remove eventually
-
 class EditFormulaTrafo() extends Transformation {
   override def createInteractive: Interaction[TrafoInstance] =
     for { a <- ask("a", new FormulaQ(<span>A formula</span>))

@@ -4,7 +4,7 @@ import java.math.BigInteger
 
 import cmathml.MutableCMathML.{Attributes, AttributesRO, MNoAttr, fromCMathML}
 import misc.Log
-import ui.mathview.MathViewFX.CursorSide
+import ui.mathview.MathView.CursorSide
 
 import scala.annotation.tailrec
 import scala.collection.mutable

@@ -1,26 +1,23 @@
 package ui
 
-import javafx.event
 import javafx.scene.control.Label
 import javafx.scene.input.{MouseButton, MouseEvent}
 import javafx.scene.layout.HBox
 
 import cmathml.CMathML.internal
-import cmathml.{CI, CN, Logic}
+import cmathml.Logic
 import misc.Log
 import misc.Utils.ImplicitConversions._
 import theory.{Formula, MutableTheory}
 import trafo.TrafoInstance
 import ui.TheoryView.{FormulaBox, TrafoBox}
-import ui.mathview.{MathEdit, MathViewFX}
+import ui.mathview.{MathEdit, MathView}
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
-import scalafx.geometry.{Insets, Pos}
-import scalafx.scene.input
-import scalafx.scene.layout.VBox
 import scalafx.Includes._
-import scalafx.event.EventType
+import scalafx.geometry.{Insets, Pos}
+import scalafx.scene.layout.VBox
 
 class TheoryView extends VBox {
   spacing = 10
@@ -88,7 +85,7 @@ object TheoryView {
     getChildren.addAll(new Label(s"($id) "),mathEdit)
   }
   private[TheoryView] class TrafoBox(val trafo: TrafoInstance) extends HBox {
-    val mathEdit = new MathViewFX()
+    val mathEdit = new MathView()
 //    mathEdit.focusTraversable = false
     alignmentProperty.setValue(Pos.CenterLeft)
     val ids = trafo.formulas.map(f => internal.formulaRef(f.id))
