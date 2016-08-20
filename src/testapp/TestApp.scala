@@ -131,14 +131,19 @@ class TestApp extends JFXApp {
     }
   }
 
+  def newTheory() = theoryView.theory.setTheory(Theory())
 
   lazy val menubar = new control.MenuBar {
     menus = List(
       new control.Menu("_File") {
-        items = List(new control.MenuItem("_Quit") {
-          onAction = handle(stage.hide())
-          accelerator = KeyCombination("Shortcut+Q") //new KeyCodeCombination(KeyCode.Q,KeyCombination.ShortcutDown)
-        })},
+        items = List(
+          new control.MenuItem("_New") {
+            onAction = handle(newTheory())
+          },
+          new control.MenuItem("_Quit") {
+            onAction = handle(stage.hide())
+            accelerator = KeyCombination("Shortcut+Q") //new KeyCodeCombination(KeyCode.Q,KeyCombination.ShortcutDown)
+          })},
       new control.Menu("_Edit") {
         items = List(new control.MenuItem("_Delete") {
           onAction = handle(deleteFormula())
@@ -440,6 +445,7 @@ class TestApp extends JFXApp {
     override val editedType: TypeTag[BoxedUnit] = typeTag[BoxedUnit]
     override val questionType = typeTag[ShowFormulaQ]
     val mathedit = new MathEdit()
+    mathedit.focusTraversable = false
     var formula : Option[Formula] = None
     override val valueProperty = new SimpleObjectProperty[BoxedUnit](BoxedUnit.UNIT)
     mathedit.setMath(q.formula.math)

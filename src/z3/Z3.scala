@@ -128,8 +128,7 @@ final class Z3(config:Map[String,String]) {
       val sort = if (n.charAt(0).isUpper) boolSort_ else realSort_
       context.mkConst(n, sort)
     case CS(_, s) => context.mkConst("string@"+s,stringSort_)
-    case Apply(_, arith1.plus,x,y) => context.mkAdd(fromCMathML_(x).asInstanceOf[ArithExpr],
-                                                     fromCMathML_(y).asInstanceOf[ArithExpr])
+    case Apply(_, arith1.plus,args @ _*) => context.mkAdd(args.map(fromCMathML_(_).asInstanceOf[ArithExpr]) : _*)
     case Apply(_, arith1.minus,x,y) => context.mkSub(fromCMathML_(x).asInstanceOf[ArithExpr],
                                                       fromCMathML_(y).asInstanceOf[ArithExpr])
     case Apply(_, arith1.times,x,y) => context.mkMul(fromCMathML_(x).asInstanceOf[ArithExpr],

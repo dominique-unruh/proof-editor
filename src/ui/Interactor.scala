@@ -59,13 +59,13 @@ class Interactor[R]() extends layout.VBox {
 
 
   private class Cell(idx:Int) extends VBox {
-    private val label = new Label("<initialize me>")
-    label.wrapText = true
+    private val label = new HTMLLabel(<i>&lt;initialize me&gt;</i>)
+//    label.wrapText = true
     var edit: Interactor.Editor[_] = _
     var question: Question[_] = _
 
     def setHtml(html: Elem) : Unit = {
-      label.setText(html.text)
+      label.setHTML(html)
     }
 
     def noQuestion() : Unit = {
