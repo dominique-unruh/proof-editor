@@ -72,6 +72,67 @@ rationalExpr returns [CMathML m]:
 negExpr  returns [CMathML m]:
     '-' x=compExpr  { $m = apply(arith1.uminus(),$x.m); }
   | 'not' x=compExpr { $m = apply(logic1.not(),$x.m); }
+=======
+    bs+=assignExpr (';' bs+=assignExpr)+ { $m = apply(prog1.block,bs); }
+  | x=assignExpr { $m = $x.m; };
+
+assignExpr returns [CMathML m]:
+	x=implExpr ':=' y=implExpr { $m = apply(prog1.assign,$x.m,$y.m); }
+  | x=implExpr { $m = $x.m; };
+
+implExpr returns [CMathML m]:
+    x=orExpr '==>' y=orExpr { $m = apply(logic1.implies,$x.m,$y.m); }
+  | x=orExpr '<=>' y=orExpr { $m = apply(logic1.equivalent,$x.m,$y.m); }
+  | x=orExpr { $m = $x.m; };
+
+orExpr returns [CMathML m]:
+    x=andExpr 'or' y=andExpr { $m = apply(logic1.or,$x.m,$y.m); }
+  | x=andExpr { $m = $x.m; };
+
+andExpr returns [CMathML m]:
+    x=relExpr 'and' y=relExpr { $m = apply(logic1.and,$x.m,$y.m); }
+  | x=relExpr { $m = $x.m; };
+
+relExpr returns [CMathML m]:
+	x=intervalExpr '=' y=intervalExpr { $m = apply(relation1.eq,$x.m,$y.m); }
+  | x=intervalExpr '<' y=intervalExpr { $m = apply(relation1.lt,$x.m,$y.m); }
+  | x=intervalExpr '<=' y=intervalExpr { $m = apply(relation1.le,$x.m,$y.m); }
+  | x=intervalExpr '>' y=intervalExpr { $m = apply(relation1.gt,$x.m,$y.m); }
+  | x=intervalExpr '>=' y=intervalExpr { $m = apply(relation1.ge,$x.m,$y.m); }
+  | x=intervalExpr '!=' y=intervalExpr { $m = apply(relation1.neq,$x.m,$y.m); }
+  | x=intervalExpr '<>' y=intervalExpr { $m = apply(relation1.neq,$x.m,$y.m); }
+  | x=intervalExpr { $m = $x.m; };
+
+intervalExpr returns [CMathML m]:
+    x=addExpr '..' y=addExpr { $m = apply(interval1.interval,$x.m,$y.m); }
+  | x=addExpr { $m = $x.m; };
+
+addExpr returns [CMathML m]:
+    x=multExpr '-' y=multExpr { $m = apply(arith1.minus,$x.m,$y.m); }
+  | x=multExpr '+' y=multExpr { $m = apply(arith1.plus,$x.m,$y.m); }
+  | x=multExpr { $m = $x.m; };
+
+multExpr returns [CMathML m]:
+    x=powerExpr '/' y=powerExpr { $m = apply(arith1.divide,$x.m,$y.m); }
+  | x=powerExpr '*' y=powerExpr { $m = apply(arith1.times,$x.m,$y.m); }
+  | x=powerExpr { $m = $x.m; };
+
+powerExpr returns [CMathML m]:
+    x=complexExpr '^' y=complexExpr { $m = apply(arith1.power,$x.m,$y.m); }
+  | x=complexExpr { $m = $x.m; };
+
+complexExpr returns [CMathML m]:
+    x=rationalExpr '|' y=rationalExpr { $m = apply(complex1.complex_cartesian,$x.m,$y.m); }
+  | x=rationalExpr { $m = $x.m; };
+
+rationalExpr returns [CMathML m]:
+    x=negExpr '//' y=negExpr { $m = apply(num1.rational,$x.m,$y.m); }
+  | x=negExpr { $m = $x.m; };
+
+negExpr  returns [CMathML m]:
+    '-' x=compExpr  { $m = apply(arith1.uminus,$x.m); }
+  | 'not' x=compExpr { $m = apply(logic1.not,$x.m); }
+>>>>>>> 4bfd5acbad4b4e497c7455ce24dd22bcbadbcf31
   | x=compExpr { $m = $x.m; };
 
 compExpr  returns [CMathML m]:
@@ -191,6 +252,8 @@ floatt returns [CN m]:
 	x=HEXFLOAT { throw new NotSupportedException("not yet implemented"); }
   | x=DECFLOAT { $m = new CN($x); };
 
+ref:
+    ('#' | '##') ID { throw new SyntaxError("references not supported"); };
 
 
 OMB: '%' [a-zA-Z0-9=]+ '%';
