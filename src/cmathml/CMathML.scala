@@ -6,11 +6,12 @@ import cmathml.CMathML._
 import com.sun.org.apache.xerces.internal.util.XMLChar
 import misc.{Log, Pure, Utils}
 import org.symcomp.openmath.{OMSymbol, _}
-import z3.Z3
+import _root_.z3.Z3
 import com.sun.glass.events.KeyEvent
 import misc.Utils.Typed
 
 import scala.collection.mutable
+import scala.reflect.internal.JavaAccFlags
 import scala.xml.{Elem, Utility}
 
 class MathException(message: String, val args: Any*) extends Exception(message)
@@ -207,6 +208,15 @@ object CMathML {
     def formulaRefE = new Apply.Extractor(formulaRef)
   }
 
+  object prog1 {
+    val cd = "prog1"
+    val block = CSymbol(cd,"block")
+    def block(args: CMathML*) : Apply = Apply(block,args:_*)
+    val blockE = new Apply.Extractor(block)
+    val assign = CSymbol(cd,"assign")
+    def assign(x:CMathML, y:CMathML) : Apply = Apply(assign,x,y)
+    val assignE = new Apply.Extractor(assign)
+  }
 
   object relation1 {
     val cd = "relation1"
@@ -401,6 +411,7 @@ final case class Apply(attributes : Attributes, hd: CMathML, args: CMathML*) ext
   }
 
   override protected def toPopcorn$(sb: StringBuilder, priority: Int): Unit = this match {
+      // Priorities follow http://java.symcomp.org/download/org.symcomp-1.5.0-src.zip /org.symcomp-1.5.0-src/openmath/src/main/java/org/symcomp/openmath/popcorn/
     case Apply(_,arith1.`power`,x,y)    => popcornBinop(sb,priority,90,"^",x,y)
     case Apply(_,arith1.`times`,x,y)    => popcornBinop(sb,priority,80,"*",x,y)
     case Apply(_,arith1.`plus`,x,y)     => popcornBinop(sb,priority,70,"+",x,y)
@@ -422,8 +433,6 @@ final case class Apply(attributes : Attributes, hd: CMathML, args: CMathML*) ext
 
     /*
     // From http://java.symcomp.org/download/org.symcomp-1.5.0-src.zip
-    public int prec_unary_minus() { return 65; }
-    public int prec_power() { return 90; }
     public int prec_complex_cartesian() { return 100; }
     public int prec_interval() { return 65; }
     public int prec_integer_interval() { return 65; }
@@ -852,4 +861,10 @@ final case class PathRev(path : List[Int]) extends AnyVal {
   def toPath = new Path(path.reverse)
   def toPathRev = this
   override def toString = toPath.toString()
+}
+
+/** Various convenience methods to ease access to CMathML objects from Java */
+object JavaHelpers {
+  @annotation.varargs
+  def apply(hd:CMathML, args:CMathML*) = Apply(hd,args:_*)
 }
