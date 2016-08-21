@@ -46,26 +46,27 @@ object TestApp {
   }
 
   import CMathML._
-  val examples = List(
-    relation1.equal(CI("x") + CI("y"), CI("y") + CN(-1)),
-    CI("x").negate()
-  )
+//  val examples = List(
+//    relation1.equal(CI("x") + CI("y"), CI("y") + CN(-1)),
+//    CI("x").negate()
+//  )
 
   val examples2 : List[(String,CMathML)] = {
-    val a = CI("a")
-    val b = CI("b")
-    val c = CI("c")
-    val x = CI("x")
-    val E = CI("E")
-    val m = CI("m")
-    val v = CI("v")
-    implicit def toCN(i:Int) : CN = CN(i)
-    def square(x:CMathML) = arith1.power(x,2)
-    def sqrt(x:CMathML) = arith1.root(x,2)
+//    val a = CI("a")
+//    val b = CI("b")
+//    val c = CI("c")
+//    val x = CI("x")
+//    val E = CI("E")
+//    val m = CI("m")
+//    val v = CI("v")
+//    implicit def toCN(i:Int) : CN = CN(i)
+//    def square(x:CMathML) = arith1.power(x,2)
+//    def sqrt(x:CMathML) = arith1.root(x,2)
     List(
-      "_Quadratic equation" -> (a*square(x) + b*x + c === 0),
-      "_Energy/mass equivalence" -> (E === m*square(c) / sqrt(1 - square(v)/square(c)))
-    )
+      "_Quadratic equation" -> "$a*$x^2 + $b*$x + $c = 0", // (a*square(x) + b*x + c === 0),
+//      "_Energy/mass equivalence" -> (E === m*square(c) / sqrt(1 - square(v)/square(c))),
+      "_De Morgan's law" -> "not($A and $C) <=> (not($A) and not($D))"
+    ).map { case (name,math) => (name,CMathML.fromPopcorn(math)) }
   }
 }
 

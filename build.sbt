@@ -49,13 +49,11 @@ scalacOptions ++= Seq("-unchecked", "-deprecation","-feature")
 
 enableDownloads
 
-/*
 antlr4Settings
-antlr4PackageName in Antlr4 := Some("ui.mathview")
+antlr4PackageName in Antlr4 := Some("cmathml")
 sourceDirectory in Antlr4 := baseDirectory.value / "src"
 compileOrder in Compile := CompileOrder.Mixed
 javaSource in Antlr4 := (sourceManaged in Compile).value
-*/
 
 resourceGenerators in Compile += installResources.taskValue
 
