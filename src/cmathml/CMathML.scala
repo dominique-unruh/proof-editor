@@ -1,6 +1,7 @@
 package cmathml
 
 import java.math.{BigInteger, MathContext}
+import java.util.stream.Stream
 
 import cmathml.CMathML._
 import com.sun.org.apache.xerces.internal.util.XMLChar
@@ -9,6 +10,7 @@ import org.symcomp.openmath.{OMSymbol, _}
 import _root_.z3.Z3
 import com.sun.glass.events.KeyEvent
 import misc.Utils.Typed
+import org.antlr.v4.runtime.{ANTLRInputStream, BailErrorStrategy, CommonTokenStream}
 
 import scala.collection.mutable
 import scala.reflect.internal.JavaAccFlags
@@ -166,7 +168,20 @@ object CMathML {
 
   private lazy val z3 = new Z3()
 
-  def fromPopcorn(str: String) = {
+
+  @Pure
+  def fromPopcorn(popcorn:String) : CMathML = {
+    val stream = new ANTLRInputStream(popcorn)
+    val lexer = new PopcornGrammarLexer(stream)
+    val tokens = new CommonTokenStream(lexer)
+    val parser = new PopcornGrammarParser(tokens)
+    parser.setErrorHandler(new BailErrorStrategy)
+    val tree = parser.expr_eof()
+    tree.cmathml
+  }
+
+  @deprecated("use fromPopcorn","Aug 21, 2016")
+  def fromPopcornSYMCOMP(str: String) = {
     val om = OpenMathBase.parsePopcorn(str.trim)
     fromSymcomp(om)
   }
@@ -260,7 +275,7 @@ object CMathML {
     def sum(x:CMathML, y:CMathML) : Apply = Apply(sum,x,y)
     val product = CSymbol(cd,"product")
     def product(x:CMathML, y:CMathML) : Apply = Apply(product,x,y)
-    val uminus = CSymbol(cd,"unary_minus")
+    val uminus = CSymbol(cd,"unary_minus") // TODO rename
     def uminus(x:CMathML) : Apply = Apply(uminus,x)
   }
 
@@ -807,6 +822,9 @@ final case class CError(attributes : Attributes, cd: String, name: String, args:
     for (Typed(m:CMathML) <- args) m.freeVariables$(acc,hidden)
   }
 }
+object CError {
+  def apply(cd: String, name: String, args: Any*) = new CError(NoAttr, cd, name, args :_*)
+}
 
 /** An addition to the Content MathML standard. Represents a missing node.
   * Not valid Content MathML, cannot be exported to valid XML
@@ -865,6 +883,15 @@ final case class PathRev(path : List[Int]) extends AnyVal {
 
 /** Various convenience methods to ease access to CMathML objects from Java */
 object JavaHelpers {
-  @annotation.varargs
-  def apply(hd:CMathML, args:CMathML*) = Apply(hd,args:_*)
+  import scala.collection.JavaConverters._
+  @annotation.varargs def apply(cd:String, name:String, args:CMathML*) = Apply(CSymbol(cd,name), args:_*)
+  def apply(cd:String, name:String, args:Stream[CMathML]) = Apply(CSymbol(cd,name), args.iterator.asScala.toSeq :_*)
+  def apply(hd: CMathML, args:Stream[CMathML]) = Apply(hd, args.iterator.asScala.toSeq :_*)
+  def addAttributes(math: CMathML, attrs:Stream[org.antlr.v4.runtime.misc.Pair[CSymbol,CMathML]]) : CMathML = ???
+  def bind(hd:CMathML, vars:Stream[CILike], body:CMathML) = Bind(hd, vars.iterator.asScala.toSeq, body)
+  def error(hd:CSymbol, args:Stream[CMathML]) = CError(hd.cd,hd.name, args.iterator.asScala.toSeq)
+  def cn(i:String) = CN(i)
+  def ci(i:String) = CI(i)
+  def cs(i:String) = CS(i)
+  def csymbol(cd:String, name:String) = CSymbol(cd,name)
 }

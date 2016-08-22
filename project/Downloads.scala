@@ -23,7 +23,7 @@ object Downloads extends AutoPlugin {
     lazy val installSymcompOpenmath = TaskKey[Unit]("Download Symcomp's openmath.jar")
 
     lazy val enableDownloads = Seq(
-      installResources := recursiveFiles(installJQuery.value,installMathQuill.value),
+      installResources := recursiveFiles(/*installJQuery.value,*/installMathQuill.value),
 
       installJars := {
         installZ3Linux64.value
