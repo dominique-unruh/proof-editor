@@ -39,13 +39,13 @@ object Launch {
 }
 
 object TestApp {
+  import CMathML._
 //  Z3 // To make sure we notice missing libraries right away
 
   final case class TrafoChoice(label:String, trafo:Transformation) {
     override def toString = label
   }
 
-  import CMathML._
 //  val examples = List(
 //    relation1.equal(CI("x") + CI("y"), CI("y") + CN(-1)),
 //    CI("x").negate()
