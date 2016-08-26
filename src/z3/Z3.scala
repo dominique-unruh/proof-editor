@@ -62,6 +62,8 @@ final class Z3(config:Map[String,String]) {
   private def toCMathML(expr: Expr) : CMathML = expr match {
     case e if e.getSort==stringSort_ && e.isConst && e.getFuncDecl.getName.toString.startsWith("string@") =>
       CS(e.getFuncDecl.getName.toString.stripPrefix("string@"))
+    case e if e.getSort==bytesSort_ && e.isConst && e.getFuncDecl.getName.toString.startsWith("bytes@") =>
+      CBytes.fromBase64(e.getFuncDecl.getName.toString.stripPrefix("bytes@"))
     case e: Expr if e.isConst => CI(e.getFuncDecl.getName.toString)
     case e: ArithExpr if e.isApp =>
       (e.getFuncDecl.getDeclKind,e.getNumArgs) match {
@@ -78,7 +80,7 @@ final class Z3(config:Map[String,String]) {
       val vars1 = e.getBoundVariableNames.toSeq.zip(e.getBoundVariableSorts)
       val vars2 = vars1.map { v => context.mkConst(v._1,v._2) }
       val vars3 = vars2.map(toCMathML(_).asInstanceOf[CI])
-      val body1 = e.getBody.substituteVars(vars2.toArray)
+      val body1 = e.getBody.substituteVars(vars2.reverse.toArray)
       val body2 = toCMathML(body1)
       var sym : CSymbol =
         if (e.isUniversal) quant1.forall
@@ -128,6 +130,7 @@ final class Z3(config:Map[String,String]) {
       val sort = if (n.charAt(0).isUpper) boolSort_ else realSort_
       context.mkConst(n, sort)
     case CS(_, s) => context.mkConst("string@"+s,stringSort_)
+    case b : CBytes => context.mkConst("bytes@"+b.base64,bytesSort_)
     case Apply(_, arith1.plus,args @ _*) => context.mkAdd(args.map(fromCMathML_(_).asInstanceOf[ArithExpr]) : _*)
     case Apply(_, arith1.minus,x,y) => context.mkSub(fromCMathML_(x).asInstanceOf[ArithExpr],
                                                       fromCMathML_(y).asInstanceOf[ArithExpr])
@@ -179,6 +182,7 @@ final class Z3(config:Map[String,String]) {
   private lazy val intSort_ = context.mkIntSort()
   private lazy val realSort_ = context.mkRealSort()
   private lazy val stringSort_ = context.mkUninterpretedSort("unicodeString")
+  private lazy val bytesSort_ = context.mkUninterpretedSort("byteString")
 
 //  /** Declares a new function. Note: the range of the function is given <b>first</b>!
 //    * (Hence the suffix RD)

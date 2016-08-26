@@ -1,6 +1,7 @@
 package cmathml
 
 import java.math.{BigInteger, MathContext}
+import java.util
 import java.util.stream.Stream
 
 import cmathml.CMathML._
@@ -8,12 +9,12 @@ import com.sun.org.apache.xerces.internal.util.XMLChar
 import misc.{Log, Pure, Utils}
 import org.symcomp.openmath.{OMSymbol, _}
 import _root_.z3.Z3
-import com.sun.glass.events.KeyEvent
+import cmathml.Apply.Extractor
 import misc.Utils.Typed
-import org.antlr.v4.runtime.{ANTLRInputStream, BailErrorStrategy, CommonTokenStream}
+
+//import org.antlr.v4.runtime.{ANTLRInputStream, BailErrorStrategy, CommonTokenStream}
 
 import scala.collection.mutable
-import scala.reflect.internal.JavaAccFlags
 import scala.xml.{Elem, Utility}
 
 class MathException(message: String, val args: Any*) extends Exception(message)
@@ -107,6 +108,11 @@ sealed trait CMathML {
       ???
   }
 
+  @Pure def updateAttributes(newAttribs : Seq[((String,String),Any)]) : CMathML =
+    setAttributes(attributes ++ newAttribs)
+
+  @Pure def setAttributes(newAttribs : Attributes) : CMathML
+
   @Pure protected def toSymcomp$ : org.symcomp.openmath.OpenMathBase
 
   /** Checks whether the formula is valid.
@@ -171,13 +177,14 @@ object CMathML {
 
   @Pure
   def fromPopcorn(popcorn:String) : CMathML = {
-    val stream = new ANTLRInputStream(popcorn)
-    val lexer = new PopcornGrammarLexer(stream)
-    val tokens = new CommonTokenStream(lexer)
-    val parser = new PopcornGrammarParser(tokens)
-    parser.setErrorHandler(new BailErrorStrategy)
-    val tree = parser.expr_eof()
-    tree.cmathml
+    PopcornGrammar.parse(popcorn)
+//    val stream = new ANTLRInputStream(popcorn)
+//    val lexer = new PopcornGrammarLexer(stream)
+//    val tokens = new CommonTokenStream(lexer)
+//    val parser = new PopcornGrammarParser(tokens)
+//    parser.setErrorHandler(new BailErrorStrategy)
+//    val tree = parser.expr_eof()
+//    tree.cmathml
   }
 
   @deprecated("use fromPopcorn","Aug 21, 2016")
@@ -231,6 +238,18 @@ object CMathML {
     val assign = CSymbol(cd,"assign")
     def assign(x:CMathML, y:CMathML) : Apply = Apply(assign,x,y)
     val assignE = new Apply.Extractor(assign)
+    val `if` = CSymbol(cd,"if")
+    def `if`(cond:CMathML, yes:CMathML, no:CMathML) : Apply = Apply(`if`,cond,yes,no)
+    val ifE = new Extractor(`if`)
+    val `while` = CSymbol(cd,"while")
+    def `while`(cond:CMathML, body:CMathML) : Apply = Apply(`while`,cond,body)
+    val whileE = new Extractor(`while`)
+  }
+
+  object interval1 {
+    val cd = "interval1"
+    val interval = CSymbol(cd,"interval")
+    def interval(x:CMathML, y:CMathML) : Apply = Apply(interval,x,y)
   }
 
   object relation1 {
@@ -255,16 +274,30 @@ object CMathML {
     def complex_cartesian(x:CMathML, y:CMathML) : Apply = Apply(complex_cartesian,x,y)
   }
 
+  object list1 {
+    val cd = "list1"
+    val list = CSymbol(cd, "list")
+    def list(args : CMathML*) : Apply = Apply(list, args : _*)
+    val listE = new Extractor(list)
+  }
+
+  object set1 {
+    val cd = "set1"
+    val set = CSymbol(cd, "set")
+    def set(args : CMathML*) : Apply = Apply(set, args : _*)
+    val setE = new Extractor(set)
+  }
+
   object arith1 {
     val cd = "arith1"
     val plus = CSymbol(cd,"plus")
-    def plus(x:CMathML,y:CMathML) : Apply = Apply(plus,x,y)
+    def plus(args:CMathML*) : Apply = Apply(plus,args:_*)
     val abs = CSymbol(cd,"abs")
     def abs(x:CMathML) : Apply = Apply(abs,x)
     val minus = CSymbol(cd,"minus")
     def minus(x:CMathML,y:CMathML) : Apply = Apply(minus,x,y)
     val times = CSymbol(cd,"times")
-    def times(x:CMathML,y:CMathML) : Apply = Apply(times,x,y)
+    def times(args:CMathML*) : Apply = Apply(times,args:_*)
     val divide = CSymbol(cd,"divide")
     def divide(x:CMathML,y:CMathML) : Apply = Apply(divide,x,y)
     val power = CSymbol(cd,"power")
@@ -295,6 +328,9 @@ object CMathML {
     val e = CSymbol(cd,"e")
     val i = CSymbol(cd,"i")
     val infinity = CSymbol(cd,"infinity")
+    val rational = CSymbol(cd,"rational")
+    def rational(x:CMathML, y:CMathML) : Apply = Apply(rational,x,y)
+    val rationalE = new Extractor(rational)
   }
 
   object minmax1 {
@@ -387,6 +423,7 @@ object CMathML {
     case "cn" => CN.fromXML(xml)
     case "ci" => CI.fromXML(xml)
     case "cs" => CS.fromXML(xml)
+    case "cbytes" => CBytes.fromXML(xml)
     case "apply" => Apply.fromXML(xml)
     case "bind" => Bind.fromXML(xml)
   }
@@ -499,7 +536,11 @@ final case class Apply(attributes : Attributes, hd: CMathML, args: CMathML*) ext
     hd.freeVariables$(acc, hidden)
     args.foreach(_.freeVariables$(acc, hidden))
   }
+
+  @Pure
+  override def setAttributes(newAttribs: Attributes): Apply = new Apply(newAttribs, hd, args :_*)
 }
+
 object Apply {
   class Extractor(cd:String, name:String) {
     def this(head:CSymbol) = this(head.cd,head.name)
@@ -583,6 +624,9 @@ final case class Bind(attributes : Attributes, hd: CMathML, vars: Seq[CILike], b
     for (v <- vars) v.freeVariables$(acc,hidden)
     body.freeVariables$(acc,hidden)
   }
+
+  @Pure
+  override def setAttributes(newAttribs: Attributes): CMathML = new Bind(newAttribs, hd, vars, body)
 }
 
 object Bind {
@@ -640,6 +684,9 @@ final case class CI(attributes : Attributes = NoAttr, name : String) extends CMa
     freeVariablesInAttributes$(acc, attributes, hidden)
     if (!hidden.contains(name)) acc += name
   }
+
+  @Pure
+  override def setAttributes(newAttribs: Attributes): CMathML = new CI(newAttribs, name)
 }
 object CI {
   def fromXML(xml: Elem) = CI(xml.text.trim)
@@ -663,8 +710,9 @@ final case class CN(attributes : Attributes = NoAttr, n: BigDecimal) extends CMa
     else  <cn type="real">{n.toString}</cn>
 
   override protected def toPopcorn$(sb: StringBuilder, priority: Int): Unit = {
-    if (n.isExactDouble) sb ++= n.toString
-    else Apply(internal.decimalFractionSymbol,CS(n.toString)).toPopcorn(sb,priority)
+//    if (n.isExactDouble) sb ++= n.toString
+//    else Apply(internal.decimalFractionSymbol,CS(n.toString)).toPopcorn(sb,priority)
+    sb ++= n.toString
   }
 
   @Pure override protected
@@ -680,6 +728,9 @@ final case class CN(attributes : Attributes = NoAttr, n: BigDecimal) extends CMa
 
   override private[cmathml] def freeVariables$(acc: mutable.Set[String], hidden: Set[String]): Unit =
     freeVariablesInAttributes$(acc, attributes, hidden)
+
+  @Pure
+  override def setAttributes(newAttribs: Attributes): CMathML = new CN(newAttribs, n)
 }
 object CN {
   def fromXML(xml: Elem) = CN(xml.text.trim)
@@ -718,11 +769,58 @@ final case class CS(attributes : Attributes = NoAttr, str: String) extends CMath
 
   override private[cmathml] def freeVariables$(acc: mutable.Set[String], hidden: Set[String]): Unit =
     freeVariablesInAttributes$(acc, attributes, hidden)
+
+  @Pure
+  override def setAttributes(newAttribs: Attributes): CMathML = new CS(newAttribs, str)
 }
 object CS {
   def fromXML(xml: Elem) = CS(xml.text)
 
   def apply(str:String) = new CS(NoAttr,str)
+}
+
+
+
+/** <cbytes>-Content MathML element
+  * @see [[https://www.w3.org/TR/MathML3/chapter4.html#contm.cbytes]] */
+final case class CBytes(attributes : Attributes = NoAttr, bytes: Vector[Byte]) extends CMathML with Leaf {
+  import CBytes._
+  override def toString = toPopcorn
+
+  /** Same as [[toXML]] but without the outermost attributes */
+  override def toXML$: Elem = <cbytes>{encode(bytes.toArray)}</cbytes>
+
+  /** Same as [[toPopcorn]] but without the outermost attributes */
+  override protected def toPopcorn$(sb: StringBuilder, priority: Int): Unit = {
+    sb += '%'
+    sb ++= encode(bytes.toArray)
+    sb += '%'
+  }
+
+  @Pure override protected
+  def toSymcomp$: OpenMathBase = ???
+
+  // TODO join occurrences in Leaf (can use setAttributes)
+  override private[cmathml] def substitute$(subst: Map[String, CMathML], substFrees: Set[String]): CMathML =
+    new CBytes(substituteInAttribs$(attributes,subst,substFrees), bytes)
+
+  // TODO join occurrences in Leaf
+  override private[cmathml] def freeVariables$(acc: mutable.Set[String], hidden: Set[String]): Unit =
+    freeVariablesInAttributes$(acc, attributes, hidden)
+
+  def base64 = encode(bytes.toArray)
+
+  @Pure
+  override def setAttributes(newAttribs: Attributes): CMathML = new CBytes(newAttribs, bytes)
+}
+object CBytes {
+  private val decode : String => Array[Byte] = util.Base64.getMimeDecoder.decode _
+  private val encode = util.Base64.getMimeEncoder.encodeToString _
+
+  def fromXML(xml: Elem) = CBytes(decode(xml.text): _*)
+  def fromBase64(base64 : String) = CBytes(decode(base64) : _*)
+
+  def apply(bytes:Byte*) = new CBytes(NoAttr,bytes.toVector)
 }
 
 
@@ -752,6 +850,9 @@ final case class CSymbol(attributes : Attributes = NoAttr, cd: String, name: Str
 
   override private[cmathml] def freeVariables$(acc: mutable.Set[String], hidden: Set[String]): Unit =
     freeVariablesInAttributes$(acc, attributes, hidden)
+
+  @Pure
+  override def setAttributes(newAttribs: Attributes): CMathML = new CSymbol(newAttribs, cd, name)
 }
 object CSymbol {
   def fromXML(xml: Elem) = CSymbol(xml.attribute("cd").get.text, xml.text.trim)
@@ -821,6 +922,9 @@ final case class CError(attributes : Attributes, cd: String, name: String, args:
     freeVariablesInAttributes$(acc, attributes, hidden)
     for (Typed(m:CMathML) <- args) m.freeVariables$(acc,hidden)
   }
+
+  @Pure
+  override def setAttributes(newAttribs: Attributes): CMathML = new CError(newAttribs, cd, name, args :_*)
 }
 object CError {
   def apply(cd: String, name: String, args: Any*) = new CError(NoAttr, cd, name, args :_*)
@@ -847,6 +951,9 @@ final case class CNone(attributes : Attributes = NoAttr) extends CMathML with Le
 
   override private[cmathml] def freeVariables$(acc: mutable.Set[String], hidden: Set[String]): Unit =
     freeVariablesInAttributes$(acc, attributes, hidden)
+
+  @Pure
+  override def setAttributes(newAttribs: Attributes): CMathML = CNone(newAttribs)
 }
 
 object Path {
@@ -887,7 +994,7 @@ object JavaHelpers {
   @annotation.varargs def apply(cd:String, name:String, args:CMathML*) = Apply(CSymbol(cd,name), args:_*)
   def apply(cd:String, name:String, args:Stream[CMathML]) = Apply(CSymbol(cd,name), args.iterator.asScala.toSeq :_*)
   def apply(hd: CMathML, args:Stream[CMathML]) = Apply(hd, args.iterator.asScala.toSeq :_*)
-  def addAttributes(math: CMathML, attrs:Stream[org.antlr.v4.runtime.misc.Pair[CSymbol,CMathML]]) : CMathML = ???
+//  def addAttributes(math: CMathML, attrs:Stream[org.antlr.v4.runtime.misc.Pair[CSymbol,CMathML]]) : CMathML = ???
   def bind(hd:CMathML, vars:Stream[CILike], body:CMathML) = Bind(hd, vars.iterator.asScala.toSeq, body)
   def error(hd:CSymbol, args:Stream[CMathML]) = CError(hd.cd,hd.name, args.iterator.asScala.toSeq)
   def cn(i:String) = CN(i)

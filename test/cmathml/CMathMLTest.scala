@@ -37,11 +37,15 @@ class CMathMLTest extends UnitSpec {
     assertResult("""<cn type="real">0.5</cn>""") { CN(0.5).toXML.toString }
   }
 
-  test("toPopcorn") {
-    assertResult("$x") { CI("x").toPopcorn }
-    assertResult("arith1.times") { arith1.times.toPopcorn }
-    assertResult("123") { CN(123).toPopcorn }
-//    assertResult("0.5") { CN(0.5).toPopcorn }  // Not supported yet
+  test("fromPopcorn whitespace") {
+    assert( CMathML.fromPopcorn("$x + $y") == CI("x")+CI("y") )
+    assert( CMathML.fromPopcorn(" 1 ") == CN(1) )
+    assert( CMathML.fromPopcorn("""" 1 """") == CS(" 1 ") )
+  }
+
+  test("fromPopcorn") {
+    val x = CMathML.fromPopcorn("0f3DDB7CDFD9D7BDBB")
+    assert(x==CN(1e-10))
   }
 
   test("xml roundtrip") {
@@ -71,6 +75,7 @@ object CMathMLTest {
     CN(1) + CN(2),
     CI("x"),
     equal(CI("x"),CN(2)),
+//    Apply(CSymbol("test","name"),CN(1)),
     CN("1.23"),
     CN(1.23), // This will not be exactly 1.23, because CN is initialized with (Double)1.23!
     divide(CN(2),CN(2)),
@@ -80,7 +85,9 @@ object CMathMLTest {
     uminus(CN("123")),
     CN(-234),
     power(CN(3),CI("x")),
-    CS("hello")
+    CS("hello"),
+    quant1.forall(List(CI("x"),CI("y")), equal(CI("x"),CI("y"))),
+    CBytes(1,2,3)
   )
 
   val subtermTests = List(

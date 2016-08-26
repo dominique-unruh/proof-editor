@@ -50,6 +50,7 @@
     <orderEntry type="library" name="SBT: org.scalaz:scalaz-core_2.11:7.2.3:jar" level="project" />
     <orderEntry type="library" name="SBT: org.scalaz:scalaz-effect_2.11:7.2.3:jar" level="project" />
     <orderEntry type="library" name="SBT: org.typelevel:macro-compat_2.11:1.1.1:jar" level="project" />
-    <orderEntry type="library" name="SBT: org.antlr:antlr4-runtime:4.5.3:jar" level="project" />
+    <orderEntry type="library" name="SBT: com.lihaoyi:fastparse-utils_2.11:0.3.7:jar" level="project" />
+    <orderEntry type="library" name="SBT: com.lihaoyi:fastparse_2.11:0.3.7:jar" level="project" />
   </component>
 </module>

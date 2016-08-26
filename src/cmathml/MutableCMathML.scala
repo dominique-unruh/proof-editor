@@ -213,6 +213,7 @@ object MutableCMathML {
     case CError(att, cd, name, args @ _*) => new MCError(att,cd,name,args)
     case CNone(att) => new MCNone(att)
     case Bind(att, hd, vars, arg) => new  MBind(att,fromCMathML(hd),vars.map(fromCMathML(_).asInstanceOf[MCI]),fromCMathML(arg))
+    case CBytes(att, bytes) => new MCBytes(att,bytes)
   }
 }
 
@@ -570,6 +571,27 @@ final class MCS(attributes: AttributesRO, private var _str:String) extends Mutab
 }
 object MCS {
   def unapply(that:MCS) = Some(that.str)
+}
+
+final class MCBytes(attributes: AttributesRO, private var _bytes:Vector[Byte]) extends MutableCMathML(attributes) with MLeaf {
+  override def toCMathML: CMathML = CBytes(attributesToCMathML,_bytes)
+
+  def this(bytes:Vector[Byte]) = this(MNoAttr,bytes)
+
+  def bytes = _bytes
+  def bytes_=(bytes:Seq[Byte]): Unit = {
+    _bytes = bytes.toVector
+    fireChange()
+  }
+
+  // TODO gather up in MLeaf
+  override def replace(a: MutableCMathML, b: MutableCMathML): Unit =
+    replaceInAttributes(a,b)
+
+  override def copy(): MutableCMathML = ???
+}
+object MCBytes {
+  def unapplySeq(that:MCBytes) = Some(that.bytes)
 }
 
 

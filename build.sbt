@@ -1,6 +1,6 @@
 import com.typesafe.sbt.packager.MappingsHelper
 
-val os = { val os = sys.props("os.name"); if (os.startsWith("Windows")) "win" else if (os.startsWith("Linux")) "linux" else error("Unrecognized OS: "+os) }
+val os = { val os = sys.props("os.name"); if (os.startsWith("Windows")) "win" else if (os.startsWith("Linux")) "linux" else sys.error("Unrecognized OS: "+os) }
 val bits = sys.props("sun.arch.data.model")
 
 val targetOs = os
@@ -14,7 +14,7 @@ organization := "de.unruh"
 //javaHome := Some(file(sys.props("java.home")).getAbsoluteFile)
 
 scalaVersion := "2.11.8"
-libraryDependencies += "org.scala-lang.modules" % "scala-xml_2.11" % "1.0.5"
+libraryDependencies += "org.scala-lang.modules" %% "scala-xml" % "1.0.5"
 libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.6" % Test
 //libraryDependencies += "org.apache.bcel" % "bcel" % "5.2"
 //libraryDependencies += "org.ow2.asm" % "asm" % "5.1"
@@ -31,6 +31,7 @@ libraryDependencies += "org.antlr" % "antlr-runtime" % "3.0.1" // Needed for ope
 //libraryDependencies += "com.typesafe.scala-logging" %% "scala-logging" % "3.4.0"
 //libraryDependencies += "ch.qos.logback" %  "logback-classic" % "1.1.7"
 libraryDependencies += "com.lihaoyi" %% "sourcecode" % "0.1.2"
+libraryDependencies += "com.lihaoyi" %% "fastparse" % "0.3.7"
 
 libraryDependencies += "com.thoughtworks.each" %% "each" % "2.0.0"
 //libraryDependencies += "org.pelotom" %% "effectful" % "1.0.1"
@@ -49,11 +50,11 @@ scalacOptions ++= Seq("-unchecked", "-deprecation","-feature", "-Xcheckinit")
 
 enableDownloads
 
-antlr4Settings
-antlr4PackageName in Antlr4 := Some("cmathml")
-sourceDirectory in Antlr4 := baseDirectory.value / "src"
-compileOrder in Compile := CompileOrder.Mixed
-javaSource in Antlr4 := (sourceManaged in Compile).value
+// antlr4Settings
+// antlr4PackageName in Antlr4 := Some("cmathml")
+// sourceDirectory in Antlr4 := baseDirectory.value / "src"
+// compileOrder in Compile := CompileOrder.Mixed
+// javaSource in Antlr4 := (sourceManaged in Compile).value
 
 resourceGenerators in Compile += installResources.taskValue
 

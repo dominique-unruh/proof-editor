@@ -2,7 +2,8 @@ package z3
 
 import java.math.BigInteger
 
-import cmathml.CMathML.{arith1, relation1}
+import cmathml.CMathML.relation1._
+import cmathml.CMathML.{arith1, quant1, relation1}
 import cmathml._
 import com.microsoft.z3.{Expr, RatNum, Version}
 import test.UnitSpec
