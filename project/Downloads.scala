@@ -27,7 +27,7 @@ object Downloads extends AutoPlugin {
 
       installJars := {
         installZ3Linux64.value
-        installSymcompOpenmath.value
+//        installSymcompOpenmath.value
         ((base.value/"lib") ** "*.jar").get },
 
       installMathQuill := downloadMathQuill(base.value),

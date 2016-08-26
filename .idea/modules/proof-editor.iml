@@ -38,8 +38,6 @@
       </library>
     </orderEntry>
     <orderEntry type="library" name="SBT: org.scala-lang.modules:scala-xml_2.11:1.0.5:jar" level="project" />
-    <orderEntry type="library" name="SBT: org.antlr:stringtemplate:3.1-b1:jar" level="project" />
-    <orderEntry type="library" name="SBT: org.antlr:antlr-runtime:3.0.1:jar" level="project" />
     <orderEntry type="library" name="SBT: com.lihaoyi:sourcecode_2.11:0.1.2:jar" level="project" />
     <orderEntry type="library" name="SBT: org.scalafx:scalafx_2.11:8.0.92-R10:jar" level="project" />
     <orderEntry type="library" name="SBT: org.scala-lang:scala-reflect:2.11.8:jar" level="project" />

@@ -27,7 +27,7 @@ libraryDependencies += "org.scalafx" %% "scalafx" % "8.0.92-R10" // https://mvnr
 //libraryDependencies += "com.google.code.findbugs" % "jsr305" % "3.0.1"
 //libraryDependencies += "org.symcomp" % "openmath" % "1.4.0"
 // https://mvnrepository.com/artifact/org.antlr/antlr-runtime
-libraryDependencies += "org.antlr" % "antlr-runtime" % "3.0.1" // Needed for openmath-1.4.0.jar
+//libraryDependencies += "org.antlr" % "antlr-runtime" % "3.0.1" // Needed for openmath-1.4.0.jar
 //libraryDependencies += "com.typesafe.scala-logging" %% "scala-logging" % "3.4.0"
 //libraryDependencies += "ch.qos.logback" %  "logback-classic" % "1.1.7"
 libraryDependencies += "com.lihaoyi" %% "sourcecode" % "0.1.2"

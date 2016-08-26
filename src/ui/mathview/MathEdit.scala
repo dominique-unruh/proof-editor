@@ -6,6 +6,7 @@ import javafx.scene.control.Alert
 import cmathml.CMathML._
 import cmathml.MutableCMathML.fromCMathML
 import cmathml._
+import fastparse.core.ParseError
 import misc.Utils.ImplicitConversions._
 import ui.mathview.MathView.{CursorLeft, CursorPos, CursorRight, CursorSide}
 
@@ -386,10 +387,8 @@ class MathEdit extends MathView {
 
     clip.content(DataFormat.PlainText) match {
       case str: String =>
-        CMathML.tryFromPopcorn(str) match {
-          case Some(math) => return Some(math)
-          case None =>
-        }
+        try { return Some(CMathML.fromPopcorn(str)) }
+        catch { case e : ParseError => }
     }
 
     None

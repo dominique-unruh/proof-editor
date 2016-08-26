@@ -7,7 +7,7 @@ import java.util.stream.Stream
 import cmathml.CMathML._
 import com.sun.org.apache.xerces.internal.util.XMLChar
 import misc.{Log, Pure, Utils}
-import org.symcomp.openmath.{OMSymbol, _}
+//import org.symcomp.openmath.{OMSymbol, _}
 import _root_.z3.Z3
 import cmathml.Apply.Extractor
 import misc.Utils.Typed
@@ -98,22 +98,22 @@ sealed trait CMathML {
   else
     ???
 
-  @deprecated("better use toPopcorn","Aug 11, 2016")
-  @Pure def toPopcornSYMCOMP : String = toSymcomp.toPopcorn
+//  @deprecated("better use toPopcorn","Aug 11, 2016")
+//  @Pure def toPopcornSYMCOMP : String = toSymcomp.toPopcorn
 
-  @Pure def toSymcomp : org.symcomp.openmath.OpenMathBase = {
-    if (attributes.isEmpty)
-      toSymcomp$
-    else
-      ???
-  }
+//  @Pure def toSymcomp : org.symcomp.openmath.OpenMathBase = {
+//    if (attributes.isEmpty)
+//      toSymcomp$
+//    else
+//      ???
+//  }
 
   @Pure def updateAttributes(newAttribs : Seq[((String,String),Any)]) : CMathML =
     setAttributes(attributes ++ newAttribs)
 
   @Pure def setAttributes(newAttribs : Attributes) : CMathML
 
-  @Pure protected def toSymcomp$ : org.symcomp.openmath.OpenMathBase
+//  @Pure protected def toSymcomp$ : org.symcomp.openmath.OpenMathBase
 
   /** Checks whether the formula is valid.
     *
@@ -161,16 +161,16 @@ object CMathML {
       case x => x
     }
 
-  def tryFromPopcorn(str: String) : Option[CMathML] = {
-    val om = try
-      OpenMathBase.parsePopcorn(str.trim)
-    catch {
-      case e: OpenMathException =>
-        Log.stackTraceDebug("tryFromPopcorn: could not parse",e)
-        return None
-    }
-    Some(fromSymcomp(om))
-  }
+  //  def tryFromPopcorn(str: String) : Option[CMathML] = {
+  //    val om = try
+  //      OpenMathBase.parsePopcorn(str.trim)
+  //    catch {
+  //      case e: OpenMathException =>
+  //        Log.stackTraceDebug("tryFromPopcorn: could not parse",e)
+  //        return None
+  //    }
+  //    Some(fromSymcomp(om))
+  //  }
 
   private lazy val z3 = new Z3()
 
@@ -187,31 +187,31 @@ object CMathML {
 //    tree.cmathml
   }
 
-  @deprecated("use fromPopcorn","Aug 21, 2016")
-  def fromPopcornSYMCOMP(str: String) = {
-    val om = OpenMathBase.parsePopcorn(str.trim)
-    fromSymcomp(om)
-  }
+//  @deprecated("use fromPopcorn","Aug 21, 2016")
+//  def fromPopcornSYMCOMP(str: String) = {
+//    val om = OpenMathBase.parsePopcorn(str.trim)
+//    fromSymcomp(om)
+//  }
 
-  def fromSymcomp(math: OpenMathBase) : CMathML = math match {
-    case n : OMInteger => CN(n.getIntValue)
-    case n : OMFloat => CN(n.getDec)
-    case s : OMSymbol =>
-      CSymbol(s.getCd,s.getName) match {
-        case CSymbol(attr,internal.holeSymbol.cd,internal.holeSymbol.name) => CNone(attr)
-        case m => m
-      }
-    case s : OMString => CS(s.getValue)
-    case x : OMVariable => CI(x.getName)
-    case a : OMApply =>
-      Apply(fromSymcomp(a.getHead),a.getParams.map(fromSymcomp) : _*) match {
-        case Apply(attr,CSymbol(_,internal.decimalFractionSymbol.cd,internal.decimalFractionSymbol.name),CS(_,str)) =>
-          CN(attr,str)
-        case m => m
-      }
-    case b : OMBind =>
-      Bind(fromSymcomp(b.getSymbol), b.getBvars.map(fromSymcomp(_).asInstanceOf[CI]).toSeq, fromSymcomp(b.getParam))
-  }
+//  def fromSymcomp(math: OpenMathBase) : CMathML = math match {
+//    case n : OMInteger => CN(n.getIntValue)
+//    case n : OMFloat => CN(n.getDec)
+//    case s : OMSymbol =>
+//      CSymbol(s.getCd,s.getName) match {
+//        case CSymbol(attr,internal.holeSymbol.cd,internal.holeSymbol.name) => CNone(attr)
+//        case m => m
+//      }
+//    case s : OMString => CS(s.getValue)
+//    case x : OMVariable => CI(x.getName)
+//    case a : OMApply =>
+//      Apply(fromSymcomp(a.getHead),a.getParams.map(fromSymcomp) : _*) match {
+//        case Apply(attr,CSymbol(_,internal.decimalFractionSymbol.cd,internal.decimalFractionSymbol.name),CS(_,str)) =>
+//          CN(attr,str)
+//        case m => m
+//      }
+//    case b : OMBind =>
+//      Bind(fromSymcomp(b.getSymbol), b.getBvars.map(fromSymcomp(_).asInstanceOf[CI]).toSeq, fromSymcomp(b.getParam))
+//  }
 
   type Attributes = Map[(String,String),Any]
   val NoAttr : Attributes = Map.empty
@@ -524,8 +524,8 @@ final case class Apply(attributes : Attributes, hd: CMathML, args: CMathML*) ext
 
   override def toXML$: Elem = <apply>{hd.toXML}{args.map(_.toXML)}</apply>
 
-  @Pure
-  override protected def toSymcomp$: OpenMathBase = hd.toSymcomp.apply(Array(args.map(_.toSymcomp) : _*))
+//  @Pure
+//  override protected def toSymcomp$: OpenMathBase = hd.toSymcomp.apply(Array(args.map(_.toSymcomp) : _*))
 
   override def substitute$(subst: Map[String, CMathML], substFrees: Set[String]): CMathML =
     new Apply(substituteInAttribs$(attributes,subst,substFrees),
@@ -595,9 +595,9 @@ final case class Bind(attributes : Attributes, hd: CMathML, vars: Seq[CILike], b
 
   override def toXML$: Elem = <bind>{hd.toXML}{vars.map(v => <bvar>{v.toXML}</bvar>)}{body.toXML}</bind>
 
-  @Pure
-  override protected def toSymcomp$: OpenMathBase =
-    hd.toSymcomp.bind(Array(vars.map(_.toSymcomp.asInstanceOf[OMVariable]):_*), body.toSymcomp)
+//  @Pure
+//  override protected def toSymcomp$: OpenMathBase =
+//    hd.toSymcomp.bind(Array(vars.map(_.toSymcomp.asInstanceOf[OMVariable]):_*), body.toSymcomp)
 
   @Pure override protected
   def toPopcorn$(sb: StringBuilder, priority: Int): Unit = {
@@ -621,8 +621,8 @@ final case class Bind(attributes : Attributes, hd: CMathML, vars: Seq[CILike], b
   override private[cmathml] def freeVariables$(acc: mutable.Set[String], hidden: Set[String]): Unit = {
     freeVariablesInAttributes$(acc, attributes, hidden)
     val hidden2 = hidden ++ (for { CI(_,n)<-vars } yield n)
-    for (v <- vars) v.freeVariables$(acc,hidden)
-    body.freeVariables$(acc,hidden)
+    for (v <- vars) v.freeVariables$(acc,hidden2)
+    body.freeVariables$(acc,hidden2)
   }
 
   @Pure
@@ -669,8 +669,8 @@ final case class CI(attributes : Attributes = NoAttr, name : String) extends CMa
   /** Same as [[toXML]] but without the outermost attributes */
   override def toXML$: Elem = <ci>{name}</ci>
 
-  @Pure override protected
-  def toSymcomp$: OpenMathBase = new OMVariable(name)
+//  @Pure override protected
+//  def toSymcomp$: OpenMathBase = new OMVariable(name)
 
   /**
     * @param subst      a substitution to be applied
@@ -715,13 +715,13 @@ final case class CN(attributes : Attributes = NoAttr, n: BigDecimal) extends CMa
     sb ++= n.toString
   }
 
-  @Pure override protected
-  def toSymcomp$: OpenMathBase =
-    if (n.isWhole)
-      new OMInteger(n.toBigIntExact.get.bigInteger)
-    else
-      new OMApply(internal.decimalFractionSymbol.cd,internal.decimalFractionSymbol.name,
-        new OMString(n.toString))
+//  @Pure override protected
+//  def toSymcomp$: OpenMathBase =
+//    if (n.isWhole)
+//      new OMInteger(n.toBigIntExact.get.bigInteger)
+//    else
+//      new OMApply(internal.decimalFractionSymbol.cd,internal.decimalFractionSymbol.name,
+//        new OMString(n.toString))
 
   override private[cmathml] def substitute$(subst: Map[String, CMathML], substFrees: Set[String]): CMathML =
     new CN(substituteInAttribs$(attributes,subst,substFrees), n)
@@ -761,8 +761,8 @@ final case class CS(attributes : Attributes = NoAttr, str: String) extends CMath
     sb += '"'
   }
 
-  @Pure override protected
-  def toSymcomp$: OpenMathBase = ???
+//  @Pure override protected
+//  def toSymcomp$: OpenMathBase = ???
 
   override private[cmathml] def substitute$(subst: Map[String, CMathML], substFrees: Set[String]): CMathML =
     new CS(substituteInAttribs$(attributes,subst,substFrees), str)
@@ -797,8 +797,8 @@ final case class CBytes(attributes : Attributes = NoAttr, bytes: Vector[Byte]) e
     sb += '%'
   }
 
-  @Pure override protected
-  def toSymcomp$: OpenMathBase = ???
+//  @Pure override protected
+//  def toSymcomp$: OpenMathBase = ???
 
   // TODO join occurrences in Leaf (can use setAttributes)
   override private[cmathml] def substitute$(subst: Map[String, CMathML], substFrees: Set[String]): CMathML =
@@ -842,8 +842,8 @@ final case class CSymbol(attributes : Attributes = NoAttr, cd: String, name: Str
     case Some(popcorn) => sb ++= popcorn
     case None => sb ++= cd; sb += '.'; sb ++= name }
 
-  @Pure override protected
-  def toSymcomp$: OpenMathBase = new OMSymbol(cd,name)
+//  @Pure override protected
+//  def toSymcomp$: OpenMathBase = new OMSymbol(cd,name)
 
   override private[cmathml] def substitute$(subst: Map[String, CMathML], substFrees: Set[String]): CMathML =
     new CSymbol(substituteInAttribs$(attributes,subst,substFrees), cd, name)
@@ -913,8 +913,8 @@ final case class CError(attributes : Attributes, cd: String, name: String, args:
   /** Same as [[toXML]] but without the outermost attributes */
   override def toXML$: Elem = <cerror><csymbol cd={cd}>{name}</csymbol>{args.map(anyToXML)}</cerror>
 
-  @Pure override protected
-  def toSymcomp$: OpenMathBase = ??? // new OMSymbol(cd,name).error(args.map(_.toSymcomp).toArray)
+//  @Pure override protected
+//  def toSymcomp$: OpenMathBase = ??? // new OMSymbol(cd,name).error(args.map(_.toSymcomp).toArray)
 
   override private[cmathml] def substitute$(subst: Map[String, CMathML], substFrees: Set[String]): CMathML = ???
 
@@ -943,8 +943,8 @@ final case class CNone(attributes : Attributes = NoAttr) extends CMathML with Le
   /** Same as [[toXML]] but without the outermost attributes */
   override def toXML$: Elem = <cerror><csymbol cd="moreerrors">encodingError</csymbol><cs>Cannot encode "hole" in formula</cs></cerror>
 
-  @Pure override protected
-  def toSymcomp$: OpenMathBase = CMathML.internal.holeSymbol.toSymcomp
+//  @Pure override protected
+//  def toSymcomp$: OpenMathBase = CMathML.internal.holeSymbol.toSymcomp
 
   override private[cmathml] def substitute$(subst: Map[String, CMathML], substFrees: Set[String]): CMathML =
     CNone(substituteInAttribs$(attributes, subst, substFrees))
