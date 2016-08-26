@@ -65,7 +65,7 @@ object TestApp {
     List(
       "_Quadratic equation" -> "$a*$x^2 + $b*$x + $c = 0", // (a*square(x) + b*x + c === 0),
 //      "_Energy/mass equivalence" -> (E === m*square(c) / sqrt(1 - square(v)/square(c))),
-      "_De Morgan's law" -> "not($A and $C) <=> (not($A) and not($D))"
+      "_De Morgan's law" -> "not($A and $C) <=> (not $A or not $C)"
     ).map { case (name,math) => (name,CMathML.fromPopcorn(math)) }
   }
 }

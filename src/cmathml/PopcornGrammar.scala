@@ -57,7 +57,7 @@ object PopcornGrammar {
     { case (x,Nil) => x
       case (x,xs) => logic1.and(x+:xs : _*) }
 
-  lazy val relExpr : P = P ( intervalExpr ~ (("="|"<"|"<="|">"|">="|"!="|"<>").! ~/ intervalExpr).? ).map
+  lazy val relExpr : P = P ( intervalExpr ~ (("="|">="|"<="|"!="|"<>"|"<"|">").! ~ intervalExpr).? ).map
     { case (x,None) => x
       case (x,Some(("=",y))) => relation1.equal(x,y)
       case (x,Some((">",y))) => relation1.gt(x,y)
