@@ -15,8 +15,8 @@ class MutableTheory {
   def addListener(listener : Listener) = synchronized { listeners += listener }
   def removeListener(listener : Listener) = synchronized { listeners -= listener }
 
-  def addFormula(formula:Formula) : Formula = synchronized {
-    val (thy2,form2) = theory.addFormula(formula)
+  def addAxiom(formula:Formula) : Formula = synchronized {
+    val (thy2,form2) = theory.addAxiom(formula)
     theory = thy2
     for (l <- listeners) l.formulaAdded(form2)
     form2
@@ -35,11 +35,11 @@ class MutableTheory {
     formulas
   }
 
-  def updateFormula(formula:Formula) : (Formula,Formula) = synchronized {
-    val (thy2,newForm,oldForm) = theory.updateFormula(formula)
-    for (l <- listeners) l.formulaUpdated(newForm,oldForm)
-    (newForm,oldForm)
-  }
+//  def updateFormula(formula:Formula) : (Formula,Formula) = synchronized {
+//    val (thy2,newForm,oldForm) = theory.updateFormula(formula)
+//    for (l <- listeners) l.formulaUpdated(newForm,oldForm)
+//    (newForm,oldForm)
+//  }
 
   def setTheory(thy: Theory): Unit = synchronized {
     theory = thy

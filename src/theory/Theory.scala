@@ -2,13 +2,14 @@ package theory
 
 import cmathml.{CMathML, Path}
 import misc.{Log, Utils}
-import theory.Formula.Property
+import relation._
+import theory.Formula.{Axiom, Property, Proven}
 import theory.Theory.NO_ID
 import trafo.TrafoInstance
 
 import scala.collection.immutable.HashMap
 import scala.collection.mutable
-import scala.collection.mutable.ListBuffer
+import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import scala.reflect.runtime.universe._
 import scala.xml.{Attribute, Comment, Elem, UnprefixedAttribute}
 
@@ -41,7 +42,11 @@ final case class Theory(counter : Int,
     </theory>
   }
 
-  def addFormula(formula:Formula) : (Theory,Formula) = {
+  def addAxiom(formula:Formula) : (Theory,Formula) = {
+    addFormula(formula.setProperty(Axiom,true))
+  }
+
+  private def addFormula(formula:Formula) : (Theory,Formula) = {
     assert(formula.id==NO_ID)
     val formula2 = formula.copy(id=counter)
     val thy = copy(counter = counter+1, formulas = formulas.updated(counter, formula2))
@@ -55,20 +60,46 @@ final case class Theory(counter : Int,
     var theory = this
     val trafoCounter = theory.counter
     theory = theory.copy(counter=trafoCounter+1)
-    var mappedFormulas = ListBuffer() : ListBuffer[Formula]
-    var newFormulas = ListBuffer() : ListBuffer[Formula]
+    val mappedFormulas = ArrayBuffer(formulas :_*)
 
-    for (f <- formulas) {
+    // Load existing formulas from theory
+    mappedFormulas.transform { f =>
+      if (f.id!=NO_ID) {
+        val f2 = theory.formulas(f.id)
+        assert(f2.logicallyEquivalent(f))
+        f2
+      } else
+        f
+    }
+
+    // Find out which formulas have been proven (can probably be done in some more general way?)
+    val premises = trafo.relation match {
+      case Implication(prems,_) => mappedFormulas.slice(0,prems)
+      case Trivial => Nil
+      case Equality => List(mappedFormulas.head)
+      case OneOf(_) => mappedFormulas
+    }
+    val premisesProven = premises.forall(f => f(Axiom) || f(Proven))
+    if (premisesProven)
+      mappedFormulas.transform { f =>
+        if (!(f(Axiom) || f(Proven))) f.setProperty(Proven,true)
+        else f
+      }
+
+    // Put changed/new formulas back into theory
+    mappedFormulas.transform { f =>
       if (f.id==NO_ID) {
-        val (thy, newFormula) = theory.addFormula(f)
-        newFormulas += newFormula
-        mappedFormulas += newFormula
+        val (thy,f2) = theory.addFormula(f)
         theory = thy
+        f2
       } else {
-        assert(isMember(f))
-        mappedFormulas += f
+        val (thy,f2) = theory.updateFormula(f)
+        theory = thy
+        f2
       }
     }
+
+    val newFormulas = mappedFormulas.toList.filter(f => !this.formulas.contains(f.id))
 
     val trafo2 = trafo.update(trafoCounter,mappedFormulas)
     theory = theory.copy(transformations=transformations.updated(trafoCounter,trafo2))
@@ -85,14 +116,16 @@ final case class Theory(counter : Int,
     * The formula to be replaced is specified by the id of the new formula.
     *
     * @param formula th new formula
-    * @return (thy,newFormula,oldFormula): thy is the new theory, oldFormula is the formula that was replaced,
+    * @return (thy,oldFormula): thy is the new theory, oldFormula is the formula that was replaced,
     *         newFormula is the just added formula (newFormula may or may not be equal to the parameter formula,
     *         but the logical content is guaranteed to be the same)
+    *
+    *  TODO version of this that is public (with restrictions on the changes)
     */
-  def updateFormula(formula:Formula) : (Theory,Formula,Formula) = {
+  private[Theory] def updateFormula(formula:Formula) : (Theory,Formula) = {
     val oldFormula = formulas.getOrElse(formula.id, throw new IllegalArgumentException("trying to update non-existing formula"))
     val thy2 = copy(formulas = formulas.updated(formula.id, formula))
-    (thy2,formula,oldFormula)
+    (thy2,oldFormula)
   }
 }
 object Theory {
@@ -113,6 +146,8 @@ object Theory {
 final case class Formula private[theory] (id : Int = NO_ID,
                                           properties : Map[Property[_],Any] = Map.empty,
                                           math : CMathML) {
+  def logicallyEquivalent(f: Formula): Boolean = this==f
+
   import Formula._
   def detach: Formula = copy(id=NO_ID)
   def toXML = {
@@ -152,10 +187,12 @@ object Formula {
           instance = universeMirror.reflectModule(module).instance.asInstanceOf[Property[_]] }
       yield instance.name -> instance
   }
-//  val tt = weakTypeTag[Property[_]]
-//  val tt2 = typeOf[Property[_]].typeSymbol.asClass.knownDirectSubclasses
 
   case object Axiom extends Property[Boolean](default=false) {
+    override def toText(value: Boolean): String = value.toString
+    override def fromText(str: String) = str.toBoolean
+  }
+  case object Proven extends Property[Boolean](default=false) {
     override def toText(value: Boolean): String = value.toString
     override def fromText(str: String) = str.toBoolean
   }
@@ -176,7 +213,3 @@ object Formula {
     new Formula(id=id,math=math, properties=Map(props:_*))
   }
 }
-
-//case class FormulaRef(val id : Int, val formula : Formula) {
-//  def math = formula.math
-//}

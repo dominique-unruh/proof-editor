@@ -8,7 +8,7 @@ class TransformationTest extends UnitSpec {
   test("EditFormulaTrafo") {
     val inter = new EditFormulaTrafo().createInteractive
     val thy0 = Theory()
-    val (thy1,f1)= thy0.addFormula(Formula(CN(1)))
+    val (thy1,f1)= thy0.addAxiom(Formula(CN(1)))
 //    var (thy2,f2)= thy1.addFormula(Formula(CN(1)))
     val f2 = CN(0)+CN(1)
     println(f1.id)

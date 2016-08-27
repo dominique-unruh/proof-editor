@@ -44,10 +44,10 @@ case object Equality extends Relation {
 }
 
 
-case class Unrelated(formulaNum : Int) extends Relation {
-  lazy val relatingFormula: CMathML =
-    fns1.lambda((1 to formulaNum).map(i => CI(s"X$i")),logic1.trueSym)
-}
+//case class Unrelated(formulaNum : Int) extends Relation {
+//  lazy val relatingFormula: CMathML =
+//    fns1.lambda((1 to formulaNum).map(i => CI(s"X$i")),logic1.trueSym)
+//}
 
 case object Trivial extends Relation {
   override val formulaNum: Int = 1

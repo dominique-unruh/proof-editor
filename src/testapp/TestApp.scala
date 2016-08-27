@@ -63,7 +63,7 @@ object TestApp {
 //    def square(x:CMathML) = arith1.power(x,2)
 //    def sqrt(x:CMathML) = arith1.root(x,2)
     List(
-      "_Quadratic equation" -> "$a*$x^2 + $b*$x + $c = 0", // (a*square(x) + b*x + c === 0),
+      "_Quadratic equation" -> "($a*$x^2 + $b*$x) + $c = 0", // (a*square(x) + b*x + c === 0),
 //      "_Energy/mass equivalence" -> (E === m*square(c) / sqrt(1 - square(v)/square(c))),
       "_De Morgan's law" -> "not($A and $C) <=> (not $A or not $C)"
     ).map { case (name,math) => (name,CMathML.fromPopcorn(math)) }
@@ -108,7 +108,7 @@ class TestApp extends JFXApp {
       errorPopup("The formula you entered is not valid math")
       return
     }
-    theoryView.theory.addFormula(Formula(math).setProperty(Formula.Axiom,true))
+    theoryView.theory.addAxiom(Formula(math))
   }
 
   private val z3 = new Z3
@@ -172,7 +172,7 @@ class TestApp extends JFXApp {
       new control.Menu("E_xamples") {
         items = for ((name,math) <- TestApp.examples2)
           yield new control.MenuItem(name) {
-            onAction = handle(theoryView.theory.addFormula(Formula(math).setProperty(Axiom,true)))
+            onAction = handle(theoryView.theory.addAxiom(Formula(math)))
           }
       }
     )
