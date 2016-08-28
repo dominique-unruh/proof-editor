@@ -6,8 +6,10 @@ import javafx.scene.layout.HBox
 
 import cmathml.CMathML.internal
 import cmathml.{CMathML, Logic}
-import misc.Log
+import misc.{Log, Utils}
 import misc.Utils.ImplicitConversions._
+import theory.Formula.Property
+import theory.Theory.FormulaId
 import theory.{Formula, MutableTheory}
 import trafo.TrafoInstance
 import ui.TheoryView.{FormulaBox, TrafoBox}
@@ -25,8 +27,8 @@ class TheoryView extends VBox {
   padding = Insets(10)
 
   val theory = new MutableTheory()
-  private var selectedFormulaId = None : Option[Int]
-  private val nodes = new mutable.HashMap[Int,FormulaBox]
+  private var selectedFormulaId = None : Option[FormulaId]
+  private val nodes = new mutable.HashMap[FormulaId,FormulaBox]
 
   def selectedFormula = selectedFormulaId.map(theory.getTheory.formulas(_))
   def selectedMathEdit = selectedFormulaId.map(nodes(_).mathEdit)
@@ -79,9 +81,9 @@ class TheoryView extends VBox {
 }
 
 object TheoryView {
-  private[TheoryView] class FormulaBox(val id:Int) extends HBox {
+  private[TheoryView] class FormulaBox(val id:FormulaId) extends HBox {
     val mathEdit = new MathEdit()
-    private val propsLabel = new Label("")
+    private val propsLabel = new HTMLLabel()
     alignmentProperty.setValue(Pos.CenterLeft)
     getChildren.addAll(new Label(s"($id) "), mathEdit, propsLabel)
 
@@ -89,13 +91,13 @@ object TheoryView {
       assert(id==formula.id)
       mathEdit.setMath(formula.math)
       val props = for {
-        (prop, value) <- formula.properties
-        if value != false
-      } yield if (value==true) prop.name else s"${prop.name}=$value"
+        (prop : Property[t], value) <- formula.properties
+//        if value != prop.default
+      } yield if (value==true) <span>{prop.name}</span> else <span>{prop.name}={prop.humanReadable(value.asInstanceOf[t])}</span>
       if (props.isEmpty)
-        propsLabel.setText("")
+        propsLabel.setHTML(<span></span>)
       else
-        propsLabel.setText(props.mkString(" (", ", ", ")"))
+        propsLabel.setHTML(<span>({Utils.intersperse(props.toSeq,scala.xml.Text(", "))})</span>)
     }
   }
   private[TheoryView] class TrafoBox(val trafo: TrafoInstance) extends HBox {

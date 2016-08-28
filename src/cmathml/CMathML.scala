@@ -7,6 +7,7 @@ import java.util.stream.Stream
 import cmathml.CMathML._
 import com.sun.org.apache.xerces.internal.util.XMLChar
 import misc.{Log, Pure, Utils}
+import theory.Theory.FormulaId
 //import org.symcomp.openmath.{OMSymbol, _}
 import _root_.z3.Z3
 import cmathml.Apply.Extractor
@@ -226,7 +227,7 @@ object CMathML {
     val holeSymbol = CSymbol(cd,"hole")
     val decimalFractionSymbol = CSymbol(cd,"decimalFraction")
     val formulaRef = CSymbol(cd,"formulaRef")
-    def formulaRef(nr : Int): Apply = Apply(formulaRef,CN(nr))
+    def formulaRef(nr : FormulaId): Apply = Apply(formulaRef,CN(nr.id))
     def formulaRefE = new Apply.Extractor(formulaRef)
   }
 

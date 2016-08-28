@@ -4,6 +4,7 @@ import cmathml.CMathML.logic1
 import cmathml.{CMathML, CNone}
 import misc.{Log, Utils}
 import relation.{Implication, OneOf, Relation}
+import theory.Theory.TrafoId
 import theory.{Formula, Theory}
 import trafo.CaseDistinction.Instance
 import trafo.Interaction._
@@ -48,12 +49,12 @@ class CaseDistinction extends Transformation {
 
 object CaseDistinction {
   def fromXML(xml:Elem) = {
-    val id = xml.attribute("id").get.text.toInt
+    val id = TrafoId(xml.attribute("id").get.text)
     val formulas = Utils.elementsIn(xml).map(Formula.fromXML)
     Instance(formulas,id)
   }
 
-  case class Instance(cases: Seq[Formula], id: Int = Theory.NO_ID) extends TrafoInstance {
+  case class Instance(cases: Seq[Formula], id: TrafoId = Theory.NO_T_ID) extends TrafoInstance {
     override val formulas = Vector(cases: _*)
     override val shortDescription: String = "case distinction"
     override lazy val isValid: Boolean =
@@ -62,7 +63,7 @@ object CaseDistinction {
       {Utils.xmlAddNewlines(formulas.map(_.toXML))}
     </caseDistinction>
 
-    override def update(id: Int, formulas: Seq[Formula]): TrafoInstance = Instance(formulas, id)
+    override def update(id: TrafoId, formulas: Seq[Formula]): TrafoInstance = Instance(formulas, id)
     override val relation: Relation = OneOf(cases.length)
   }
 }

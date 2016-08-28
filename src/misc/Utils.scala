@@ -24,6 +24,12 @@ import scala.xml.{Atom, Comment, Elem, Text}
 
 
 object Utils {
+  def splitString2(str: String, sep: Char) = {
+    val idx = str.indexOf(sep)
+    assert(idx>=0)
+    (str.substring(0,idx), str.substring(idx+1))
+  }
+
   def lowerFirst(s: String) = if (s.isEmpty) s else s(0).toLower + s.substring(1)
 
   def xmlAddNewlines(nodes : Seq[scala.xml.Node]) = intersperse(nodes, Text("\n"))
@@ -34,7 +40,7 @@ object Utils {
         invoke(l)
       } catch {
         case e: Throwable =>
-          Log.warn("Exception in listener", e)
+          Log.stackTrace("Exception in listener", e)
       }
 
 

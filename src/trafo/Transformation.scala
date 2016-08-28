@@ -3,6 +3,7 @@ package trafo
 import cmathml.{CMathML, Logic}
 import relation.Relation
 import theory.Formula
+import theory.Theory.TrafoId
 
 import scala.collection.immutable.Vector
 import scala.collection.mutable
@@ -22,8 +23,8 @@ abstract class Transformation {
   * it must only refer to the formulas listed in [[TrafoInstance.formulas]].
   */
 abstract class TrafoInstance {
-  def update(id: Int, formulas: Seq[Formula]) : TrafoInstance
-  val id: Int
+  def update(id: TrafoId, formulas: Seq[Formula]) : TrafoInstance
+  val id: TrafoId
   val formulas : IndexedSeq[Formula]
   val isValid  : Boolean
   val relation : Relation

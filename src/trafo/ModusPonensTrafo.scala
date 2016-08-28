@@ -7,6 +7,7 @@ import misc.{Log, Utils}
 import misc.Log
 import relation.{Implication, Relation}
 import sun.java2d.cmm.kcms.CMM
+import theory.Theory.TrafoId
 import theory.{Formula, Theory}
 import trafo.Interaction._
 import trafo.ModusPonensTrafo.Instance
@@ -73,14 +74,14 @@ class ModusPonensTrafo extends Transformation {
 
 object ModusPonensTrafo {
   def fromXML(xml:Elem) = {
-    val id = xml.attribute("id").get.text.toInt
+    val id = TrafoId(xml.attribute("id").get.text)
     val path = Path.fromString(xml.attribute("path").get.text)
     Utils.elementsIn(xml) match {
       case Seq(a,b,res) => Instance(Formula.fromXML(a),Formula.fromXML(b),path,Formula.fromXML(res),id)
     }
   }
 
-  case class Instance(a : Formula, b : Formula, path : Path, res : Formula, id : Int = Theory.NO_ID) extends TrafoInstance {
+  case class Instance(a : Formula, b : Formula, path : Path, res : Formula, id : TrafoId = Theory.NO_T_ID) extends TrafoInstance {
     override val shortDescription: String = "modus ponens"
     override val formulas = Vector(a,b,res)
     override val isValid: Boolean = {
@@ -100,7 +101,7 @@ object ModusPonensTrafo {
       {res.toXML}
     </modusPonens>
 
-    override def update(id: Int, formulas: Seq[Formula]): TrafoInstance = formulas match {
+    override def update(id: TrafoId, formulas: Seq[Formula]): TrafoInstance = formulas match {
       case Seq(a2,b2,res2) => Instance(a2,b2,path,res2,id)
       case _ => sys.error("update with wrong number of formulas")
     }

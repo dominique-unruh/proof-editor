@@ -88,7 +88,9 @@ object CMathMLTest {
     CS("hello"),
     quant1.forall(List(CI("x"),CI("y")), equal(CI("x"),CI("y"))),
     CBytes(1,2,3),
-    logic1.equivalent(CI("A"),CI("B"))
+    logic1.equivalent(CI("A"),CI("B")),
+    logic1.trueSym,
+    logic1.falseSym
   )
 
   val subtermTests = List(

@@ -42,7 +42,6 @@ class FilteredListView[T](val items: ObservableBuffer[T]) extends VBox {
 
   filterField.onKeyPressed = { e:KeyEvent =>
     import scalafx.scene.input.KeyCode._
-    Log.debug("key press", e)
     e.code match {
       case Down =>
         listView.requestFocus()

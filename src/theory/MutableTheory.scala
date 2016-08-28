@@ -1,6 +1,7 @@
 package theory
 
 import misc.{Log, Utils}
+import theory.Theory.{FormulaId, TrafoId}
 import trafo.TrafoInstance
 
 import scala.collection.mutable
@@ -45,17 +46,17 @@ class MutableTheory {
     theory = thy
     for (l <- listeners) l.theoryCleared()
     val ids = mutable.HashSet[Int]()
-    ids ++= thy.formulas.values.map(_.id)
-    ids ++= thy.transformations.values.map(_.id)
-    val seenFormulas = mutable.HashSet[Int]()
+    ids ++= thy.formulas.values.map(_.id.id)
+    ids ++= thy.transformations.values.map(_.id.id)
+    val seenFormulas = mutable.HashSet[FormulaId]()
     for (id <- ids.toSeq.sorted) {
-      for (t <- thy.transformations.get(id)) {
+      for (t <- thy.transformations.get(TrafoId(id))) {
         val newFormulas = t.formulas.filter(f => !seenFormulas.contains(f.id))
         Utils.invokeListeners[Listener](listeners, _.transformationAdded(t, newFormulas))
         seenFormulas ++= t.formulas.map(_.id)
       }
-      for (f <- thy.formulas.get(id) if !seenFormulas.contains(id)) {
-        seenFormulas += id
+      for (f <- thy.formulas.get(FormulaId(id)) if !seenFormulas.contains(FormulaId(id))) {
+        seenFormulas += FormulaId(id)
         Utils.invokeListeners[Listener](listeners, _.formulaAdded(f))
       }
     }

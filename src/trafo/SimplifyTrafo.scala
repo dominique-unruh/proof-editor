@@ -3,7 +3,7 @@ package trafo
 import Interaction._
 import SimplifyTrafo._
 import misc.Utils
-import theory.Theory.NO_ID
+import theory.Theory.{NO_ID, TrafoId}
 import theory.{Formula, Theory}
 import relation.{Equality, Implication, Relation}
 import theory.Formula
@@ -30,14 +30,14 @@ class SimplifyTrafo extends Transformation {
 
 object SimplifyTrafo {
   def fromXML(xml:Elem) = {
-    val id = xml.attribute("id").get.text.toInt
+    val id = TrafoId(xml.attribute("id").get.text)
     Utils.elementsIn(xml) match {
       case Seq(a,b) => Instance(Formula.fromXML(a), Formula.fromXML(b), id)
     }
   }
 
 
-  case class Instance(a: Formula, b: Formula, id : Int = NO_ID) extends TrafoInstance {
+  case class Instance(a: Formula, b: Formula, id : TrafoId = Theory.NO_T_ID) extends TrafoInstance {
     override val shortDescription: String = "simplification"
     override val formulas = Vector(a, b)
     override lazy val isValid = a.math == b.math
@@ -47,7 +47,7 @@ object SimplifyTrafo {
       {b.toXML}
     </simplify>
 
-    override def update(id: Int, formulas: Seq[Formula]): TrafoInstance = formulas match {
+    override def update(id: TrafoId, formulas: Seq[Formula]): TrafoInstance = formulas match {
       case Seq(a2,b2) => Instance(a2,b2,id)
       case _ => sys.error("update with wrong number of formulas")
     }
