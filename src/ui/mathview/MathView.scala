@@ -1,10 +1,12 @@
 package ui.mathview
 
-import javafx.geometry.Bounds
+import javafx.geometry.{BoundingBox, Bounds}
+import javafx.scene
+import javafx.scene.input.MouseEvent
 import javafx.scene.layout
 
 import cmathml._
-import misc.Pure
+import misc.{Log, Pure}
 import misc.Utils.ImplicitConversions._
 
 import scala.annotation.tailrec
@@ -16,7 +18,9 @@ import scalafx.collections.ObservableBuffer.{Add, Remove, Reorder, Update}
 import scalafx.geometry.Insets
 import scalafx.scene.image.Image
 import scalafx.scene.layout._
-import scalafx.scene.{Group, Node}
+import javafx.scene.{Group, Node}
+
+import scalafx.Includes._
 
 trait MathHighlight extends Node {
   def setSize(size:Bounds) : Unit
@@ -266,7 +270,21 @@ class MathView extends HBox {
      getNodeImpl(math).get.snapshot(null,null)
   }
 
-  private class MathNodeImpl(val math : MutableCMathML) extends Group with MathRendererContext with MathNode {
+
+  def getMathNodeFromMouse(e : MouseEvent) : Option[MathNode] = {
+    // TODO: e.getTarget does not necessarily get the node under the mouse (e.g., while dragging)
+
+    if (!e.getTarget.isInstanceOf[Node]) return None
+    var candidate = e.getTarget.asInstanceOf[javafx.scene.Node]
+    while (candidate!=null) {
+      Log.debug("bb",candidate.getClass.getSimpleName,candidate.getBoundsInLocal,candidate.getLayoutBounds)
+      if (candidate.isInstanceOf[MathNodeImpl]) return Some(candidate.asInstanceOf[MathNode])
+      candidate = candidate.getParent
+    }
+    None
+  }
+
+  private class MathNodeImpl(val math : MutableCMathML) extends javafx.scene.Group with MathRendererContext with MathNode {
     def rightmostChild: Option[MutableCMathML] = embedded.lastOption
     def leftmostChild: Option[MutableCMathML] = embedded.headOption
 
@@ -376,7 +394,7 @@ class MathView extends HBox {
     private def updateChildren() : Unit = {
       var cs = List(child : javafx.scene.Node)
       for (h <- highlights) cs = h::cs
-      children.setAll(cs : _*)
+      getChildren.setAll(cs : _*)
     }
 
     private def disownAll() = {
@@ -397,6 +415,9 @@ class MathView extends HBox {
       assert(child!=null)
       setChild(child)
     }
+
+    override def boundingBoxInScene: Bounds =
+      this.localToScene(this.boundsInLocal.value)
   }
 }
 
@@ -418,6 +439,7 @@ trait MathRendererFactory {
 
 trait MathNode {
   val math : MutableCMathML
+  def boundingBoxInScene : Bounds
 }
 
 class MathViewException(message: String, args: Any*) extends MathException(message,args)

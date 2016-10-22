@@ -11,7 +11,7 @@ import scala.collection.mutable
 import scalafx.Includes._
 import scalafx.beans.binding.Bindings
 import scalafx.geometry.Pos
-import scalafx.scene.Node
+import javafx.scene.Node
 import scalafx.scene.layout.HBox
 import scalafx.scene.paint.Color
 import scalafx.scene.shape.{Line, Rectangle}

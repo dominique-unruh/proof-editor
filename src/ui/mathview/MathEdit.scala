@@ -2,11 +2,13 @@ package ui.mathview
 
 import javafx.geometry.Bounds
 import javafx.scene.control.Alert
+import javafx.scene.layout
 
 import cmathml.CMathML._
 import cmathml.MutableCMathML.fromCMathML
 import cmathml._
 import fastparse.core.ParseError
+import misc.Log
 import misc.Utils.ImplicitConversions._
 import ui.mathview.MathView.{CursorLeft, CursorPos, CursorRight, CursorSide}
 
@@ -23,21 +25,92 @@ object MathEdit {
   private val dataformatCMathML = new DataFormat("application/x.proof-editor-math-internal")
   private val dataformatPopcorn = new DataFormat("text/x.openmath-popcorn")
   private val dataformatCMathMLXML = new DataFormat("application/mathml-content+xml")
+
+  private[MathEdit] def makeExtendBinopCombinations(entries : ((CSymbol,String),CSymbol)*) =
+    Map(entries.map { case ((sym,op),newSym) => (sym.cd,sym.name,op) -> (newSym.cd,newSym.name) } : _*)
+  private[MathEdit] lazy val extendBinopCombinations = makeExtendBinopCombinations(
+    relation1.equal -> ">" -> logic1.implies,
+    relation1.equal -> "/" -> relation1.neq,
+    relation1.gt -> "=" -> relation1.geq,
+    relation1.lt -> "=" -> relation1.leq,
+    relation1.leq -> ">" -> logic1.equivalent
+  )
 }
 
 class MathEdit extends MathView {
   import MathEdit._
 
-  styleClass += "mathedit"
-  focusTraversable = true
-
   val editable = ObjectProperty(None : Option[MutableCMathML])
-  installHighlight(editable,classOf[EditableHighlight])
-
   var _onChange : () => Unit = { () => }
+  private var selectingFrom : Option[CursorPos] = None
+  val cursorPos = ObjectProperty[CursorPos](CursorPos(mathDoc.root, CursorLeft))
+  val selection = ObjectProperty[Option[MutableCMathML]](None)
+  init()
+
+  private def init() = {
+    styleClass += "mathedit"
+    focusTraversable = true
+
+    installHighlight(editable,classOf[EditableHighlight])
+    installHighlight(selection,classOf[MathSelection])
+
+    mathDoc.addGlobalChangeListener({ _ => _onChange() })
+
+    cursorPos.onChange { (_, oldPos, newPos) =>
+      removeCursor(oldPos)
+      if (focused.value)
+        showCursor(newPos)
+    }
+    focused.onChange { (_, _, focus) =>
+      if (focus)
+        showCursor(cursorPos.value)
+      else
+        removeCursor(cursorPos.value)
+    }
+
+    onContextMenuRequested = { e:ContextMenuEvent =>
+      //    println("Context menu requested: "+e)
+      createContextMenu.show(this,e.screenX,e.screenY)
+    }
+
+    onMousePressed = { e:MouseEvent =>
+      Log.debug("clicked",e)
+      requestFocus()
+      val pos = getPositionFromMouse(e)
+      pos match {
+        case None =>
+        case Some(pos2) => moveTo(pos2,selecting=e.shiftDown)
+      }
+    }
+
+    onMouseDragged = { e:MouseEvent =>
+      val pos = getPositionFromMouse(e)
+      Log.debug("dragged pos",pos)
+      pos match {
+        case None =>
+        case Some(pos2) => moveTo(pos2,selecting=true)
+      }
+    }
+
+    onKeyPressed = handleKeyPress(_:KeyEvent)
+    onKeyTyped = handleKeyTyped(_:KeyEvent)
+  }
+
+  def getPositionFromMouse(e: MouseEvent) : Option[CursorPos] = {
+//    Log.debug("click",e.target)
+    getMathNodeFromMouse(e) match {
+      case None => None
+      case Some(node) =>
+        val bb = node.boundingBoxInScene
+        val centerX = (bb.getMinX+bb.getMaxX)/2
+//        Log.debug("clikc",e.sceneX,bb,centerX)
+        val side = if (e.sceneX >= centerX) CursorRight else CursorLeft
+        val pos = CursorPos(node.math, side)
+        Some(pos)
+    }
+  }
+
   def onChange(f:()=>Unit) = _onChange = f
-  mathDoc.addGlobalChangeListener({ _ => _onChange() })
-//  def onChange(f:()=>Unit) = _onChange = f
 
   override def setMath(m : CMathML): Unit = {
     super.setMath(m)
@@ -54,19 +127,6 @@ class MathEdit extends MathView {
     cursorPos.value = CursorPos(mathDoc.root, CursorRight)
   }
 
-  private var selectingFrom : Option[CursorPos] = None
-  val cursorPos = ObjectProperty[CursorPos](CursorPos(mathDoc.root, CursorLeft))
-  cursorPos.onChange { (_, oldPos, newPos) =>
-    removeCursor(oldPos)
-    if (focused.value)
-      showCursor(newPos)
-  }
-  focused.onChange { (_, _, focus) =>
-    if (focus)
-      showCursor(cursorPos.value)
-    else
-      removeCursor(cursorPos.value)
-  }
 
   private def removeCursor() : Unit = removeCursor(cursorPos.value)
   private def removeCursor(pos:CursorPos) : Unit =
@@ -92,8 +152,6 @@ class MathEdit extends MathView {
     }
   }
 
-  val selection = ObjectProperty[Option[MutableCMathML]](None)
-  installHighlight(selection,classOf[MathSelection])
 
   private def menuItem(text:String, action: => Unit) = {
     val item = new MenuItem(text)
@@ -132,10 +190,6 @@ class MathEdit extends MathView {
     cm
   }
 
-  onContextMenuRequested = { e:ContextMenuEvent =>
-//    println("Context menu requested: "+e)
-    createContextMenu.show(this,e.screenX,e.screenY)
-  }
 
   private def clearSelection(): Unit = {
     selectingFrom = None
@@ -153,10 +207,6 @@ class MathEdit extends MathView {
     case _ => throw new IllegalArgumentException(side.toString)
   }
 
-  onMouseClicked = { e:MouseEvent => requestFocus() }
-
-  onKeyPressed = handleKeyPress(_:KeyEvent)
-  onKeyTyped = handleKeyTyped(_:KeyEvent)
 
   def selectAll() = {
     if (inEditableRange(cursorPos.value.node) && (selection.value != editable.value))
@@ -168,17 +218,6 @@ class MathEdit extends MathView {
     cursorPos.value = CursorPos(selection.value.get, CursorRight)
   }
 
-  // TODO static
-  private def makeExtendBinopCombinations(entries : ((CSymbol,String),CSymbol)*) =
-    Map(entries.map { case ((sym,op),newSym) => (sym.cd,sym.name,op) -> (newSym.cd,newSym.name) } : _*)
-  // TODO static
-  private lazy val extendBinopCombinations = makeExtendBinopCombinations(
-    relation1.equal -> ">" -> logic1.implies,
-    relation1.equal -> "/" -> relation1.neq,
-    relation1.gt -> "=" -> relation1.geq,
-    relation1.lt -> "=" -> relation1.leq,
-    relation1.leq -> ">" -> logic1.equivalent
-  )
   private def extendBinop(char:String) : Boolean = {
     cursorPos.value match {
       case CursorPos (none @ MCNone(), CursorLeft) =>
@@ -298,16 +337,8 @@ class MathEdit extends MathView {
     e.code match {
       case Right|Left =>
         val newPos = atSideOf(e.code, cursorPos.value, jump=e.controlDown)
-        if (newPos.isDefined) {
-          if (e.shiftDown) {
-            if (selectingFrom.isEmpty)
-              selectingFrom = Some(cursorPos.value)
-            val selected = encompassingNode(newPos.get.node,selectingFrom.get.node)
-            selection.value = Some(selected)
-          } else
-            clearSelection()
-          cursorPos.value = newPos.get
-        }
+        if (newPos.isDefined)
+          moveTo(newPos.get,selecting=e.shiftDown)
       case X if e.shortcutDown => clipboardCut()
       case C if e.shortcutDown => clipboardCopy()
       case V if e.shortcutDown => clipboardPaste()
@@ -414,10 +445,21 @@ class MathEdit extends MathView {
     case _ =>
   }
 
+  private def moveTo(newPos: CursorPos, selecting:Boolean=false) = {
+    if (selecting) {
+      if (selectingFrom.isEmpty)
+        selectingFrom = Some(cursorPos.value)
+      val selected = encompassingNode(newPos.node,selectingFrom.get.node)
+      selection.value = Some(selected)
+    } else
+      clearSelection()
+    cursorPos.value = newPos
+  }
+
   private def moveLeft() = {
     leftOf(cursorPos.value) match {
       case None =>
-      case Some(pos) => cursorPos.value = pos
+      case Some(pos) => moveTo(pos)
     }
   }
 
@@ -500,43 +542,42 @@ class MathEdit extends MathView {
 
 
 
-private class MathCursor(val cursorSide: CursorSide) extends Region with MathHighlight {
-  id = Integer.toHexString(hashCode) // TODO: remove
-  styleClass += "mathCursor"
+private class MathCursor(val cursorSide: CursorSide) extends javafx.scene.layout.Region with MathHighlight {
+  this.id = Integer.toHexString(hashCode) // TODO: remove
+  getStyleClass += "mathCursor"
   cursorSide match {
-    case CursorLeft => styleClass += "mathCursorLeft"
-    case CursorRight => styleClass += "mathCursorRight"
+    case CursorLeft => getStyleClass += "mathCursorLeft"
+    case CursorRight => getStyleClass += "mathCursorRight"
   }
   override def setSize(size:Bounds) = {
-    layoutX = size.minX
-    layoutY = size.minY
-    prefWidth = size.width
-    prefHeight = size.height
+    this.layoutX = size.minX
+    this.layoutY = size.minY
+    setPrefWidth(size.width)
+    setPrefHeight(size.height)
     resize(size.width,size.height)
   }
 }
 
-private class MathSelection extends Region with MathHighlight {
-  id = Integer.toHexString(hashCode) // TODO: remove
-  styleClass += "mathSelection"
+private class MathSelection extends javafx.scene.layout.Region with MathHighlight {
+  this.id = Integer.toHexString(hashCode) // TODO: remove
+  this.styleClass += "mathSelection"
   override def setSize(size:Bounds) = {
-    layoutX = size.minX
-    layoutY = size.minY
-    prefWidth = size.width
-    prefHeight = size.height
+    this.layoutX = size.minX
+    this.layoutY = size.minY
+    setPrefWidth(size.width)
+    setPrefHeight(size.height)
     resize(size.width,size.height)
   }
 }
 
-private class EditableHighlight extends Region with MathHighlight {
-  id = Integer.toHexString(hashCode) // TODO: remove
-  styleClass += "mathEditable"
+private class EditableHighlight extends layout.Region with MathHighlight {
+  this.id = Integer.toHexString(hashCode) // TODO: remove
+  this.styleClass += "mathEditable"
   override def setSize(size:Bounds) = {
-    layoutX = size.minX
-    layoutY = size.minY
-    prefWidth = size.width
-    prefHeight = size.height
+    this.layoutX = size.minX
+    this.layoutY = size.minY
+    setPrefWidth(size.width)
+    setPrefHeight(size.height)
     resize(size.width,size.height)
   }
 }
-
