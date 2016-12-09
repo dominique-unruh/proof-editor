@@ -1,0 +1,5 @@
+session "ProofEditorSupport" = "HOL-Protocol" +
+  theories
+(*    "protocol/Protocol"
+    "protocol/Codec_Test" *)
+    "ProofEditorSupportOps"

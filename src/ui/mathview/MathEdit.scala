@@ -5,7 +5,7 @@ import javafx.scene.control.Alert
 import javafx.scene.layout
 
 import cmathml.CMathML._
-import cmathml.MutableCMathML.fromCMathML
+import cmathml.MutableCMathML.{fromCMathML, m_internal}
 import cmathml._
 import fastparse.core.ParseError
 import misc.Log
@@ -239,10 +239,47 @@ class MathEdit extends MathView {
     if (!extendBinop(char))
       insertBinaryOp(op)
 
+
+  private def extendBackslashName(str:String) : Boolean = {
+    cursorPos.value match {
+      case CursorPos(m_internal.backslashNameE(cs @ MCS(name)),
+                     CursorRight) =>
+        cs.str = name + str
+        true
+      case _ => false
+    }
+  }
+
+  val backslashNames = Map(
+    "sum" -> arith1.sumIndexed(CNone(),CNone(),CNone(),CNone()),
+    "true" -> logic1.trueSym,
+    "false" -> logic1.falseSym
+  )
+
+  private def finishBackslashName() : Unit = {
+    cursorPos.value match {
+      case CursorPos(bsn @ m_internal.backslashNameE(MCS(name)),CursorRight) =>
+        backslashNames.get(name) match {
+          case Some(newMath) =>
+            replaceWith(bsn, MutableCMathML.fromCMathML(newMath))
+          case None =>
+        }
+      case _ =>
+    }
+  }
+
   private def handleKeyTyped(e:KeyEvent) = {
-//    println("Key typed: "+e)
     var processed = true
+
     e.character match {
+      case AlphaChar(_) =>
+      case _ => finishBackslashName()
+    }
+
+    e.character match {
+      case AlphaChar(c) =>
+        if (!extendBackslashName(c))
+          insertMath(CI(c))
       case "+" => extendOrInsertBinop("+",arith1.plus)
       case "-" => extendOrInsertBinop("-",arith1.minus)
       case "*" => extendOrInsertBinop("*",arith1.times)
@@ -253,9 +290,9 @@ class MathEdit extends MathView {
       case "^" => extendOrInsertBinop("^",arith1.power)
       case "|" => extendOrInsertBinop("|",logic1.or)
       case "&" => extendOrInsertBinop("&",logic1.and)
-      case "T" => insertMath(logic1.trueSym)
-      case "F" => insertMath(logic1.falseSym)
-      case AlphaChar(c) => insertMath(CI(c))
+      case "\\" => insertMath(CMathML.internal.backslashName(""))
+//      case "T" => insertMath(logic1.trueSym)
+//      case "F" => insertMath(logic1.falseSym)
       case NumChar(c) => insertDigit(c(0)-'0')
       case _ => processed = false
     }
@@ -504,7 +541,9 @@ class MathEdit extends MathView {
         f(|x1,...,xn) --> ???   (if f != [] and not all xi=[])
        */
       (cursor.node, cursor.side) match {
-        case (m @ (MCN(_)|MCI(_)|MCSymbol(_,_)|MCError(_,_,_)), CursorRight) => replaceWith(m,hole); cursorPos.value = CursorPos(hole,CursorLeft)
+        case (m @ (MCN(_)|MCI(_)|MCSymbol(_,_)|MCError(_,_,_)|m_internal.backslashNameE(MCS(""))), CursorRight) => replaceWith(m,hole); cursorPos.value = CursorPos(hole,CursorLeft)
+        case (m_internal.backslashNameE(cs @ MCS(name)),CursorRight) =>
+          cs.str = name.substring(0,name.length-1)
         case (m @ (MApply(_,_*) | MCNone()), CursorRight) => leftAndBS()
         case (m, CursorLeft) =>
           m.parent match {

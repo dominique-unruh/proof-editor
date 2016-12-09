@@ -36,6 +36,20 @@ libraryDependencies += "com.lihaoyi" %% "fastparse" % "0.3.7"
 libraryDependencies += "com.thoughtworks.each" %% "each" % "2.0.0"
 //libraryDependencies += "org.pelotom" %% "effectful" % "1.0.1"
 
+libraryDependencies += "info.hupel" %% "libisabelle" % "0.5"
+libraryDependencies += "info.hupel" %% "libisabelle-setup" % "0.5"
+//libraryDependencies += "info.hupel" %% "pide-package" % "0.6"
+
+
+libraryDependencies += "org.slf4j" % "slf4j-simple" % "1.7.21"
+
+libraryDependencies += "com.twitter" %% "finagle-http" % "6.39.0"
+libraryDependencies += "com.twitter" %% "bijection-util" % "0.9.2"
+
+
+libraryDependencies += "org.scala-lang.modules" %% "scala-pickling" % "0.10.1"
+
+
 
 scalaSource in Compile := baseDirectory.value / "src"
 scalaSource in Test := baseDirectory.value / "test"

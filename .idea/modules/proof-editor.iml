@@ -17,6 +17,7 @@
       <sourceFolder url="file://$MODULE_DIR$/../../target/scala-2.11/resource_managed/main" type="java-resource" />
       <sourceFolder url="file://$MODULE_DIR$/../../src/test/resources" type="java-test-resource" />
       <sourceFolder url="file://$MODULE_DIR$/../../target/scala-2.11/resource_managed/test" type="java-test-resource" />
+      <excludeFolder url="file://$MODULE_DIR$/../../target" />
       <excludeFolder url="file://$MODULE_DIR$/../../target/resolution-cache" />
       <excludeFolder url="file://$MODULE_DIR$/../../target/scala-2.11" />
       <excludeFolder url="file://$MODULE_DIR$/../../target/streams" />
@@ -28,28 +29,84 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="SBT: org.scala-lang:scala-library:2.11.8:jar" level="project" />
-    <orderEntry type="module-library">
-      <library name="SBT: unmanaged-jars">
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../lib/com.microsoft.z3.jar!/" />
-          <root url="jar://$MODULE_DIR$/../../lib/openmath-1.4.0.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
+    <orderEntry type="library" name="SBT: com.twitter:bijection-util_2.11:0.9.2:jar" level="project" />
+    <orderEntry type="library" name="SBT: com.twitter:bijection-core_2.11:0.9.2:jar" level="project" />
+    <orderEntry type="library" name="SBT: org.scala-lang.modules:scala-parser-combinators_2.11:1.0.4:jar" level="project" />
+    <orderEntry type="library" name="SBT: io.netty:netty:3.10.1.Final:jar" level="project" />
+    <orderEntry type="library" name="SBT: commons-lang:commons-lang:2.6:jar" level="project" />
+    <orderEntry type="library" name="SBT: com.twitter:util-stats_2.11:6.38.0:jar" level="project" />
+    <orderEntry type="library" name="SBT: com.twitter:util-registry_2.11:6.38.0:jar" level="project" />
+    <orderEntry type="library" name="SBT: com.twitter:util-logging_2.11:6.38.0:jar" level="project" />
+    <orderEntry type="library" name="SBT: com.twitter:util-lint_2.11:6.38.0:jar" level="project" />
+    <orderEntry type="library" name="SBT: com.twitter:util-jvm_2.11:6.38.0:jar" level="project" />
+    <orderEntry type="library" name="SBT: com.twitter:util-hashing_2.11:6.38.0:jar" level="project" />
+    <orderEntry type="library" name="SBT: com.twitter:util-function_2.11:6.38.0:jar" level="project" />
+    <orderEntry type="library" name="SBT: com.twitter:util-core_2.11:6.38.0:jar" level="project" />
+    <orderEntry type="library" name="SBT: com.twitter:util-collection_2.11:6.38.0:jar" level="project" />
+    <orderEntry type="library" name="SBT: com.twitter:util-codec_2.11:6.38.0:jar" level="project" />
+    <orderEntry type="library" name="SBT: com.twitter:util-cache_2.11:6.38.0:jar" level="project" />
+    <orderEntry type="library" name="SBT: com.twitter:util-app_2.11:6.38.0:jar" level="project" />
+    <orderEntry type="library" name="SBT: com.twitter:finagle-toggle_2.11:6.39.0:jar" level="project" />
+    <orderEntry type="library" name="SBT: com.twitter:finagle-http_2.11:6.39.0:jar" level="project" />
+    <orderEntry type="library" name="SBT: com.twitter:finagle-core_2.11:6.39.0:jar" level="project" />
+    <orderEntry type="library" name="SBT: com.thoughtworks.paranamer:paranamer:2.6:jar" level="project" />
+    <orderEntry type="library" name="SBT: com.google.guava:guava:16.0.1:jar" level="project" />
+    <orderEntry type="library" name="SBT: com.github.ben-manes.caffeine:caffeine:2.3.0:jar" level="project" />
+    <orderEntry type="library" name="SBT: com.fasterxml.jackson.module:jackson-module-scala_2.11:2.6.5:jar" level="project" />
+    <orderEntry type="library" name="SBT: com.fasterxml.jackson.module:jackson-module-paranamer:2.6.5:jar" level="project" />
+    <orderEntry type="library" name="SBT: com.fasterxml.jackson.core:jackson-databind:2.6.5:jar" level="project" />
+    <orderEntry type="library" name="SBT: com.fasterxml.jackson.core:jackson-core:2.6.5:jar" level="project" />
+    <orderEntry type="library" name="SBT: com.fasterxml.jackson.core:jackson-annotations:2.6.5:jar" level="project" />
+    <orderEntry type="library" name="SBT: org.slf4j:slf4j-simple:1.7.21:jar" level="project" />
     <orderEntry type="library" name="SBT: org.scala-lang.modules:scala-xml_2.11:1.0.5:jar" level="project" />
-    <orderEntry type="library" name="SBT: com.lihaoyi:sourcecode_2.11:0.1.2:jar" level="project" />
     <orderEntry type="library" name="SBT: org.scalafx:scalafx_2.11:8.0.92-R10:jar" level="project" />
     <orderEntry type="library" name="SBT: org.scala-lang:scala-reflect:2.11.8:jar" level="project" />
     <orderEntry type="library" scope="TEST" name="SBT: org.scalatest:scalatest_2.11:2.2.6:jar" level="project" />
     <orderEntry type="library" name="SBT: com.thoughtworks.each:each_2.11:2.0.0:jar" level="project" />
     <orderEntry type="library" name="SBT: com.thoughtworks.sde:comprehension-monad_2.11:2.0.0:jar" level="project" />
     <orderEntry type="library" name="SBT: com.thoughtworks.sde:core_2.11:2.0.0:jar" level="project" />
-    <orderEntry type="library" name="SBT: org.scalaz:scalaz-core_2.11:7.2.3:jar" level="project" />
-    <orderEntry type="library" name="SBT: org.scalaz:scalaz-effect_2.11:7.2.3:jar" level="project" />
     <orderEntry type="library" name="SBT: org.typelevel:macro-compat_2.11:1.1.1:jar" level="project" />
+    <orderEntry type="library" name="SBT: com.chuusai:shapeless_2.11:2.3.2:jar" level="project" />
+    <orderEntry type="library" name="SBT: com.github.fge:java7-fs-more:0.2.0:jar" level="project" />
+    <orderEntry type="library" name="SBT: com.google.code.findbugs:jsr305:3.0.1:jar" level="project" />
+    <orderEntry type="library" name="SBT: org.apache.commons:commons-compress:1.12:jar" level="project" />
+    <orderEntry type="library" name="SBT: org.jsoup:jsoup:1.9.2:jar" level="project" />
+    <orderEntry type="library" name="SBT: org.reactivestreams:reactive-streams:1.0.0:jar" level="project" />
+    <orderEntry type="library" name="SBT: org.slf4j:slf4j-api:1.7.21:jar" level="project" />
+    <orderEntry type="module-library">
+      <library name="SBT: unmanaged-jars">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../../lib/com.microsoft.z3.jar!/" />
+          <root url="jar://$MODULE_DIR$/../../lib/pide-2016-assembly.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES>
+          <root url="file:///tmp/libisabelle/modules/pide/2016/src/main/scala" />
+        </SOURCES>
+      </library>
+    </orderEntry>
+    <orderEntry type="library" name="SBT: com.github.mpilquist:simulacrum_2.11:0.8.0:jar" level="project" />
     <orderEntry type="library" name="SBT: com.lihaoyi:fastparse-utils_2.11:0.3.7:jar" level="project" />
     <orderEntry type="library" name="SBT: com.lihaoyi:fastparse_2.11:0.3.7:jar" level="project" />
+    <orderEntry type="library" name="SBT: com.lihaoyi:scalatags_2.11:0.6.0:jar" level="project" />
+    <orderEntry type="library" name="SBT: com.lihaoyi:sourcecode_2.11:0.1.2:jar" level="project" />
+    <orderEntry type="library" name="SBT: info.hupel:libisabelle-setup_2.11:0.5:jar" level="project" />
+    <orderEntry type="library" name="SBT: info.hupel:libisabelle_2.11:0.5:jar" level="project" />
+    <orderEntry type="library" name="SBT: info.hupel:pide-interface_2.11:0.5:jar" level="project" />
+    <orderEntry type="library" name="SBT: io.get-coursier:coursier-cache_2.11:1.0.0-M14:jar" level="project" />
+    <orderEntry type="library" name="SBT: io.get-coursier:coursier_2.11:1.0.0-M14:jar" level="project" />
+    <orderEntry type="library" name="SBT: io.monix:monix-execution_2.11:2.0.0:jar" level="project" />
+    <orderEntry type="library" name="SBT: org.apache.commons:commons-lang3:3.4:jar" level="project" />
+    <orderEntry type="library" name="SBT: org.log4s:log4s_2.11:1.3.0:jar" level="project" />
+    <orderEntry type="library" name="SBT: org.scalaz:scalaz-concurrent_2.11:7.2.5:jar" level="project" />
+    <orderEntry type="library" name="SBT: org.scalaz:scalaz-core_2.11:7.2.5:jar" level="project" />
+    <orderEntry type="library" name="SBT: org.scalaz:scalaz-effect_2.11:7.2.5:jar" level="project" />
+    <orderEntry type="library" name="SBT: org.typelevel:cats-core_2.11:0.7.2:jar" level="project" />
+    <orderEntry type="library" name="SBT: org.typelevel:cats-free_2.11:0.7.2:jar" level="project" />
+    <orderEntry type="library" name="SBT: org.typelevel:cats-kernel_2.11:0.7.2:jar" level="project" />
+    <orderEntry type="library" name="SBT: org.typelevel:cats-macros_2.11:0.7.2:jar" level="project" />
+    <orderEntry type="library" name="SBT: org.typelevel:machinist_2.11:0.4.1:jar" level="project" />
+    <orderEntry type="library" name="SBT: org.scala-lang:scala-compiler:2.11.6:jar" level="project" />
+    <orderEntry type="library" name="SBT: org.scala-lang.modules:scala-pickling_2.11:0.10.1:jar" level="project" />
   </component>
 </module>

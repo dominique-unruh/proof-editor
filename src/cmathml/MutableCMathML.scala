@@ -2,6 +2,7 @@ package cmathml
 
 import java.math.BigInteger
 
+import cmathml.CMathML.{arith1, fns1, internal, interval1}
 import cmathml.MutableCMathML.{Attributes, AttributesRO, MNoAttr, fromCMathML}
 import misc.Log
 import ui.mathview.MathView.CursorSide
@@ -212,8 +213,36 @@ object MutableCMathML {
     case CSymbol(att, cd, name) => new MCSymbol(att,cd,name)
     case CError(att, cd, name, args @ _*) => new MCError(att,cd,name,args)
     case CNone(att) => new MCNone(att)
-    case Bind(att, hd, vars, arg) => new  MBind(att,fromCMathML(hd),vars.map(fromCMathML(_).asInstanceOf[MCI]),fromCMathML(arg))
+    case Bind(att, hd, vars, arg) => new  MBind(att,fromCMathML(hd),vars.map(fromCMathML(_).asInstanceOf[MCILike]),fromCMathML(arg))
     case CBytes(att, bytes) => new MCBytes(att,bytes)
+  }
+
+  object m_internal {
+    object backslashNameE {
+      def unapply(math:MApply) = math match {
+        case MApply(MCSymbol(internal.backslashName.cd,internal.backslashName.name),cs : MCS) => Some(cs)
+        case _ => None
+      }
+    }
+  }
+
+  object m_interval1 {
+    val integer_intervalE = new MApply.Extractor(interval1.integer_interval)
+  }
+
+  object m_fns1 {
+    val lambdaE = new MBind.Extractor(fns1.lambda)
+  }
+
+  object m_arith1 {
+    val sumE = new MApply.Extractor(arith1.sum)
+    object sumIndexedE {
+      def unapply(math:MutableCMathML) = math match {
+        case m_arith1.sumE(m_interval1.integer_intervalE(start,end),m_fns1.lambdaE(x,body)) =>
+          Some((x,start,end,body))
+        case _ => None
+      }
+    }
   }
 }
 
@@ -347,6 +376,14 @@ object MApply {
         case -1 => None
         case i => Some(i)
       }
+  }
+
+  class Extractor(cd:String, name:String) {
+    def this(head:CSymbol) = this(head.cd,head.name)
+    def unapplySeq(apply:MApply) : Option[Seq[MutableCMathML]] = apply match {
+      case MApply(MCSymbol(`cd`,`name`), args @ _*) => Some(args)
+      case _ => None
+    }
   }
 }
 
@@ -491,6 +528,13 @@ object MBind {
       }
   }
 
+  class Extractor(cd:String, name:String) {
+    def this(head:CSymbol) = this(head.cd,head.name)
+    def unapply(bind:MBind) : Option[(Seq[MCILike],MutableCMathML)] = bind match {
+      case MBind(MCSymbol(`cd`,`name`), vars, body) => Some((vars,body))
+      case _ => None
+    }
+  }
 }
 
 /** An MCI or an MCNone */

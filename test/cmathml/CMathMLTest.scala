@@ -4,6 +4,7 @@ import test.UnitSpec
 import CMathML._
 import misc.Log
 import _root_.z3.Z3
+import cmathml.CMathML.arith1._
 
 class CMathMLTest extends UnitSpec {
   test("CMathML.replace") {
@@ -82,7 +83,6 @@ object CMathMLTest {
     minus(CN(3),CN(2)),
     times(minus(CN(4),CN(2)),CN(1.2)),
     uminus(CI("x")),
-    uminus(CN("123")),
     CN(-234),
     power(CN(3),CI("x")),
     CS("hello"),

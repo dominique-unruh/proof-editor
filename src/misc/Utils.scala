@@ -21,9 +21,17 @@ import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.util.matching.Regex
 import scala.xml.{Atom, Comment, Elem, Text}
+import scalafx.collections.ObservableBuffer
 
 
 object Utils {
+  def max(doubles: Double*) : Double = {
+    var max = Double.MinValue
+    for (d <- doubles)
+      max = math.max(d, max)
+    max
+  }
+
   def splitString2(str: String, sep: Char) = {
     val idx = str.indexOf(sep)
     assert(idx>=0)
@@ -43,14 +51,6 @@ object Utils {
           Log.stackTrace("Exception in listener", e)
       }
 
-
-  def max(nums: Seq[Double]) = {
-    val it = nums.iterator
-    var m = it.next()
-    for (n <- it)
-      if (n > m) m = n
-    m
-  }
 
   def firstElementIn(xml: Elem): Elem =
     xml.child.find(_.isInstanceOf[Elem]).get.asInstanceOf[Elem]

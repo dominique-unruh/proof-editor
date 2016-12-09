@@ -4,13 +4,14 @@ import java.math.{BigInteger, MathContext}
 import java.util
 import java.util.stream.Stream
 
+import cmathml.Apply.Extractor
 import cmathml.CMathML._
 import com.sun.org.apache.xerces.internal.util.XMLChar
+import isabelle.Isabelle
 import misc.{Log, Pure, Utils}
 import theory.Theory.FormulaId
 //import org.symcomp.openmath.{OMSymbol, _}
 import _root_.z3.Z3
-import cmathml.Apply.Extractor
 import misc.Utils.Typed
 
 //import org.antlr.v4.runtime.{ANTLRInputStream, BailErrorStrategy, CommonTokenStream}
@@ -122,17 +123,19 @@ sealed trait CMathML {
     * - Is well-typed
     * - Contains only supported symbols
     *
-    * TODO: currently this is done by simply converting to Z3. Should be checked directly
+    * TODO: currently this is done by simply converting to Isabelle and typechecking. Should be checked directly (?)
     * TODO: should return explanation why this is not valid math
     */
   @Pure def isValidMath: Boolean = {
+    val term = Isabelle.fromCMathML(this)
     try {
-      z3.fromCMathML(this)
+//      z3.fromCMathML(this)
+      Isabelle.defaultInstance.typeInference(term)
       true
     }
     catch {
       case e : Exception =>
-        Log.debug("while converting to Z3",e,this)
+        Log.debug("while typechecking with Isabelle",e,this)
         false
     }
   }
@@ -223,12 +226,22 @@ object CMathML {
 
 
   object internal {
+
     val cd = "internal"
     val holeSymbol = CSymbol(cd,"hole")
     val decimalFractionSymbol = CSymbol(cd,"decimalFraction")
     val formulaRef = CSymbol(cd,"formulaRef")
     def formulaRef(nr : FormulaId): Apply = Apply(formulaRef,CN(nr.id))
     def formulaRefE = new Apply.Extractor(formulaRef)
+    val backslashName = CSymbol(cd,"backslashName")
+    def backslashName(name: String) : Apply = Apply(backslashName,CS(name))
+    object backslashNameE {
+      private val e = new Apply.Extractor(backslashName)
+      def unapply(math:Apply) = math match {
+        case `e`(CS(_,name)) => Some(name)
+        case _ => None
+      }
+    }
   }
 
   object prog1 {
@@ -241,32 +254,42 @@ object CMathML {
     val assignE = new Apply.Extractor(assign)
     val `if` = CSymbol(cd,"if")
     def `if`(cond:CMathML, yes:CMathML, no:CMathML) : Apply = Apply(`if`,cond,yes,no)
-    val ifE = new Extractor(`if`)
+    val ifE = new Apply.Extractor(`if`)
     val `while` = CSymbol(cd,"while")
     def `while`(cond:CMathML, body:CMathML) : Apply = Apply(`while`,cond,body)
-    val whileE = new Extractor(`while`)
+    val whileE = new Apply.Extractor(`while`)
   }
 
   object interval1 {
     val cd = "interval1"
     val interval = CSymbol(cd,"interval")
     def interval(x:CMathML, y:CMathML) : Apply = Apply(interval,x,y)
+    val intervalE = new Apply.Extractor(interval)
+    val integer_interval = CSymbol(cd,"integer_interval")
+    def integer_interval(x:CMathML, y:CMathML) : Apply = Apply(integer_interval,x,y)
+    val integer_intervalE = new Apply.Extractor(integer_interval)
   }
 
   object relation1 {
     val cd = "relation1"
     val equal = CSymbol(cd,"eq") // eq is used by Scala
     def equal(a: CMathML, b: CMathML) : Apply = Apply(equal,a,b)
+    val equalE = new Apply.Extractor(equal)
     val neq = CSymbol(cd,"neq")
     def neq(a: CMathML, b: CMathML) : Apply = Apply(neq,a,b)
+    val neqE = new Apply.Extractor(neq)
     val leq = CSymbol(cd,"leq")
     def leq(a: CMathML, b: CMathML) : Apply = Apply(leq,a,b)
+    val leqE = new Apply.Extractor(leq)
     val geq = CSymbol(cd,"geq")
     def geq(a: CMathML, b: CMathML) : Apply = Apply(geq,a,b)
+    val geqE = new Apply.Extractor(geq)
     val lt = CSymbol(cd,"lt")
     def lt(a: CMathML, b: CMathML) : Apply = Apply(lt,a,b)
+    val ltE = new Apply.Extractor(lt)
     val gt = CSymbol(cd,"gt")
     def gt(a: CMathML, b: CMathML) : Apply = Apply(gt,a,b)
+    val gtE = new Apply.Extractor(gt)
   }
 
   object complex1 {
@@ -279,38 +302,55 @@ object CMathML {
     val cd = "list1"
     val list = CSymbol(cd, "list")
     def list(args : CMathML*) : Apply = Apply(list, args : _*)
-    val listE = new Extractor(list)
+    val listE = new Apply.Extractor(list)
   }
 
   object set1 {
     val cd = "set1"
     val set = CSymbol(cd, "set")
     def set(args : CMathML*) : Apply = Apply(set, args : _*)
-    val setE = new Extractor(set)
+    val setE = new Apply.Extractor(set)
   }
 
   object arith1 {
     val cd = "arith1"
     val plus = CSymbol(cd,"plus")
     def plus(args:CMathML*) : Apply = Apply(plus,args:_*)
+    val plusE = new Extractor(plus)
     val abs = CSymbol(cd,"abs")
     def abs(x:CMathML) : Apply = Apply(abs,x)
     val minus = CSymbol(cd,"minus")
     def minus(x:CMathML,y:CMathML) : Apply = Apply(minus,x,y)
+    val minusE = new Extractor(minus)
     val times = CSymbol(cd,"times")
     def times(args:CMathML*) : Apply = Apply(times,args:_*)
+    val timesE = new Extractor(times)
     val divide = CSymbol(cd,"divide")
     def divide(x:CMathML,y:CMathML) : Apply = Apply(divide,x,y)
+    val divideE = new Extractor(divide)
     val power = CSymbol(cd,"power")
     def power(x:CMathML, y:CMathML) : Apply = Apply(power,x,y)
+    val powerE = new Extractor(power)
     val root = CSymbol(cd,"root")
     def root(x:CMathML, y:CMathML) : Apply = Apply(root,x,y)
+    val rootE = new Extractor(root)
     val sum = CSymbol(cd,"sum")
     def sum(x:CMathML, y:CMathML) : Apply = Apply(sum,x,y)
+    val sumE = new Apply.Extractor(sum)
+    def sumIndexed(x:CILike, start: CMathML, end: CMathML, body: CMathML) =
+      arith1.sum(interval1.integer_interval(start,end),fns1.lambda(x,body))
+    object sumIndexedE {
+      def unapply(math:CMathML) = math match {
+        case arith1.sumE(interval1.integer_intervalE(start,end),fns1.lambdaE(x,body)) =>
+          Some((x,start,end,body))
+        case _ => None
+      }
+    }
     val product = CSymbol(cd,"product")
-    def product(x:CMathML, y:CMathML) : Apply = Apply(product,x,y)
+//    def product(x:CMathML, y:CMathML) : Apply = Apply(product,x,y)
     val uminus = CSymbol(cd,"unary_minus") // TODO rename
     def uminus(x:CMathML) : Apply = Apply(uminus,x)
+    val uminusE = new Extractor(uminus)
   }
 
   object calculus1 {
@@ -331,7 +371,7 @@ object CMathML {
     val infinity = CSymbol(cd,"infinity")
     val rational = CSymbol(cd,"rational")
     def rational(x:CMathML, y:CMathML) : Apply = Apply(rational,x,y)
-    val rationalE = new Extractor(rational)
+    val rationalE = new Apply.Extractor(rational)
   }
 
   object minmax1 {
@@ -738,6 +778,7 @@ object CN {
 
   def apply(d:BigDecimal) = new CN(NoAttr,d)
   def apply(i:BigInteger) = new CN(NoAttr,BigDecimal(i,MATHCONTEXT))
+  def apply(i:BigInt) = new CN(NoAttr,BigDecimal(i,MATHCONTEXT))
   def apply(i:Int) = new CN(NoAttr,BigDecimal(i,MATHCONTEXT))
   def apply(d:Double) = new CN(NoAttr,BigDecimal.exact(d)(MATHCONTEXT))
   def apply(s:String) = new CN(NoAttr,BigDecimal(s,MATHCONTEXT))

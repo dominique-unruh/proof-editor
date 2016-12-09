@@ -3,7 +3,7 @@ package ui.mathview
 import java.io.IOException
 import javafx.geometry
 
-import cmathml.CMathML.internal
+import cmathml.CMathML.{arith1, fns1, internal, interval1}
 import cmathml._
 import misc.Utils
 
@@ -12,6 +12,9 @@ import scalafx.Includes._
 import scalafx.beans.binding.Bindings
 import scalafx.geometry.Pos
 import javafx.scene.Node
+
+import cmathml.MutableCMathML.m_arith1
+
 import scalafx.scene.layout.HBox
 import scalafx.scene.paint.Color
 import scalafx.scene.shape.{Line, Rectangle}
@@ -19,7 +22,7 @@ import scalafx.scene.text.{Font, FontPosture, Text}
 
 object DefaultMathRendererFactory extends MathRendererFactory {
   override def renderer(context: MathRendererContext, math: MutableCMathML): Node = {
-    def own(math:MutableCMathML) = context.own(math)
+    def own(math:MutableCMathML*) = for (m<-math) context.own(m)
     def get(math:MutableCMathML) = context.getNodeForEmbedding(math)
     def binop(hd: MutableCMathML, op: String, x: MutableCMathML, y: MutableCMathML) = {
       own(hd)
@@ -38,6 +41,8 @@ object DefaultMathRendererFactory extends MathRendererFactory {
 
     math match {
       case m: MCI => new Var(m)
+      case MApply(hd@MCSymbol(internal.backslashName.cd,internal.backslashName.name), cs@MCS(name)) =>
+        own(hd); own(cs); new BackslashName(name)
       case MApply(hd@MCSymbol("relation1", "eq"), x, y) => binop(hd, "=", x, y)
       case MApply(hd@MCSymbol("relation1", "neq"), x, y) => binop(hd, "≠", x, y)
       case MApply(hd@MCSymbol("relation1", "lt"), x, y) => binop(hd, "<", x, y)
@@ -57,6 +62,11 @@ object DefaultMathRendererFactory extends MathRendererFactory {
       case MApply(hd@MCSymbol("logic1", "implies"), x, y) => binop(hd, "⇒", x, y)
       case MApply(hd@MCSymbol("logic1", "not"), x) => prefixop(hd, "¬", x)
       case MApply(MCSymbol(internal.formulaRef.cd,internal.formulaRef.name),MCN(i)) => new Text(s"($i)")
+      case MApply(hd@MCSymbol(arith1.sum.cd,arith1.sum.name),
+                  int@MApply(hd2@MCSymbol(interval1.integer_interval.cd,interval1.integer_interval.name),start,end),
+                  lam@MBind(hd3@MCSymbol(fns1.lambda.cd,fns1.lambda.name),Seq(x),body)) =>
+        own(hd,int,hd2,lam,hd3)
+        new Sum(get(x),get(start),get(end),get(body))
       case MCSymbol("logic1","true") => new SFSymbol("true")
       case MCSymbol("logic1","false") => new SFSymbol("false")
       case MBind(hd@MCSymbol("quant1","forall"), vs, body) => quant(hd, "∀", vs, body)
@@ -65,6 +75,7 @@ object DefaultMathRendererFactory extends MathRendererFactory {
       case MApply(hd, args@_*) => new GenericApply(get(hd), args.map(get))
       case MBind(hd, vars, arg) => new GenericBind(get(hd), vars.map(get(_)), get(arg))
       case MCSymbol(cd, name) => new GenericSymbol(cd, name)
+      case MCS(str) => new MathString(str)
       case m @ MCN(num) => new Num(m)
     }
   }
@@ -106,23 +117,33 @@ class BinOp(op:String, a:javafx.scene.Node, b:javafx.scene.Node) extends javafx.
     super.layoutChildren()
   }
 
-//  val innerHeight = Bindings.createDoubleBinding(
-//    () => math.max(opTxt.layoutBounds.get.getHeight, math.max(a.layoutBounds.get.getHeight,b.layoutBounds.get.getHeight)),
-//    opTxt.layoutBounds, a.layoutBounds, b.layoutBounds)
-//
-//  def updateParens() = {
-//    val h = innerHeight.get
-//    val font = symbolFont(h)
-//    open.font = font
-//    close.font = font
-//    println("height",h,getParent, a, a.layoutBounds.get.getHeight, b, b.layoutBounds.get.getHeight)
-//  }
-//
-//  innerHeight.onChange(updateParens()) // Delayed action. I think otherwise we end up changing bounds within a recomputation of bounds, leading to spurious errors?
-//  updateParens()
-
   getChildren.addAll(open,a,opTxt,b,close)
 }
+
+class Sum(x:javafx.scene.Node, start:javafx.scene.Node, end:javafx.scene.Node, body:javafx.scene.Node) extends javafx.scene.layout.HBox {
+  import MathText._
+  setId(Integer.toHexString(hashCode())) // TODO: remove
+  setAlignment(geometry.Pos.CENTER)
+  val open = symbolText("sum(")
+  val close = symbolText(")")
+  val eqSign = symbolText("=")
+  val dots = symbolText("..")
+  val comma = symbolText(",")
+  val inner : List[javafx.scene.Node] = List(x,eqSign,start,dots,end,comma,body)
+
+  setFillHeight(false)
+
+  override def layoutChildren(): Unit = {
+    val h = Utils.max(inner.map(_.prefHeight(-1)) : _*)
+    val font = symbolFont(h+1)
+    open.font = font
+    close.font = font
+    super.layoutChildren()
+  }
+
+  getChildren.addAll(open,x,eqSign,start,dots,end,comma,body,close)
+}
+
 
 class Quantifier(op:String, vars:Seq[javafx.scene.Node], body:javafx.scene.Node) extends javafx.scene.layout.HBox {
   import MathText._
@@ -144,7 +165,7 @@ class Quantifier(op:String, vars:Seq[javafx.scene.Node], body:javafx.scene.Node)
   setFillHeight(false)
 
   override def layoutChildren(): Unit = {
-    val h = Utils.max(inner.map(_.prefHeight(-1)))
+    val h = Utils.max(inner.map(_.prefHeight(-1)) :_*)
     val font = symbolFont(h+1)
     open.font = font
     close.font = font
@@ -276,6 +297,14 @@ class GenericSymbol(cd:String, name:String) extends Text(s"$cd.$name") {
 }
 
 class SFSymbol(name:String) extends Text(name) {
+  font = MathText.SFFont
+}
+
+class MathString(str:String) extends Text(s"“$str”") {
+  font = MathText.SFFont
+}
+
+class BackslashName(name:String) extends Text(s"\\$name") {
   font = MathText.SFFont
 }
 
