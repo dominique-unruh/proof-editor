@@ -17,6 +17,7 @@ import cmathml.CMathML
 import scala.reflect.runtime.universe.TypeTag
 import com.sun.javafx.webkit.WebConsoleListener
 
+import scala.collection.immutable.IndexedSeq
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.util.matching.Regex
@@ -25,6 +26,10 @@ import scalafx.collections.ObservableBuffer
 
 
 object Utils {
+  def containsDuplicates[A](seq: Seq[A]) = {
+    seq.toSet.size != seq.size
+  }
+
   def max(doubles: Double*) : Double = {
     var max = Double.MinValue
     for (d <- doubles)

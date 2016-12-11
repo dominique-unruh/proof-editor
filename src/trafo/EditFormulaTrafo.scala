@@ -43,7 +43,7 @@ object EditFormulaTrafo {
       case Seq(a2,b2) => new Instance(a2,b2,id)
       case _ => sys.error("update with wrong number of formulas")
     }
-    override val relation: Relation = Equality
+    override val relation: Relation = Equality()
     override val shortDescription: String = "automated comparison"
   }
 

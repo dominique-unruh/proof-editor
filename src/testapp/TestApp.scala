@@ -195,7 +195,8 @@ class TestApp extends JFXApp {
     TrafoChoice("Edit formula", new EditFormulaTrafo),
     TrafoChoice("Simplify formula", new SimplifyTrafo),
     TrafoChoice("Trivial", new TrivialTrafo),
-    TrafoChoice("Case distinction", new CaseDistinction)
+    TrafoChoice("Case distinction", new CaseDistinction),
+    TrafoChoice("Substitution", new SubstitutionTrafo)
   )
 
 

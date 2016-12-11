@@ -47,8 +47,14 @@ sealed trait CMathML {
     try { subterm(path); true }
     catch { case _:InvalidPath => false }
 
-  /** Throw InvalidPath if the path points to a nonexisting position */
-  def subterm(p: Path) : CMathML
+  /** Throw InvalidPath if the path points to a nonexisting position. */
+  final def subterm(p: Path) : CMathML = subterm$(p,Nil)._1
+  /**
+    * Returns subterm at path p, together with the list of bound variables
+    * at this point (innermost binders first).
+    * Throw InvalidPath if the path points to a nonexisting position. */
+  final def subtermBound(p: Path) : (CMathML,List[CILike]) = subterm$(p,Nil)
+  def subterm$(p: Path, bound : List[CILike]) : (CMathML,List[CILike])
   /** Replaces the subterm x at path p by f(x) */
   @Pure def mapAt(p:Path, f:CMathML=>CMathML) : CMathML
   /** Replaces the subterm x at path p by y */
@@ -479,7 +485,7 @@ object CMathML {
 
 sealed protected trait Leaf extends CMathML {
   def mapAt(p: Path, f: CMathML=>CMathML): CMathML = { if (!p.isEmpty) throw new InvalidPath("path descending below leaf",p); f(this) }
-  def subterm(p: Path): CMathML = { if (!p.isEmpty) throw new InvalidPath("path descending below leaf",p); this }
+  def subterm$(p: Path, bound: List[CILike]): (CMathML,List[CILike]) = { if (!p.isEmpty) throw new InvalidPath("path descending below leaf",p); (this,bound) }
 }
 
 
@@ -562,12 +568,12 @@ final case class Apply(attributes : Attributes, hd: CMathML, args: CMathML*) ext
       sb += ')'
   }
 
-  override def subterm(p: Path): CMathML = {
-    if (p.isEmpty) return this
+  override def subterm$(p: Path, bound: List[CILike]): (CMathML,List[CILike]) = {
+    if (p.isEmpty) return (this,bound)
     val idx = p.head; val tl = p.tail
-    if (idx==0) return hd.subterm(tl)
+    if (idx==0) return hd.subterm$(tl,bound)
     if (idx>args.length) throw new InvalidPath("path refers to argument beyond last in Apply",p)
-    args(idx-1).subterm(tl)
+    args(idx-1).subterm$(tl,bound)
   }
 
   override def toXML$: Elem = <apply>{hd.toXML}{args.map(_.toXML)}</apply>
@@ -629,15 +635,15 @@ final case class Bind(attributes : Attributes, hd: CMathML, vars: Seq[CILike], b
     }
   }
 
-  override def subterm(p: Path): CMathML = {
-    if (p.isEmpty) return this
+  override def subterm$(p: Path, bound: List[CILike]): (CMathML, List[CILike]) = {
+    if (p.isEmpty) return (this,bound)
     val idx = p.head; val tl = p.tail
     idx match {
-      case 0 => hd.subterm(tl)
-      case 1 => body.subterm(tl)
+      case 0 => hd.subterm$(tl,bound)
+      case 1 => body.subterm$(tl,bound)
       case _ if idx >= 2 =>
         if (idx-2 >= vars.length) throw new InvalidPath("Beyond last variable in Bind",p,this)
-        vars(idx-2).subterm(tl)
+        vars(idx-2).subterm$(tl,bound)
     }
   }
 

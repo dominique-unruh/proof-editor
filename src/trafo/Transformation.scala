@@ -44,7 +44,8 @@ object TrafoInstance {
     "trivial" -> TrivialTrafo.fromXML,
     "editFormula" -> EditFormulaTrafo.fromXML,
     "simplify" -> SimplifyTrafo.fromXML,
-    "caseDistinction" -> CaseDistinction.fromXML
+    "caseDistinction" -> CaseDistinction.fromXML,
+    "substitution" -> SubstitutionTrafo.fromXML
   )
   def fromXML(xml: Elem) = trafoXMLParsers.synchronized {
     trafoXMLParsers.get(xml.label) match {

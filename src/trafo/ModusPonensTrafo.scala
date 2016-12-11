@@ -85,6 +85,7 @@ object ModusPonensTrafo {
     override val shortDescription: String = "modus ponens"
     override val formulas = Vector(a,b,res)
     override val isValid: Boolean = {
+      // TODO: should check for bound variables! (see SubstitutionTrafo)
       val impl = b.math.subterm(path)
       impl match {
         case Apply(_,`implies`,p,q) =>

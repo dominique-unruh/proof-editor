@@ -81,7 +81,7 @@ final case class Theory(counter : Int,
     val premises = trafo.relation match {
       case Implication(prems,_) => mappedFormulas.slice(0,prems)
       case Trivial => Nil
-      case Equality => List(mappedFormulas.head)
+      case Equality(_) => List(mappedFormulas.head)
       case OneOf(_) => mappedFormulas
     }
     val premisesProven = premises.foldLeft(allDone) { (cases, f) => cases.intersection(f(Proven)) }

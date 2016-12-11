@@ -11,7 +11,7 @@ object Logic {
       case fns1.lambdaE(vars,body) =>
         val freeVars = Set(arguments:_*).flatMap(_.freeVariables)
         val lambdaFree = body.freeVariables
-        assert(vars.length==arguments.length)
+        assert(vars.length==arguments.length,(vars,arguments))
         val varNames = vars.map { case CI(_,n) => n; case CNone(_) => sys.error("CNone") }
         assert(varNames.distinct.length == varNames.length) // all vars distinct
         assert(lambdaFree.intersect(freeVars).isEmpty) // alpha-renaming needed, not yet impl
