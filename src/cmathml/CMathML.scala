@@ -408,8 +408,11 @@ object CMathML {
     def and(args:CMathML*) : Apply = Apply(and,args:_*)
     val equivalent = CSymbol(cd,"equivalent")
     def equivalent(x:CMathML, y:CMathML) : Apply = Apply(equivalent,x,y)
+    val equivalentE = new Apply.Extractor(equivalent)
     val falseSym = CSymbol(cd,"false")
+    val falseE = new CSymbol.Extractor(falseSym)
     val trueSym = CSymbol(cd,"true")
+    val trueE = new CSymbol.Extractor(trueSym)
     val implies = CSymbol(cd,"implies")
     def implies(x:CMathML, y:CMathML) : Apply = Apply(implies,x,y)
     val not = CSymbol(cd,"not")
@@ -424,8 +427,12 @@ object CMathML {
     val cd = "quant1"
     val forall = CSymbol(cd,"forall")
     def forall(vars:Seq[CILike],body:CMathML) : Bind = Bind(forall,vars,body)
+    val forallE = new Bind.Extractor(forall)
+
     val exists = CSymbol(cd,"exists")
     def exists(vars:Seq[CILike],body:CMathML) : Bind = Bind(exists,vars,body)
+    val existsE = new Bind.Extractor(exists)
+
   }
 
   object transc1 {
@@ -876,6 +883,8 @@ final case class CSymbol(attributes : Attributes = NoAttr, cd: String, name: Str
   assert(isNCName(name))
   override def toString = toPopcorn
 
+  def id = (cd,name)
+
   override def toXML$: Elem = <csymbol cd={cd}>{name}</csymbol>
 
   /** TODO: Support abbreviated symbols */
@@ -936,6 +945,11 @@ object CSymbol {
   )
 
   def apply(cd: String, name: String) = new CSymbol(NoAttr,cd,name)
+
+  class Extractor(sym: CSymbol) {
+    def unapply(s:CSymbol) : Boolean = s.id == sym.id
+  }
+
 }
 
 /** <cerror>-Content MathML element

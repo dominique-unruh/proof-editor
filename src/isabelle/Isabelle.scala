@@ -1,31 +1,24 @@
 package isabelle
 
-import java.io.File
 import java.nio.file.Paths
-import java.rmi.{Remote, RemoteException}
-import java.rmi.registry.{LocateRegistry, Registry}
-import java.rmi.server.UnicastRemoteObject
 
-import cmathml.Apply.Extractor
-import cmathml.CMathML.{arith1, fns1, relation1}
+import cmathml.CMathML._
 import cmathml._
-import com.sun.xml.internal.stream.buffer.{MutableXMLStreamBuffer, XMLStreamBufferResult}
 import com.twitter.finagle.http.{Method, Request, Response}
 import com.twitter.finagle.{ChannelException, Http, Service, http}
-import info.hupel.isabelle.api.XML.Tree
 import info.hupel.isabelle._
+import info.hupel.isabelle.api.XML.Tree
 import info.hupel.isabelle.api.{Environment, Version, XML}
 import info.hupel.isabelle.japi.Codecs
 import info.hupel.isabelle.pure.{Abs, App, Bound, Const, Free, Term, Typ, Type}
 import info.hupel.isabelle.setup.{Resources, Setup}
 import isabelle.Isabelle.types.dummy
 
-import BigInt._
-import scala.annotation.tailrec
-import scala.concurrent.duration.Duration
-import scala.concurrent.{Await, Future}
+import scala.BigInt._
+import scala.collection.mutable.ListBuffer
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration.Inf
+import scala.concurrent.{Await, Future}
 import scala.language.postfixOps
 
 ///** Functions that should be accessible via RMI */
@@ -86,8 +79,8 @@ object IsabelleServer {
     override def decode(tree: Tree): XMLResult[String] = Right(tree.toYXML)
   }
   def main(args: Array[String]): Unit = {
-    import com.twitter.bijection.twitter_util.UtilBijections._
     import com.twitter.bijection.Conversion.asMethod
+    import com.twitter.bijection.twitter_util.UtilBijections._
 
     println("Starting Isabelle")
     val isabelle = new IsabelleLocal()
@@ -125,8 +118,8 @@ class IsabelleRemote extends Isabelle {
   val client = Http.client.newService(":12344")
 
   override def invoke[I, O](op: (String,Codec[I],Codec[O]), input: I): Future[O] = {
-    import com.twitter.bijection.twitter_util.UtilBijections._
     import com.twitter.bijection.Conversion.asMethod
+    import com.twitter.bijection.twitter_util.UtilBijections._
 
     val (opname,inCodec,outCodec) = op
     val input2 = inCodec.encode(input)
@@ -139,6 +132,7 @@ class IsabelleRemote extends Isabelle {
       val tree = XML.fromYXML(content)
       outCodec.decode(tree) match {
         case Right(out) => out
+        case Left((msg,_)) => sys.error(msg)
       }
     }
     response.as[Future[O]]
@@ -208,14 +202,18 @@ object Isabelle {
   }
 
   object types {
-    val bool = Type("HOL.bool",Nil)
     val dummy = Type("dummy",Nil)
+    def list(typ: Typ) = Type("List.list",List(typ))
+    val listE = new TypeExtractor(list(dummy).name)
+    val bool = Type("HOL.bool",Nil)
     val int = Type("Int.int",Nil)
     val nat = Type("Nat.nat",Nil)
     val num = Type ("Num.num", Nil)
     val real = Type ("Real.real", Nil)
     def fun(t1:Typ,t2:Typ) = Type("fun",List(t1,t2))
     val funE = new TypeExtractor(fun(dummy,dummy).name)
+    val unicodeString = Type("ProofEditorSupport.unicode_string", Nil)
+    val byteString = Type("ProofEditorSupport.byte_string", Nil)
   }
 
   class AppExtractor1(const:String) {
@@ -232,9 +230,19 @@ object Isabelle {
     }
   }
 
-  class ConstExtractorT(const:String) {
-    def unapply(t:Const) = t match {
-      case Const(`const`,typ) => Some(typ)
+  class AppExtractor2T(const:String, convertTyp : PartialFunction[Typ,Typ] = {case c=>c}) {
+    def unapply(t:App) : Option[(Typ,Term,Term)] = t match {
+      case App(App(Const(`const`,typ),t1),t2) =>
+        val typ2 : Typ = convertTyp.applyOrElse[Typ,Typ](typ, {_:Typ => types.dummy})
+        Some((typ2,t1,t2))
+      case _ => None
+    }
+  }
+
+  class ConstExtractorT(const:String, convertTyp : PartialFunction[Typ,Typ] = {case c=>c}) {
+    def unapply(t:Const) : Option[Typ] = t match {
+      case Const(`const`,typ) =>
+        Some(convertTyp.applyOrElse(typ, {_:Typ => types.dummy}))
       case _ => None
     }
   }
@@ -249,10 +257,23 @@ object Isabelle {
   object consts {
     import types._
     val `true` = Const("HOL.True",bool)
+    val trueE = new ConstExtractor(`true`.name)
     val `false` = Const("HOL.False",bool)
+    val falseE = new ConstExtractor(`false`.name)
 
     val disj = Const("HOL.disj",fun(bool,fun(bool,bool)))
     def disj(t1:Term,t2:Term) : App = App(App(disj,t1),t2)
+
+    def nil(typ:Typ) : Const = Const("List.list.Nil",types.list(typ))
+    val nil : Const = nil(dummy)
+    val nilET = new ConstExtractorT(nil.name, { case types.listE(t) => t })
+    val nilE = new ConstExtractor(nil.name)
+
+    def cons(typ:Typ) : Const = { val lT = types.list(typ); Const("List.list.Cons",fun(typ,fun(lT,lT))) }
+    val cons : Const = cons(dummy)
+    def cons(t1:Term,t2:Term) : App = App(App(cons,t1),t2)
+    def cons(typ:Typ,t1:Term,t2:Term) : App = App(App(cons(typ),t1),t2)
+    val consE = new AppExtractor2(cons.name)
 
     def plus(typ:Typ) : Const = Const("Groups.plus_class.plus",fun(typ,fun(typ,typ)))
     val plus : Const = plus(dummy)
@@ -326,11 +347,32 @@ object Isabelle {
     val uminus : Const = uminus(dummy)
     val uminusE = new AppExtractor1(uminus.name)
 
+    def holAll(typ: Typ) = Const("HOL.All", fun(fun(typ,bool),typ))
+    def holAll(typ: Typ, t: Term) : App = App(holAll(typ),t)
+    def holAll(t: Term) : App = holAll(dummy,t)
+    val holAll : Const = holAll(dummy)
+    val holAllE = new AppExtractor1(holAll.name)
+
+    def holEx(typ: Typ) = Const("HOL.All", fun(fun(typ,bool),typ))
+    def holEx(typ: Typ, t: Term) : App = App(holEx(typ),t)
+    def holEx(t: Term) : App = holEx(dummy,t)
+    val holEx : Const = holEx(dummy)
+    val holExE = new AppExtractor1(holEx.name)
+
     def equal(typ:Typ) : Const = Const("HOL.eq", fun(typ,fun(typ,bool)))
     def equal(typ:Typ, t1: Term, t2: Term) : App = App(App(equal(typ),t1),t2)
     def equal(t1: Term, t2: Term) : App = App(App(equal,t1),t2)
     val equal : Const = equal(dummy)
     val equalE = new AppExtractor2(equal.name)
+    val equalET = new AppExtractor2T(equal.name, { case funE(t,_) => t })
+
+    val unicodeString : Const = Const("ProofEditorSupport.unicode_string.UnicodeString", fun(list(nat),types.unicodeString))
+    def unicodeString(t:Term) : App = App(unicodeString,t)
+    val unicodeStringE = new AppExtractor1(unicodeString.name)
+
+    val byteString : Const = Const("ProofEditorSupport.byte_string.UnicodeString", fun(list(nat),types.byteString))
+    def byteString(t:Term) : App = App(byteString,t)
+    val byteStringE = new AppExtractor1(byteString.name)
   }
 
   def mk_numeral(i:BigInt) = {
@@ -395,6 +437,49 @@ object Isabelle {
     }
   }
 
+  object ListE {
+    def unapplySeq(t:Term) : Option[Seq[Term]] = {
+      var t2 = t
+      val l = ListBuffer[Term]()
+      while (true) {
+        t2 match {
+          case consts.nilE() => return Some(l.toList)
+          case consts.consE(x,xs) =>
+            t2 = xs
+            l.append(x)
+          case _ => return None
+        }
+      }
+      assert(false); None // unreachable
+    }
+  }
+
+  object UnicodeString {
+    def unapply(t:Term): Option[String] = t match {
+      case consts.unicodeStringE(ListE(chars @ _*)) =>
+        val jChars = chars.map {
+          case Number(i) if i.isValidChar => i.toChar
+          case _ => return None
+        }
+        Some(jChars.mkString)
+      case _ => None
+    }
+  }
+
+  object ByteString {
+    def unapplySeq(t:Term): Option[Seq[Byte]] = t match {
+      case consts.byteStringE(ListE(bytes @ _*)) =>
+        Some(bytes.map {
+          case Number(i) if i.isValidByte => i.toByte
+          case _ => return None
+        })
+      case _ => None
+    }
+  }
+
+  def mk_list(typ:Typ, list:Seq[Term]) : Term =
+    list.foldRight(consts.nil(typ) : Term) { case (elem,resList) => consts.cons(typ,elem,resList) }
+
 //  fun dest_number (Const ("Groups.zero_class.zero", T)) = (T, 0)
 //  | dest_number (Const ("Groups.one_class.one", T)) = (T, 1)
 //  | dest_number (Const ("Num.numeral_class.numeral", Type ("fun", [_, T])) $ t) =
@@ -424,11 +509,19 @@ object Isabelle {
             }
             consts.divide(nominator,denominator)
         }
+      case CS(_,str) =>
+        val list = mk_list(types.nat, str.map(c => mk_number(types.nat, c.toInt)))
+        App(consts.unicodeString,list)
+      case CBytes(_,bytes) =>
+        val list = mk_list(types.nat, bytes.map(c => mk_number(types.nat, c.toInt)))
+        App(consts.byteString,list)
       case CI(_,name) =>
         bound.get(name) match {
           case Some(i) => Bound(boundShift-i)
           case None => Free(name, dummy)
         }
+      case logic1.trueE() => consts.`true`
+      case logic1.falseE() => consts.`false`
       case arith1.plusE(x,y) => consts.plus(f(x),f(y))
       case arith1.minusE(x,y) => consts.minus(f(x),f(y))
       case arith1.timesE(x,y) => consts.times(f(x),f(y))
@@ -436,8 +529,13 @@ object Isabelle {
       case arith1.powerE(x,y) => consts.powr(f(x),f(y))
       case arith1.uminusE(x) => consts.uminus(f(x))
       case relation1.equalE(x,y) => consts.equal(f(x),f(y))
+      case logic1.equivalentE(x,y) => consts.equal(types.bool,f(x),f(y))
       case fns1.lambdaE(Seq(CI(_,name)),body) =>
         Abs(name, dummy, fromCMathML(body,bound.updated(name,boundShift+1),boundShift+1))
+      case quant1.forallE(Seq(x),body) =>
+        consts.holAll(f(fns1.lambda(x,body)))
+      case quant1.forallE(Seq(x,xs@_*),body) =>
+        f(quant1.forall(Seq(x),quant1.forall(xs,body)))
       case Apply(_,CSymbol(_,cd,name),_*) =>
         sys.error(s"Unknown symbol $cd.$name")
       case Bind(_,CSymbol(_,cd,name),_,_) =>
@@ -453,14 +551,23 @@ object Isabelle {
       case minusE(x,y) => arith1.minus(f(x),f(y))
       case timesE(x,y) => arith1.times(f(x),f(y))
       case powrE(x,y) => arith1.power(f(x),f(y))
+      case equalET(types.bool,x,y) => logic1.equivalent(f(x),f(y))
       case equalE(x,y) => relation1.equal(f(x),f(y))
       case divideE(Number(nominator),Number(denom)) if denom==10 => CN(BigDecimal(nominator,1,CN.MATHCONTEXT))
       case divideE(Number(nominator),powerE(Number(tn),Number(exp))) if tn==10 && exp.isValidInt && exp >= 0 =>
         CN(BigDecimal(nominator,exp.toInt,CN.MATHCONTEXT))
+      case holAllE(Abs(x,_,body)) =>
+        assert(!bound.contains(x))
+        quant1.forall(Seq(CI(x)), toCMathML(body,x::bound))
       case divideE(x,y) => arith1.divide(f(x),f(y)) // must be after other divideE-patterns
       case Number(n) => CN(n)
       case uminusE(x) => arith1.uminus(f(x)) // must be after Number
-      case Free(name,_) => CI(name)
+      case Free(name,_) => assert(!bound.contains(name)); CI(name)
+      case Bound(i) => CI(bound(i.intValue))
+      case UnicodeString(str) => CS(str)
+      case ByteString(bytes@_*) => CBytes(bytes:_*)
+      case trueE() => logic1.trueSym
+      case falseE() => logic1.falseSym
       case Const(name,_) => sys.error(s"Unknown symbol $name")
     }
   }

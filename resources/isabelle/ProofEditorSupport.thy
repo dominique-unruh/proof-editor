@@ -2,6 +2,9 @@ theory ProofEditorSupport
 imports Complex_Main
 begin
 
+datatype unicode_string = UnicodeString "nat list"
+datatype byte_string = ByteString "nat list"
+
 ML {*
   val ctx = @{context}
   fun simplify_term t = 
@@ -24,6 +27,5 @@ ML {*
   Print_Mode.setmp ["ASCII"] (Syntax.string_of_term ctx)
   end
 *}
-
 
 end
