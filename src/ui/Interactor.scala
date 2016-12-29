@@ -74,7 +74,7 @@ class Interactor[R]() extends layout.VBox {
       question = null
     }
 
-    def setQuestion[U<:AnyRef](q : Question[U]): Unit = {
+    def setQuestion[U](q : Question[U]): Unit = {
       if (question == null || question!=q) {
         if (edit != null) getChildren.remove(edit)
         edit = null
@@ -147,9 +147,9 @@ class Interactor[R]() extends layout.VBox {
     * @param fromEditor true if setAnswer is called due to editing via the associated Editor.
     *                   This makes sure the editor is not updated to show the new answer.
     */
-  def setAnswer(idx: Int, answer: AnyRef, fromEditor:Boolean=false) : Unit = interactions(idx) match {
-    case InteractionRunning(id, question, _) =>
-      previousAnswers.update(id, QAPair[answer.type](question.asInstanceOf[Question[answer.type]],answer))
+  def setAnswer(idx: Int, answer: Any, fromEditor:Boolean=false) : Unit = interactions(idx) match {
+    case int : InteractionRunning[t,a] =>
+      previousAnswers.update(int.id, QAPair[a](int.question.asInstanceOf[Question[a]],answer.asInstanceOf[a]))
       if (!fromEditor) updateGUI(idx)
       recompute(idx + 1)
     case InteractionFinished(_) | InteractionFailed() =>
@@ -170,15 +170,15 @@ class Interactor[R]() extends layout.VBox {
       case int : InteractionRunning[t,a] =>
         cell.setQuestion[a](int.question)
         cell.setHtml(int.question.message)
-        val answer = currentAnswer(int.id,int.question) // answers.getOrElse(id,question.default)
         assert(cell.edit.editedType == int.question.answerType)
-        cell.edit.asInstanceOf[Editor[answer.type]].setValue(answer)
+        val answer = currentAnswer(int.id,int.question).asInstanceOf[a] // answers.getOrElse(id,question.default)
+        cell.edit.asInstanceOf[Editor[a]].setValue(answer)
     }
   }
 }
 
 object Interactor {
-  trait Editor[T<:AnyRef] extends Node {
+  trait Editor[T] extends Node {
     /** Focusses this editor (or whichever part of it is useful to allow the user to start entering an answer) */
     def focus(): Unit
 
@@ -193,10 +193,10 @@ object Interactor {
   }
 
   trait EditorFactory {
-    def create[T<:AnyRef](q : Question[T]) : Editor[T]
-    def cast[T<:AnyRef,U<:AnyRef](a: TypeTag[T], b: TypeTag[U], x : Editor[T]) : Editor[U] =
+    def create[T](q : Question[T]) : Editor[T]
+    def cast[T,U](a: TypeTag[T], b: TypeTag[U], x : Editor[T]) : Editor[U] =
       if (a!=null && b!=null && a==b) x.asInstanceOf[Editor[U]] else throw new ClassCastException(s"$a != $b in type cast")
-    def cast[T<:AnyRef,U<:AnyRef](b: TypeTag[U], x : Editor[T]) : Editor[U] =
+    def cast[T,U](b: TypeTag[U], x : Editor[T]) : Editor[U] =
       cast(x.editedType, b, x)
   }
 
@@ -217,9 +217,9 @@ object Interactor {
   }
 
   // TODO there should be existing classes for this
-  class IntEditor extends TextField with Editor[Integer] {
-    override val valueProperty: Property[Integer] = new SimpleObjectProperty
-    override val editedType: TypeTag[Integer] = typeTag[Integer]
+  class IntEditor extends TextField with Editor[Int] {
+    override val valueProperty: Property[Int] = new SimpleObjectProperty
+    override val editedType: TypeTag[Int] = typeTag[Int]
     override val questionType = typeTag[IntQ]
 
     textProperty.addListener((newVal:String) =>
@@ -229,7 +229,7 @@ object Interactor {
       } catch {
         case _:NumberFormatException => /*valueProperty.setValue(None)*/ ()
       })
-    valueProperty.addListener({ (newVal:Integer) =>
+    valueProperty.addListener({ (newVal:Int) =>
       Log.debug("change: ",newVal)
       textProperty.setValue(newVal.toString)})
 
@@ -238,7 +238,7 @@ object Interactor {
   }
 
   val defaultEditorFactory = new EditorFactory {
-    override def create[T<:AnyRef](q : Question[T]) : Editor[T] = {
+    override def create[T](q : Question[T]) : Editor[T] = {
       val qt = q.questionType; val at = q.answerType
       if (qt == typeTag[StringQ]) cast(at, new StringEditor)
       else if (qt == typeTag[IntQ]) cast(at, new IntEditor)

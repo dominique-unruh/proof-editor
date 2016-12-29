@@ -486,7 +486,7 @@ class TestApp extends JFXApp {
 
 
   lazy val editorFactory = new EditorFactory {
-    override def create[T<:AnyRef](q: Question[T]): Editor[T] = {
+    override def create[T](q: Question[T]): Editor[T] = {
       if (q.questionType==typeTag[FormulaQ]) {
         val q2 = q.asInstanceOf[FormulaQ]
         val edit = new FormulaEditor()

@@ -44,10 +44,10 @@ class MathQ(val message:Elem, val default : CMathML = CNone()) extends Question[
 //  val default = CNone
 }
 
-class IntQ(val message:Elem) extends Question[Integer] {
-  val answerType = typeTag[Integer]
+class IntQ(val message:Elem) extends Question[Int] {
+  val answerType = typeTag[Int]
   val questionType = typeTag[IntQ]
-  val default = 0.asInstanceOf[Integer]
+  val default = 0.asInstanceOf[Int]
 }
 
 class StringQ(val message:Elem) extends Question[String] {
@@ -83,7 +83,7 @@ class MessageQ(val typ:MessageQ.Type, val message:Elem) extends Question[BoxedUn
   override def toString = "[MSG: "+message.text+"]"
 }
 
-final case class InteractionRunning[T,A <: AnyRef](id: String,
+final case class InteractionRunning[T,A](id: String,
                                        question : Question[A],
                                        answer : A => Interaction[T]) extends Interaction[T] {
   override def resultMaybe: Option[T] = None
@@ -120,7 +120,7 @@ sealed trait Interaction[+T] {
     case InteractionFinished(result) => InteractionFinished(f(result))
     case InteractionFailed() => InteractionFailed()
   }
-  @Pure final def quickInteract(answers : AnyRef*) : (T,List[Question[BoxedUnit]]) = {
+  @Pure final def quickInteract(answers : Any*) : (T,List[Question[BoxedUnit]]) = {
     val (inter,msgs) = quickInteract0(answers : _*)
     inter match {
       case InteractionFinished(result) => (result,msgs)
@@ -133,7 +133,7 @@ sealed trait Interaction[+T] {
     * @param answers The answers to be provided. Questions with answers of type [[BoxedUnit]] do not have to be provided.
     * @return (rest,messages): rest=remaining interaction, messages=questions with BoxedUnit-answers that where encountered
     */
-  @Pure final def quickInteract0(answers : AnyRef*) : (Interaction[T],List[Question[BoxedUnit]]) = {
+  @Pure final def quickInteract0(answers : Any*) : (Interaction[T],List[Question[BoxedUnit]]) = {
     import scala.util.control.Breaks._
     var inter = this
     var messages = Nil: List[Question[BoxedUnit]]
@@ -166,7 +166,7 @@ object Interaction {
   def fail[T] : Interaction[T] = InteractionFailed()
   def failU : Interaction[Unit] = fail
   def returnval[T](res : T) = new InteractionFinished[T](res)
-  def ask[T<:AnyRef](id : String, question : Question[T]) =
+  def ask[T](id : String, question : Question[T]) =
     new InteractionRunning[T,T](id,question, { a =>
       assert(a!=null)
 //      assert(question.answerType.isInstance(a), "answer "+a+" should be of type "+question.answerType+" not "+a.getClass) // equivalent to "answer.isInstanceOf[T]"
