@@ -83,14 +83,14 @@ class MessageQ(val typ:MessageQ.Type, val message:Elem) extends Question[BoxedUn
   override def toString = "[MSG: "+message.text+"]"
 }
 
-final case class InteractionRunning[T](id: String,
-                                       question : Question[_<:AnyRef],
-                                       answer : AnyRef => Interaction[T]) extends Interaction[T] {
+final case class InteractionRunning[T,A <: AnyRef](id: String,
+                                       question : Question[A],
+                                       answer : A => Interaction[T]) extends Interaction[T] {
   override def resultMaybe: Option[T] = None
   override def isDone: Boolean = false
   override def isRunning: Boolean = true
   override def isFailed: Boolean = false
-  override def withFilter(p: (T) => Boolean): Interaction[T] = InteractionRunning(id, question, a => answer(a).withFilter(p))
+  override def withFilter(p: (T) => Boolean): Interaction[T] = InteractionRunning[T,A](id, question, a => answer(a).withFilter(p))
 }
 final case class InteractionFinished[T](result: T) extends Interaction[T] {
   override def resultMaybe: Option[T] = Some(result)
@@ -111,12 +111,12 @@ final case class InteractionFailed() extends Interaction[Nothing] {
 sealed trait Interaction[+T] {
   def withFilter(p : T => Boolean) : Interaction[T]
   final def flatMap[U](f: T => Interaction[U]) : Interaction[U] = this match { // TODO: move to subclasses like withFilter
-    case InteractionRunning(id, question, answer) => InteractionRunning(id, question, a => answer(a).flatMap(f))
+    case /*InteractionRunning(id, question, answer)*/int : InteractionRunning[T,a] => InteractionRunning[U,a](int.id, int.question, a => int.answer(a).flatMap(f))
     case InteractionFinished(result) => f(result)
     case InteractionFailed() => InteractionFailed()
   }
   final def map[U](f: T => U) : Interaction[U] = this match { // TODO: move to subclasses
-    case InteractionRunning(id, question, answer) => InteractionRunning(id, question, a => answer(a).map(f))
+    case int : InteractionRunning[T,a] => InteractionRunning[U,a](int.id, int.question, a => int.answer(a).map(f))
     case InteractionFinished(result) => InteractionFinished(f(result))
     case InteractionFailed() => InteractionFailed()
   }
@@ -128,6 +128,11 @@ sealed trait Interaction[+T] {
       case InteractionRunning(_,question,_) => throw new RuntimeException("interaction incomplete, expecting "+question.message.text)
     }
   }
+
+  /** Runs the interaction [[this]] by providing the answers [[answers]]. Leftover answers are silently ignored.
+    * @param answers The answers to be provided. Questions with answers of type [[BoxedUnit]] do not have to be provided.
+    * @return (rest,messages): rest=remaining interaction, messages=questions with BoxedUnit-answers that where encountered
+    */
   @Pure final def quickInteract0(answers : AnyRef*) : (Interaction[T],List[Question[BoxedUnit]]) = {
     import scala.util.control.Breaks._
     var inter = this
@@ -162,13 +167,13 @@ object Interaction {
   def failU : Interaction[Unit] = fail
   def returnval[T](res : T) = new InteractionFinished[T](res)
   def ask[T<:AnyRef](id : String, question : Question[T]) =
-    new InteractionRunning[T](id,question, { a =>
+    new InteractionRunning[T,T](id,question, { a =>
       assert(a!=null)
 //      assert(question.answerType.isInstance(a), "answer "+a+" should be of type "+question.answerType+" not "+a.getClass) // equivalent to "answer.isInstanceOf[T]"
       Interaction.returnval(a.asInstanceOf[T])
     })
   def error(id:String,err:Elem) : Interaction[Unit] =
-    new InteractionRunning[Unit](id,MessageQ.Error(err),{a=>returnval(())})
+    new InteractionRunning[Unit,BoxedUnit](id,MessageQ.Error(err),{a=>returnval(())})
   def failWith[T](id:String, err:Elem) : Interaction[T] =
     for { _ <- error(id, err); res <- fail[T] } yield res
   def failWithU(id:String, err:Elem) : Interaction[Unit] = failWith(id,err)

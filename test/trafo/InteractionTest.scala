@@ -69,7 +69,7 @@ class InteractionTest extends UnitSpec {
     val int : Interaction[String] = for { i <- ask("q1",q) } yield i+i
     assertResult("some string") { questionMessage(int) }
 
-    val int2 = int.asInstanceOf[InteractionRunning[_]].answer("abc")
+    val int2 = int.asInstanceOf[InteractionRunning[_,String]].answer("abc")
     assertResult("abcabc") { int2.asInstanceOf[InteractionFinished[_]].result }
   }
 

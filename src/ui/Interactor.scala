@@ -167,11 +167,11 @@ class Interactor[R]() extends layout.VBox {
       case InteractionFailed() =>
         cell.noQuestion()
         cell.setHtml(<b>Failed</b>)
-      case InteractionRunning(id,question,answer) =>
-        cell.setQuestion(question)
-        cell.setHtml(question.message)
-        val answer = currentAnswer(id,question) // answers.getOrElse(id,question.default)
-        // TODO: add typetag check
+      case int : InteractionRunning[t,a] =>
+        cell.setQuestion[a](int.question)
+        cell.setHtml(int.question.message)
+        val answer = currentAnswer(int.id,int.question) // answers.getOrElse(id,question.default)
+        assert(cell.edit.editedType == int.question.answerType)
         cell.edit.asInstanceOf[Editor[answer.type]].setValue(answer)
     }
   }
