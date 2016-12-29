@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="SBT: io.get-coursier:coursier_2.11:1.0.0-M15:jar">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.ivy2/cache/io.get-coursier/coursier_2.11/jars/coursier_2.11-1.0.0-M15.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$USER_HOME$/.ivy2/cache/io.get-coursier/coursier_2.11/docs/coursier_2.11-1.0.0-M15-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.ivy2/cache/io.get-coursier/coursier_2.11/srcs/coursier_2.11-1.0.0-M15-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

@@ -1,5 +1,6 @@
 package isabelle
 
+import java.net.URI
 import java.nio.file.Paths
 
 import cmathml.CMathML._
@@ -13,6 +14,7 @@ import info.hupel.isabelle.japi.Codecs
 import info.hupel.isabelle.pure.{Abs, App, Bound, Const, Free, Term, Typ, Type}
 import info.hupel.isabelle.setup.{Resources, Setup}
 import isabelle.Isabelle.types.dummy
+import misc.Log
 
 import scala.BigInt._
 import scala.collection.mutable.ListBuffer
@@ -57,7 +59,7 @@ abstract class Isabelle {
 }
 
 class IsabelleLocal(env:IsabelleEnvironment = IsabelleEnvironment.defaultEnvironment) extends Isabelle {
-  val systemFuture = for { e<-env.environment; sys <- System.create(e,env.config) } yield sys
+  val systemFuture = for { e<-env.environment; c <- env.config; sys <- System.create(e, c) } yield sys
   lazy val system = Await.result(systemFuture,Inf)
 
   def dispose() = for (sys<-systemFuture) sys.dispose
@@ -574,15 +576,21 @@ object Isabelle {
 }
 
 class IsabelleEnvironment(version : String) {
-  private val resourceDirectory = Paths.get(getClass.getClassLoader.getResource("isabelle/").toURI)
-  private val resources = new Resources(resourceDirectory)
-  val config = resources.makeConfiguration(List(), "ProofEditorSupport")
+  private val resourceDirectory = Paths.get(getClass.getClassLoader.getResource("isabelle/ROOT").toURI).getParent
+  val config = Future {
+    val resources = Resources.dumpIsabelleResources().fold({msg => throw new RuntimeException(msg.explain)},{fu=>fu})
+    val config = resources.makeConfiguration(List(resourceDirectory), "ProofEditorSupport")
+    Log.debug("config",config)
+    config
+  }
   val environment : Future[Environment] = Future {
     IsabelleEnvironment.Lock.synchronized {
-      val setupFuture = Setup.defaultSetup(Version(version)).fold({msg => throw new RuntimeException(msg.explain)},{fu=>fu})
-      val setup = Await.result(setupFuture,Inf)
+      val setup =
+        Setup.default(Version(version)).fold({msg => throw new RuntimeException(msg.explain)},{fu=>fu})
+//      val setup = Await.result(setupFuture,Inf)
       val environment = Await.result(setup.makeEnvironment,Inf)
-      val built = System.build(environment,config)
+      val config2 = Await.result(config,Inf)
+      val built = System.build(environment,config2)
       assert(built)
       environment
     }
@@ -591,6 +599,6 @@ class IsabelleEnvironment(version : String) {
 
 object IsabelleEnvironment {
   private object Lock
-  val defaultVersion = "2016"
+  val defaultVersion = "2016-1"
   lazy val defaultEnvironment = new IsabelleEnvironment(defaultVersion)
 }

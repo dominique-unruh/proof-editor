@@ -11,7 +11,7 @@ import isabelle.Isabelle.{defaultInstance => isa}
 class IsabelleTest extends UnitSpec {
 
   test("Isabelle initializes") {
-    Isabelle.defaultInstance
+    Isabelle.defaultInstance.ping()
   }
 
   test("integer conversion") {

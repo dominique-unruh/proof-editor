@@ -10,6 +10,7 @@ object Downloads extends AutoPlugin {
 //  lazy val installDependencies = taskKey[Unit]("Download and build dependencies - if needed")
   lazy val installMathQuill = TaskKey[File]("Download and build MathQuill")
   lazy val installJQuery = TaskKey[File]("Download JQuery")
+//  lazy val installLibIsabelle = TaskKey[File]("Install resources for libisabelle")
 
   def copyInto(from:File,to:File) = IO.copyFile(from, to / from.name)
 
@@ -21,9 +22,10 @@ object Downloads extends AutoPlugin {
     lazy val installZ3Win64 = TaskKey[Unit]("Download and build Z3 (Windows 64)")
     lazy val installZ3Win32 = TaskKey[Unit]("Download and build Z3 (Windows 32)")
     lazy val installSymcompOpenmath = TaskKey[Unit]("Download Symcomp's openmath.jar")
+//    lazy val libIsabelleVersion = SettingKey[String]("Version of libisabelle")
 
     lazy val enableDownloads = Seq(
-      installResources := recursiveFiles(/*installJQuery.value,*/installMathQuill.value),
+      installResources := recursiveFiles(/*installJQuery.value,*/installMathQuill.value/*,installLibIsabelle.value*/),
 
       installJars := {
         installZ3Linux64.value
@@ -33,6 +35,15 @@ object Downloads extends AutoPlugin {
       installMathQuill := downloadMathQuill(base.value),
 
       installJQuery := downloadJQuery(base.value),
+
+//      installLibIsabelle := {
+//        val libisabelleDir = base.value/"resources/isabelle/libisabelle"
+//        if (!libisabelleDir.exists) {
+//          val dir = downloadLibIsabelle(libIsabelleVersion.value, base.value)
+//          copyInto(dir / ".libisabelle/libisabelle", libisabelleDir.getParentFile)
+//        }
+//        libisabelleDir
+//      },
 
       installZ3Linux64 := {
         if (!(base.value/"lib/linux64/libz3java.so").exists) {
@@ -94,6 +105,16 @@ object Downloads extends AutoPlugin {
     }
     base / mathquillTargetDir
   }
+
+//  private def downloadLibIsabelle(version:String, base:File) : File = {
+//    val url = s"http://central.maven.org/maven2/info/hupel/libisabelle-setup_2.11/$version/libisabelle-setup_2.11-$version.jar"
+//    val dir = base / s"tmp/libisabelle"
+//    IO.delete(dir)
+//    val files = IO.unzipURL(new URL(url), dir)
+//    error(files.toString)
+////    val actualDir = dir / s"z3-$version-$os"
+////    actualDir
+//  }
 
   // ---- Z3 ----
 //  val z3TargetDir = "target/z3"

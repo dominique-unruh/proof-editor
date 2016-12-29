@@ -36,8 +36,9 @@ libraryDependencies += "com.lihaoyi" %% "fastparse" % "0.3.7"
 libraryDependencies += "com.thoughtworks.each" %% "each" % "2.0.0"
 //libraryDependencies += "org.pelotom" %% "effectful" % "1.0.1"
 
-libraryDependencies += "info.hupel" %% "libisabelle" % "0.5"
-libraryDependencies += "info.hupel" %% "libisabelle-setup" % "0.5"
+//libIsabelleVersion := "0.6.4"
+libraryDependencies += "info.hupel" %% "libisabelle" % "0.6.4"
+libraryDependencies += "info.hupel" %% "libisabelle-setup" % "0.6.4"
 //libraryDependencies += "info.hupel" %% "pide-package" % "0.6"
 
 

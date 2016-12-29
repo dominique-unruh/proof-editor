@@ -456,7 +456,7 @@ class MathEdit extends MathView {
     clip.content(DataFormat.PlainText) match {
       case str: String =>
         try { return Some(CMathML.fromPopcorn(str)) }
-        catch { case e : ParseError => }
+        catch { case e : ParseError[_,_] => }
     }
 
     None
