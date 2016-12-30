@@ -14,13 +14,15 @@ organization := "de.unruh"
 //javaHome := Some(file(sys.props("java.home")).getAbsoluteFile)
 
 scalaVersion := "2.11.8"
+//scalaVersion := "2.12.1"
+
 libraryDependencies += "org.scala-lang.modules" %% "scala-xml" % "1.0.5"
-libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.6" % Test
+libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.1" % Test
 //libraryDependencies += "org.apache.bcel" % "bcel" % "5.2"
 //libraryDependencies += "org.ow2.asm" % "asm" % "5.1"
 //libraryDependencies += "commons-io" % "commons-io" % "2.5"
 libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaVersion.value
-libraryDependencies += "org.scalafx" %% "scalafx" % "8.0.92-R10" // https://mvnrepository.com/artifact/org.scalafx/scalafx_2.11
+libraryDependencies += "org.scalafx" %% "scalafx" % "8.0.102-R11" // https://mvnrepository.com/artifact/org.scalafx/scalafx_2.11
 //libraryDependencies += "org.apache.xmlgraphics" % "batik-swing" % "1.8"
 //libraryDependencies += "org.apache.xmlgraphics" % "xmlgraphics-commons" % "2.1"
 //libraryDependencies += "org.jetbrains" % "annotations" % "15.0"
@@ -30,10 +32,10 @@ libraryDependencies += "org.scalafx" %% "scalafx" % "8.0.92-R10" // https://mvnr
 //libraryDependencies += "org.antlr" % "antlr-runtime" % "3.0.1" // Needed for openmath-1.4.0.jar
 //libraryDependencies += "com.typesafe.scala-logging" %% "scala-logging" % "3.4.0"
 //libraryDependencies += "ch.qos.logback" %  "logback-classic" % "1.1.7"
-libraryDependencies += "com.lihaoyi" %% "sourcecode" % "0.1.2"
-libraryDependencies += "com.lihaoyi" %% "fastparse" % "0.3.7"
+libraryDependencies += "com.lihaoyi" %% "sourcecode" % "0.1.3"
+libraryDependencies += "com.lihaoyi" %% "fastparse" % "0.4.2"
 
-libraryDependencies += "com.thoughtworks.each" %% "each" % "2.0.0"
+libraryDependencies += "com.thoughtworks.each" %% "each" % "3.1.1"
 //libraryDependencies += "org.pelotom" %% "effectful" % "1.0.1"
 
 //libIsabelleVersion := "0.6.4"
@@ -44,8 +46,8 @@ libraryDependencies += "info.hupel" %% "libisabelle-setup" % "0.6.4"
 
 libraryDependencies += "org.slf4j" % "slf4j-simple" % "1.7.21"
 
-libraryDependencies += "com.twitter" %% "finagle-http" % "6.39.0"
-libraryDependencies += "com.twitter" %% "bijection-util" % "0.9.2"
+libraryDependencies += "com.twitter" %% "finagle-http" % "6.41.0"
+libraryDependencies += "com.twitter" %% "bijection-util" % "0.9.4"
 
 
 libraryDependencies += "org.scala-lang.modules" %% "scala-pickling" % "0.10.1"
