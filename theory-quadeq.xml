@@ -1,0 +1,42 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<theory counter="16" xmlns="http://unruh.de/proof-editor">
+  <formulas>
+    <formula proven="#" axiom="true" id="1"><!-- ($a*$x^2+$b*$x)+$c=0 --><math xmlns="http://www.w3.org/1998/Math/MathML"><apply><csymbol cd="relation1">eq</csymbol><apply><csymbol cd="arith1">plus</csymbol><apply><csymbol cd="arith1">plus</csymbol><apply><csymbol cd="arith1">times</csymbol><ci>a</ci><apply><csymbol cd="arith1">power</csymbol><ci>x</ci><cn type="integer">2</cn></apply></apply><apply><csymbol cd="arith1">times</csymbol><ci>b</ci><ci>x</ci></apply></apply><ci>c</ci></apply><cn type="integer">0</cn></apply></math></formula>
+    <formula proven="2:3,4#3" id="3"><!-- $a=0 --><math xmlns="http://www.w3.org/1998/Math/MathML"><apply><csymbol cd="relation1">eq</csymbol><ci>a</ci><cn type="integer">0</cn></apply></math></formula>
+    <formula proven="2:3,4#4" id="4"><!-- $a!=0 --><math xmlns="http://www.w3.org/1998/Math/MathML"><apply><csymbol cd="relation1">neq</csymbol><ci>a</ci><cn type="integer">0</cn></apply></math></formula>
+    <formula proven="2:3,4#3" id="6"><!-- (0*$x^2+$b*$x)+$c=0 --><math xmlns="http://www.w3.org/1998/Math/MathML"><apply><csymbol cd="relation1">eq</csymbol><apply><csymbol cd="arith1">plus</csymbol><apply><csymbol cd="arith1">plus</csymbol><apply><csymbol cd="arith1">times</csymbol><cn type="integer">0</cn><apply><csymbol cd="arith1">power</csymbol><ci>x</ci><cn type="integer">2</cn></apply></apply><apply><csymbol cd="arith1">times</csymbol><ci>b</ci><ci>x</ci></apply></apply><ci>c</ci></apply><cn type="integer">0</cn></apply></math></formula>
+    <formula proven="9:10,11;2:3,4#10,3;10,4;11,3" id="8"><!-- $b*$x+$c=0 --><math xmlns="http://www.w3.org/1998/Math/MathML"><apply><csymbol cd="relation1">eq</csymbol><apply><csymbol cd="arith1">plus</csymbol><apply><csymbol cd="arith1">times</csymbol><ci>b</ci><ci>x</ci></apply><ci>c</ci></apply><cn type="integer">0</cn></apply></math></formula>
+    <formula proven="9:10,11#10" id="10"><!-- $b=0 --><math xmlns="http://www.w3.org/1998/Math/MathML"><apply><csymbol cd="relation1">eq</csymbol><ci>b</ci><cn type="integer">0</cn></apply></math></formula>
+    <formula proven="9:10,11#11" id="11"><!-- $b!=0 --><math xmlns="http://www.w3.org/1998/Math/MathML"><apply><csymbol cd="relation1">neq</csymbol><ci>b</ci><cn type="integer">0</cn></apply></math></formula>
+    <formula proven="9:10,11#10" id="13"><!-- 0*$x+$c=0 --><math xmlns="http://www.w3.org/1998/Math/MathML"><apply><csymbol cd="relation1">eq</csymbol><apply><csymbol cd="arith1">plus</csymbol><apply><csymbol cd="arith1">times</csymbol><cn type="integer">0</cn><ci>x</ci></apply><ci>c</ci></apply><cn type="integer">0</cn></apply></math></formula>
+    <formula proven="9:10,11#10" id="15"><!-- $c=0 --><math xmlns="http://www.w3.org/1998/Math/MathML"><apply><csymbol cd="relation1">eq</csymbol><ci>c</ci><cn type="integer">0</cn></apply></math></formula>
+  </formulas>
+  <transformations>
+    <substitution id="-1" path="1-1-1-1">
+      <formula proven="2:3,4#3" id="3"><!-- $a=0 --><math xmlns="http://www.w3.org/1998/Math/MathML"><apply><csymbol cd="relation1">eq</csymbol><ci>a</ci><cn type="integer">0</cn></apply></math></formula>
+      <formula proven="#" axiom="true" id="1"><!-- ($a*$x^2+$b*$x)+$c=0 --><math xmlns="http://www.w3.org/1998/Math/MathML"><apply><csymbol cd="relation1">eq</csymbol><apply><csymbol cd="arith1">plus</csymbol><apply><csymbol cd="arith1">plus</csymbol><apply><csymbol cd="arith1">times</csymbol><ci>a</ci><apply><csymbol cd="arith1">power</csymbol><ci>x</ci><cn type="integer">2</cn></apply></apply><apply><csymbol cd="arith1">times</csymbol><ci>b</ci><ci>x</ci></apply></apply><ci>c</ci></apply><cn type="integer">0</cn></apply></math></formula>
+      <formula proven="2:3,4#3" id="6"><!-- (0*$x^2+$b*$x)+$c=0 --><math xmlns="http://www.w3.org/1998/Math/MathML"><apply><csymbol cd="relation1">eq</csymbol><apply><csymbol cd="arith1">plus</csymbol><apply><csymbol cd="arith1">plus</csymbol><apply><csymbol cd="arith1">times</csymbol><cn type="integer">0</cn><apply><csymbol cd="arith1">power</csymbol><ci>x</ci><cn type="integer">2</cn></apply></apply><apply><csymbol cd="arith1">times</csymbol><ci>b</ci><ci>x</ci></apply></apply><ci>c</ci></apply><cn type="integer">0</cn></apply></math></formula>
+    </substitution>
+    <substitution id="-1" path="1-1-1">
+      <formula proven="9:10,11#10" id="10"><!-- $b=0 --><math xmlns="http://www.w3.org/1998/Math/MathML"><apply><csymbol cd="relation1">eq</csymbol><ci>b</ci><cn type="integer">0</cn></apply></math></formula>
+      <formula proven="9:10,11;2:3,4#10,3;10,4;11,3" id="8"><!-- $b*$x+$c=0 --><math xmlns="http://www.w3.org/1998/Math/MathML"><apply><csymbol cd="relation1">eq</csymbol><apply><csymbol cd="arith1">plus</csymbol><apply><csymbol cd="arith1">times</csymbol><ci>b</ci><ci>x</ci></apply><ci>c</ci></apply><cn type="integer">0</cn></apply></math></formula>
+      <formula proven="9:10,11#10" id="13"><!-- 0*$x+$c=0 --><math xmlns="http://www.w3.org/1998/Math/MathML"><apply><csymbol cd="relation1">eq</csymbol><apply><csymbol cd="arith1">plus</csymbol><apply><csymbol cd="arith1">times</csymbol><cn type="integer">0</cn><ci>x</ci></apply><ci>c</ci></apply><cn type="integer">0</cn></apply></math></formula>
+    </substitution>
+    <caseDistinction id="2">
+      <formula proven="2:3,4#3" id="3"><!-- $a=0 --><math xmlns="http://www.w3.org/1998/Math/MathML"><apply><csymbol cd="relation1">eq</csymbol><ci>a</ci><cn type="integer">0</cn></apply></math></formula>
+      <formula proven="2:3,4#4" id="4"><!-- $a!=0 --><math xmlns="http://www.w3.org/1998/Math/MathML"><apply><csymbol cd="relation1">neq</csymbol><ci>a</ci><cn type="integer">0</cn></apply></math></formula>
+    </caseDistinction>
+    <simplify id="7">
+      <formula proven="2:3,4#3" id="6"><!-- (0*$x^2+$b*$x)+$c=0 --><math xmlns="http://www.w3.org/1998/Math/MathML"><apply><csymbol cd="relation1">eq</csymbol><apply><csymbol cd="arith1">plus</csymbol><apply><csymbol cd="arith1">plus</csymbol><apply><csymbol cd="arith1">times</csymbol><cn type="integer">0</cn><apply><csymbol cd="arith1">power</csymbol><ci>x</ci><cn type="integer">2</cn></apply></apply><apply><csymbol cd="arith1">times</csymbol><ci>b</ci><ci>x</ci></apply></apply><ci>c</ci></apply><cn type="integer">0</cn></apply></math></formula>
+      <formula proven="2:3,4#3" id="8"><!-- $b*$x+$c=0 --><math xmlns="http://www.w3.org/1998/Math/MathML"><apply><csymbol cd="relation1">eq</csymbol><apply><csymbol cd="arith1">plus</csymbol><apply><csymbol cd="arith1">times</csymbol><ci>b</ci><ci>x</ci></apply><ci>c</ci></apply><cn type="integer">0</cn></apply></math></formula>
+    </simplify>
+    <caseDistinction id="9">
+      <formula proven="9:10,11#10" id="10"><!-- $b=0 --><math xmlns="http://www.w3.org/1998/Math/MathML"><apply><csymbol cd="relation1">eq</csymbol><ci>b</ci><cn type="integer">0</cn></apply></math></formula>
+      <formula proven="9:10,11#11" id="11"><!-- $b!=0 --><math xmlns="http://www.w3.org/1998/Math/MathML"><apply><csymbol cd="relation1">neq</csymbol><ci>b</ci><cn type="integer">0</cn></apply></math></formula>
+    </caseDistinction>
+    <simplify id="14">
+      <formula proven="9:10,11#10" id="13"><!-- 0*$x+$c=0 --><math xmlns="http://www.w3.org/1998/Math/MathML"><apply><csymbol cd="relation1">eq</csymbol><apply><csymbol cd="arith1">plus</csymbol><apply><csymbol cd="arith1">times</csymbol><cn type="integer">0</cn><ci>x</ci></apply><ci>c</ci></apply><cn type="integer">0</cn></apply></math></formula>
+      <formula proven="9:10,11#10" id="15"><!-- $c=0 --><math xmlns="http://www.w3.org/1998/Math/MathML"><apply><csymbol cd="relation1">eq</csymbol><ci>c</ci><cn type="integer">0</cn></apply></math></formula>
+    </simplify>
+  </transformations>
+</theory>
